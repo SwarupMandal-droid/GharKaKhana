@@ -1,9 +1,65 @@
-venv/
-.env
+# ── Python ────────────────────────────────────────────────────────────────────
 __pycache__/
-*.pyc
-*.pyo
-media/
-staticfiles/
+*.py[cod]
+*$py.class
+*.so
+
+# ── Virtual environment ────────────────────────────────────────────────────────
+venv/
+.venv/
+env/
+ENV/
+
+# ── Django ────────────────────────────────────────────────────────────────────
 *.log
+local_settings.py
 db.sqlite3
+db.sqlite3-journal
+
+# ── Secrets & environment variables ───────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── Static & media files ──────────────────────────────────────────────────────
+/staticfiles/
+/media/
+
+# ── Distribution / packaging ──────────────────────────────────────────────────
+dist/
+build/
+*.egg-info/
+*.egg
+.eggs/
+wheels/
+
+# ── Unit test / coverage ──────────────────────────────────────────────────────
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.pytest_cache/
+nosetests.xml
+
+# ── IDE / Editor ──────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── OS files ──────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Celery ────────────────────────────────────────────────────────────────────
+celerybeat-schedule
+celerybeat.pid
+
+# ── mypy ──────────────────────────────────────────────────────────────────────
+.mypy_cache/
+.dmypy.json
+dmypy.json
