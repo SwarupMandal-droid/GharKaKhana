@@ -7,9 +7,12 @@ from orders.models import Order
 from cooks.models import CookProfile
 import datetime
 import math
+import hashlib
+import functools
 
 
 def delivery_required(view_func):
+    @functools.wraps(view_func)
     @login_required
     def wrapper(request, *args, **kwargs):
         if request.user.role != 'DELIVERY':
@@ -108,23 +111,34 @@ def estimate_time(route):
     return round(travel + handoffs)
 
 
+def _delivery_fingerprint(deliveries):
+    """Build a hash of delivery IDs + statuses to detect changes."""
+    parts = sorted(f"{d.pk}:{d.status}" for d in deliveries)
+    return hashlib.md5("|".join(parts).encode()).hexdigest()
+
+
 @delivery_required
 def dashboard(request):
     delivery_person = request.user.delivery_profile
     cook            = delivery_person.cook
-    today           = datetime.date.today()
+    today           = timezone.localdate()
+    tomorrow        = today + datetime.timedelta(days=1)
 
-    # Get today's slot batches
+    # Get slot batches for today and tomorrow (preorders)
     from cooks.models import DeliverySlot
     slots = cook.delivery_slots.filter(is_active=True).order_by('start_time')
 
-    slot_batches = []
+    slot_batches   = []
+    grand_total    = 0
+    grand_done     = 0
+    grand_km       = 0
+
     for slot in slots:
-        # All orders for this slot today that need delivery
+        # Orders for this slot that are active today or preordered for tomorrow
         slot_orders = Order.objects.filter(
             cook         = cook,
             slot         = slot,
-            menu__menu_date = today,
+            menu__menu_date__in = [today, tomorrow],
             status__in   = ['CONFIRMED', 'PREPARING', 'OUT_FOR_DELIVERY', 'DELIVERED'],
             delivery_type = 'DELIVERY',
         ).select_related(
@@ -150,7 +164,6 @@ def dashboard(request):
                 delivery.save()
             deliveries.append(delivery)
 
-        # Run route optimization
         pending_deliveries = [
             d for d in deliveries if d.status == 'ASSIGNED'
         ]
@@ -159,23 +172,46 @@ def dashboard(request):
         ]
 
         # Check if cutoff has passed (route ready)
-        now          = timezone.localtime(timezone.now()).time()
+        now           = timezone.localtime(timezone.now()).time()
         cutoff_passed = now >= cook.order_cutoff
 
         if pending_deliveries:
-            route    = nearest_neighbor_route(cook, pending_deliveries)
-            # Save sequence numbers
-            for idx, stop in enumerate(route):
-                stop['delivery'].sequence = idx + 1
-                stop['delivery'].save()
-            maps_url = build_maps_url(cook, route)
-            est_time = estimate_time(route)
-            total_km = round(sum(s['distance'] for s in route), 2)
+            # Only recalculate route if deliveries have changed
+            fingerprint  = _delivery_fingerprint(pending_deliveries)
+            cache_key    = f"route_{slot.pk}"
+            cached       = request.session.get(cache_key)
+
+            if cached and cached.get('hash') == fingerprint:
+                # Reuse cached route data — skip DB writes
+                route    = nearest_neighbor_route(cook, pending_deliveries)
+                maps_url = build_maps_url(cook, route)
+                est_time = cached['est_time']
+                total_km = cached['total_km']
+            else:
+                # Route changed — recalculate and save sequences
+                route    = nearest_neighbor_route(cook, pending_deliveries)
+                for idx, stop in enumerate(route):
+                    stop['delivery'].sequence = idx + 1
+                    stop['delivery'].save()
+                maps_url = build_maps_url(cook, route)
+                est_time = estimate_time(route)
+                total_km = round(sum(s['distance'] for s in route), 2)
+                request.session[cache_key] = {
+                    'hash':     fingerprint,
+                    'est_time': est_time,
+                    'total_km': total_km,
+                }
         else:
             route    = []
             maps_url = None
             est_time = 0
             total_km = 0
+
+        batch_total = len(deliveries)
+        batch_done  = len(completed_deliveries)
+        grand_total += batch_total
+        grand_done  += batch_done
+        grand_km    += total_km
 
         slot_batches.append({
             'slot':       slot,
@@ -185,8 +221,8 @@ def dashboard(request):
             'est_time':   est_time,
             'total_km':   total_km,
             'cutoff_passed': cutoff_passed,
-            'total':      len(deliveries),
-            'done':       len(completed_deliveries),
+            'total':      batch_total,
+            'done':       batch_done,
         })
 
     context = {
@@ -194,6 +230,9 @@ def dashboard(request):
         'cook':            cook,
         'slot_batches':    slot_batches,
         'today':           today,
+        'grand_total':     grand_total,
+        'grand_done':      grand_done,
+        'grand_km':        round(grand_km, 2),
     }
     return render(request, 'delivery/dashboard.html', context)
 

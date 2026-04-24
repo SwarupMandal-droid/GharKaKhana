@@ -20,14 +20,20 @@
       <p class="p-hero-sub">
         <span style="color: var(--p-orange)">📍</span> {{ cook.kitchen_name }} · {{ today|date:"l, d F Y" }}
       </p>
+      <p style="font-size: 0.9rem; color: var(--p-gray-600); margin-top: 8px;">
+        📞 Kitchen: {{ cook.phone }} | 🏠 {{ cook.address|truncatechars:40 }}
+      </p>
     </div>
-    <div style="display: flex; gap: 12px;">
+    <div style="display: flex; align-items: center; gap: 20px;">
       <div style="text-align: right">
         <div style="font-size: 0.8rem; color: var(--p-gray-600); font-weight: 600; text-transform: uppercase">Status</div>
         <div style="display: flex; align-items: center; gap: 6px; font-weight: 700; color: var(--p-success)">
           <span class="dot dot-green"></span> Online & Active
         </div>
       </div>
+      <a href="." class="p-btn p-btn-white" style="padding: 10px 15px; font-size: 0.85rem;">
+        🔄 Refresh
+      </a>
     </div>
   </div>
 
@@ -40,17 +46,17 @@
     </div>
     <div class="p-stat-card animate-fade" style="animation-delay: 0.2s">
       <div class="p-stat-icon">🛵</div>
-      <div class="p-stat-value">{% with total=0 %}{% for b in slot_batches %}{% with total=total|add:b.total %}{% endwith %}{% endfor %}{{ total }}{% endwith %}</div>
+      <div class="p-stat-value">{{ grand_total }}</div>
       <div class="p-stat-label">Total Orders</div>
     </div>
     <div class="p-stat-card animate-fade" style="animation-delay: 0.3s">
       <div class="p-stat-icon">✅</div>
-      <div class="p-stat-value">{% with done=0 %}{% for b in slot_batches %}{% with done=done|add:b.done %}{% endwith %}{% endfor %}{{ done }}{% endwith %}</div>
+      <div class="p-stat-value">{{ grand_done }}</div>
       <div class="p-stat-label">Delivered</div>
     </div>
     <div class="p-stat-card animate-fade" style="animation-delay: 0.4s">
       <div class="p-stat-icon">📏</div>
-      <div class="p-stat-value">{% with km=0 %}{% for b in slot_batches %}{% with km=km|add:b.total_km %}{% endwith %}{% endfor %}{{ km }}{% endwith %}</div>
+      <div class="p-stat-value">{{ grand_km }}</div>
       <div class="p-stat-label">Total KM</div>
     </div>
   </div>
@@ -66,13 +72,21 @@
           <p class="p-slot-meta">
             {{ batch.done }} of {{ batch.total }} orders completed 
             {% if batch.total_km %}· {{ batch.total_km }} km route{% endif %}
+            {% if batch.est_time %}· ~{{ batch.est_time }} min{% endif %}
           </p>
         </div>
-        {% if batch.maps_url %}
-        <a href="{{ batch.maps_url }}" target="_blank" class="p-btn p-btn-orange">
-          🗺️ Open Full Route
-        </a>
-        {% endif %}
+        <div style="display: flex; gap: 10px; align-items: center;">
+          {% if not batch.cutoff_passed %}
+          <span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: #FFF9E6; color: #D4A017; border-radius: 12px; font-size: 0.85rem; font-weight: 600; border: 1px solid #FFEDCC;">
+            ⏳ Orders still open
+          </span>
+          {% endif %}
+          {% if batch.maps_url %}
+          <a href="{{ batch.maps_url }}" target="_blank" class="p-btn p-btn-orange">
+            🗺️ Open Full Route
+          </a>
+          {% endif %}
+        </div>
       </div>
 
       <!-- Animated Progress Bar -->
@@ -100,7 +114,12 @@
 
           <!-- Customer Info -->
           <div class="p-stop-content">
-            <h3 class="p-customer-name">{{ order.customer.name }}</h3>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <h3 class="p-customer-name">{{ order.customer.name }}</h3>
+              <a href="tel:{{ order.customer.phone }}" style="color: var(--p-orange); font-weight: 700; text-decoration: none; font-size: 0.9rem; display: flex; align-items: center; gap: 4px;">
+                📞 {{ order.customer.phone }}
+              </a>
+            </div>
             <p class="p-address">📍 {{ order.address.address }}</p>
             
             <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px">

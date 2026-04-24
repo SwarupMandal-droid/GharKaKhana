@@ -274,12 +274,68 @@ def order_status_update(request, pk):
                 for item in order.items.all():
                     item.menu_item.quantity_available += item.quantity
                     item.menu_item.save()
+
+            # Notify customer about status change
+            _notify_status_change(order, old_status, new_status)
                     
             messages.success(request, f'Order status updated to {order.get_status_display()}.')
         else:
             messages.error(request, 'Invalid status.')
             
     return redirect('cook:order_detail', pk=pk)
+
+
+def _notify_status_change(order, old_status, new_status):
+    """Send a notification to the customer when the cook changes order status."""
+    from notifications.models import Notification
+
+    STATUS_NOTIFICATIONS = {
+        'CONFIRMED': {
+            'type':    'ORDER_CONFIRMED',
+            'title':   'Order confirmed!',
+            'message': 'Your order from {kitchen} has been confirmed and is scheduled for {slot}.',
+        },
+        'PREPARING': {
+            'type':    'ORDER_PREPARING',
+            'title':   'Food is being prepared 🍳',
+            'message': '{kitchen} has started preparing your order. It will be ready soon!',
+        },
+        'OUT_FOR_DELIVERY': {
+            'type':    'ORDER_OUT',
+            'title':   'Out for delivery! 🛵',
+            'message': 'Your order from {kitchen} is on its way. Keep your PIN ready.',
+        },
+        'CANCELLED': {
+            'type':    'ORDER_CANCELLED',
+            'title':   'Order cancelled',
+            'message': 'Your order from {kitchen} has been cancelled by the cook. '
+                       'If you were charged, a refund will be processed.',
+        },
+        'FAILED': {
+            'type':    'ORDER_FAILED',
+            'title':   'Order could not be fulfilled',
+            'message': 'Unfortunately {kitchen} could not fulfil your order. '
+                       'Please contact support if you need assistance.',
+        },
+    }
+
+    if old_status == new_status:
+        return
+
+    notif_data = STATUS_NOTIFICATIONS.get(new_status)
+    if not notif_data:
+        return
+
+    slot_label = order.slot.label if order.slot else 'your selected slot'
+    Notification.objects.create(
+        user    = order.customer,
+        type    = notif_data['type'],
+        title   = notif_data['title'],
+        message = notif_data['message'].format(
+            kitchen=order.cook.kitchen_name,
+            slot=slot_label,
+        ),
+    )
 
 
 @role_required(['COOK'])

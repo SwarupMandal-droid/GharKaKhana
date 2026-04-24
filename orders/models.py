@@ -127,7 +127,7 @@ class FailedDelivery(models.Model):
 
     order       = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='failed_delivery')
     reason      = models.CharField(max_length=20, choices=Reason.choices)
-    photo       = models.ImageField(upload_to='failed_deliveries/')
+    photo       = models.ImageField(upload_to='failed_deliveries/', blank=True, null=True)
     reported_at = models.DateTimeField(auto_now_add=True)
     notes       = models.TextField(blank=True)
 
