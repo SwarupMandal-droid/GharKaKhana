@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container animate-fade">
+
+  <div class="page-header" style="margin-bottom: 40px;">
+    <h1 style="font-size: 2.25rem;">Platform Intelligence 📊</h1>
+    <p class="text-muted">{{ today|date:"l, d F Y" }} · Management Portal</p>
+  </div>
+
+  <!-- Stat cards -->
+  <div class="grid-4" style="margin-bottom: 40px; gap: 24px;">
+    <div class="card stat-card-premium">
+      <div class="text-xs text-muted" style="text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin-bottom: 8px;">Orders Delivered</div>
+      <div style="font-size: 2.25rem; font-weight: 800; color: var(--p-black);">{{ total_orders }}</div>
+      <div style="font-size: 0.75rem; color: var(--p-success); font-weight: 700; margin-top: 4px;">↑ All time</div>
+    </div>
+    <div class="card stat-card-premium">
+      <div class="text-xs text-muted" style="text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin-bottom: 8px;">Active Cooks</div>
+      <div style="font-size: 2.25rem; font-weight: 800; color: var(--p-black);">{{ total_cooks }}</div>
+      {% if pending_cooks > 0 %}
+      <div style="font-size: 0.75rem; color: var(--p-orange); font-weight: 700; margin-top: 4px;">⚠️ {{ pending_cooks }} pending apps</div>
+      {% else %}
+      <div style="font-size: 0.75rem; color: var(--p-success); font-weight: 700; margin-top: 4px;">✓ Fully approved</div>
+      {% endif %}
+    </div>
+    <div class="card stat-card-premium">
+      <div class="text-xs text-muted" style="text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin-bottom: 8px;">Total Customers</div>
+      <div style="font-size: 2.25rem; font-weight: 800; color: var(--p-black);">{{ total_customers }}</div>
+      <div style="font-size: 0.75rem; color: var(--p-gray-400); font-weight: 700; margin-top: 4px;">Registered</div>
+    </div>
+    <div class="card stat-card-premium">
+      <div class="text-xs text-muted" style="text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin-bottom: 8px;">Platform Revenue</div>
+      <div style="font-size: 2.25rem; font-weight: 800; color: var(--p-black);">₹{{ total_platform_fee|floatformat:0 }}</div>
+      <div style="font-size: 0.75rem; color: var(--p-gray-400); font-weight: 700; margin-top: 4px;">0.2% Net Commission</div>
+    </div>
+  </div>
+
+  <!-- Revenue highlight -->
+  <div class="card" style="margin-bottom: 40px; background: var(--p-black); border-color: var(--p-black); padding: 40px; box-shadow: var(--shadow-lg);">
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 32px;">
+      <div>
+        <div class="text-xs" style="font-weight: 700; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">
+          Monthly Commission Revenue
+        </div>
+        <div style="font-family: 'Poppins', sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--p-orange);">
+          ₹{{ month_fee|floatformat:2 }}
+        </div>
+        <div style="font-size: 0.875rem; color: rgba(255,255,255,0.4); margin-top: 8px;">
+          Calculated from ₹{{ month_revenue|floatformat:0 }} gross order value this month
+        </div>
+      </div>
+      <div style="text-align: right; background: rgba(255,255,255,0.05); padding: 24px; border-radius: var(--radius-md); border: 1px solid rgba(255,255,255,0.1);">
+        <div class="text-xs" style="color: rgba(255,255,255,0.4); margin-bottom: 8px; font-weight: 700; text-transform: uppercase;">
+          Unpaid Commission
+        </div>
+        <div style="font-family: 'Poppins', sans-serif; font-size: 2rem; font-weight: 800; color: #FFF;">
+          ₹{{ pending_commission|floatformat:0 }}
+        </div>
+        <a href="/billing/admin/" class="btn-primary btn-sm" style="margin-top: 16px; background: var(--p-orange); border: none; box-shadow: var(--shadow-orange);">
+          Process Billing →
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="gap: 32px; align-items: start;">
+
+    <!-- Pending approvals -->
+    <div>
+      <div class="card" style="padding: 0;">
+        <div class="card-header" style="padding: 24px 32px; border-bottom: 1px solid var(--p-border);">
+          <h3 style="font-size: 1.125rem;">Kitchen Applications</h3>
+          <a href="/admin-panel/cooks/" class="text-xs" style="color: var(--p-orange); font-weight: 700; text-transform: uppercase;">View All</a>
+        </div>
+        <div style="padding: 8px 32px 32px;">
+          {% if pending_approvals %}
+            {% for cook in pending_approvals %}
+            <div style="padding: 20px 0; border-bottom: 1px solid var(--p-border); display: flex; align-items: center; justify-content: space-between;">
+              <div>
+                <div style="font-weight: 800; font-size: 1rem; color: var(--p-gray-900);">{{ cook.kitchen_name }}</div>
+                <div style="font-size: 0.8125rem; color: var(--p-gray-500); margin-top: 4px;">
+                  Chef {{ cook.user.name }} · {{ cook.user.email }}
+                </div>
+                <div style="font-size: 0.75rem; font-weight: 600; color: var(--p-gray-400); margin-top: 4px;">
+                  Applied {{ cook.created_at|date:"d M Y" }}
+                </div>
+              </div>
+              <div style="display: flex; gap: 12px; flex-shrink: 0;">
+                <form method="post" action="/admin-panel/cooks/{{ cook.pk }}/approve/">
+                  {% csrf_token %}
+                  <button class="btn-success btn-sm" style="border-radius: 8px; font-weight: 800;">Approve</button>
+                </form>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+          <div class="empty-state" style="padding: 48px 0;">
+            <p>No pending applications today.</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Unpaid invoices -->
+    <div>
+      <div class="card" style="padding: 0;">
+        <div class="card-header" style="padding: 24px 32px; border-bottom: 1px solid var(--p-border);">
+          <h3 style="font-size: 1.125rem;">Outstanding Dues</h3>
+          <a href="/billing/admin/?status=UNPAID" class="text-xs" style="color: var(--p-orange); font-weight: 700; text-transform: uppercase;">Manage Invoices</a>
+        </div>
+        <div style="padding: 8px 32px 32px;">
+          {% if unpaid_invoices %}
+            {% for invoice in unpaid_invoices %}
+            <div style="padding: 20px 0; border-bottom: 1px solid var(--p-border); display: flex; align-items: center; justify-content: space-between;">
+              <div>
+                <div style="font-weight: 800; font-size: 1rem; color: var(--p-gray-900);">
+                  {{ invoice.cook.kitchen_name }}
+                </div>
+                <div style="font-size: 0.8125rem; color: var(--p-gray-500); margin-top: 4px;">
+                  {{ invoice.period_start|date:"F Y" }} Cycle
+                </div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-family: 'Poppins', sans-serif; font-weight: 800; color: var(--p-orange); font-size: 1.125rem;">
+                  ₹{{ invoice.commission_amount|floatformat:0 }}
+                </div>
+                <span class="badge badge-failed" style="margin-top: 6px; border: none; font-size: 0.65rem;">UNPAID</span>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+          <div class="empty-state" style="padding: 48px 0;">
+            <p>All invoices are cleared. Good job!</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent orders -->
+    <div style="grid-column: span 2;">
+      <div class="card" style="padding: 0;">
+        <div class="card-header" style="padding: 24px 32px; border-bottom: 1px solid var(--p-border);">
+          <h3 style="font-size: 1.125rem;">Live Transactions</h3>
+          <a href="/admin-panel/orders/" class="text-xs" style="color: var(--p-orange); font-weight: 700; text-transform: uppercase;">Watch Orders Log</a>
+        </div>
+        <div class="table-wrap">
+          <table style="width: 100%; border-collapse: separate; border-spacing: 0;">
+            <thead style="background: var(--p-gray-100);">
+              <tr>
+                <th style="padding: 16px 32px; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--p-gray-500);">Ref</th>
+                <th style="padding: 16px; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--p-gray-500);">Customer Info</th>
+                <th style="padding: 16px; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--p-gray-500);">Kitchen</th>
+                <th style="padding: 16px; text-align: right; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--p-gray-500);">Total Value</th>
+                <th style="padding: 16px; text-align: center; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--p-gray-500);">Payment</th>
+                <th style="padding: 16px; text-align: center; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--p-gray-500);">Fulfillment</th>
+                <th style="padding: 16px 32px; text-align: right; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--p-gray-500);">Datetime</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for order in recent_orders %}
+              <tr style="border-bottom: 1px solid var(--p-border);">
+                <td style="padding: 20px 32px; font-weight: 800; color: var(--p-gray-900);">#{{ order.pk }}</td>
+                <td style="padding: 20px 16px; font-weight: 600; font-size: 0.875rem;">{{ order.customer.name }}</td>
+                <td style="padding: 20px 16px; font-weight: 600; font-size: 0.875rem;">{{ order.cook.kitchen_name }}</td>
+                <td style="padding: 20px 16px; font-weight: 800; text-align: right; color: var(--p-black);">₹{{ order.total|floatformat:0 }}</td>
+                <td style="padding: 20px 16px; text-align: center;">
+                  <span class="badge {% if order.payment_method == 'ONLINE' %}badge-confirmed{% else %}badge-pending{% endif %}" style="border: none; font-size: 0.65rem;">
+                    {{ order.get_payment_method_display }}
+                  </span>
+                </td>
+                <td style="padding: 20px 16px; text-align: center;">
+                  <span class="badge badge-{{ order.status|lower }}" style="font-weight: 700; border: none; font-size: 0.65rem;">
+                    {{ order.get_status_display }}
+                  </span>
+                </td>
+                <td style="padding: 20px 32px; text-align: right; font-size: 0.75rem; color: var(--p-gray-500); font-weight: 500;">
+                  {{ order.placed_at|date:"d M, H:i" }}
+                </div>
+               </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<style>
+.stat-card-premium {
+  padding: 32px !important;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.stat-card-premium:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+.table-wrap tr:hover {
+  background: var(--p-gray-50);
+}
+</style>
+{% endblock %}

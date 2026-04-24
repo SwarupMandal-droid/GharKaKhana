@@ -1,0 +1,82 @@
+<div class="container animate-fade">
+
+  <div class="page-header" style="margin-bottom: 40px;">
+    <h1 style="font-size: 2.25rem;">Growth Analytics 📈</h1>
+    <p class="text-muted">Last 30 days of platform performance and revenue trends</p>
+  </div>
+
+  <!-- Bar Chart Card -->
+  <div class="card" style="margin-bottom: 32px; padding: 32px; box-shadow: var(--shadow-md);">
+    <div class="card-header" style="margin-bottom: 32px;">
+      <h3 style="font-size: 1.25rem;">Daily Orders & Revenue Velocity</h3>
+    </div>
+    
+    <div style="height: 320px; display: flex; align-items: flex-end; gap: 8px; padding: 20px 0; border-bottom: 1px solid var(--p-border);">
+      {% for day in daily_orders %}
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 12px; position: relative;" class="chart-bar-container">
+        <!-- Tooltip (Simulated) -->
+        <div class="chart-tooltip" style="position: absolute; bottom: 100%; margin-bottom: 8px; background: var(--p-black); color: white; padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; white-space: nowrap; opacity: 0; transition: var(--transition);">
+          {{ day.count }} ord / ₹{{ day.revenue }}
+        </div>
+        
+        <div class="chart-bar" style="width: 100%; background: linear-gradient(to top, var(--p-orange), var(--p-orange-mid)); height: calc({{ day.count }} * 12px); min-height: 4px; border-radius: 6px 6px 0 0; transition: transform 0.3s ease; cursor: pointer;"
+             title="{{ day.date }}: {{ day.count }} orders"></div>
+             
+        <div style="font-size: 10px; color: var(--p-gray-400); font-weight: 600; transform: rotate(-45deg); margin-top: 12px; width: 30px;">{{ day.date|slice:":6" }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="grid-2" style="gap: 32px;">
+    <!-- Top Cooks -->
+    <div class="card" style="padding: 0;">
+      <div class="card-header" style="padding: 24px 32px; border-bottom: 1px solid var(--p-border);">
+        <h3 style="font-size: 1.125rem;">Top Performing Kitchens</h3>
+      </div>
+      <div class="table-wrap">
+        <table style="width: 100%; border-collapse: separate; border-spacing: 0;">
+          <thead style="background: var(--p-gray-100);">
+            <tr>
+              <th style="padding: 16px 32px; text-align: left; font-size: 0.75rem; text-transform: uppercase; color: var(--p-gray-500);">Kitchen Name</th>
+              <th style="padding: 16px; text-align: center; font-size: 0.75rem; text-transform: uppercase; color: var(--p-gray-500);">Volume</th>
+              <th style="padding: 16px 32px; text-align: right; font-size: 0.75rem; text-transform: uppercase; color: var(--p-gray-500);">Trust Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for cook in top_cooks %}
+            <tr style="border-bottom: 1px solid var(--p-border);">
+              <td style="padding: 20px 32px; font-weight: 700; color: var(--p-gray-900);">{{ cook.kitchen_name }}</td>
+              <td style="padding: 20px 16px; text-align: center;">
+                <span class="badge" style="background: var(--p-orange-light); color: var(--p-orange); border: none; font-weight: 800;">{{ cook.order_count }} Orders</span>
+              </td>
+              <td style="padding: 20px 32px; text-align: right; font-weight: 800; color: var(--p-success);">
+                {{ cook.avg_rating|floatformat:1 }}★
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <!-- Empty filler for layout symmetry or more stats -->
+    <div class="card stat-card-premium" style="background: var(--p-orange); border: none; color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+       <div style="font-size: 4rem; margin-bottom: 16px;">🚀</div>
+       <h2 style="color: white; margin-bottom: 8px;">Sky's the Limit</h2>
+       <p style="opacity: 0.9; max-width: 240px;">GharKhana is growing 15% WoW. Keep up the great work!</p>
+    </div>
+  </div>
+
+</div>
+
+<style>
+.chart-bar-container:hover .chart-tooltip {
+  opacity: 1;
+  transform: translateY(-4px);
+}
+.chart-bar:hover {
+  transform: scaleY(1.05);
+  filter: brightness(1.1);
+}
+</style>

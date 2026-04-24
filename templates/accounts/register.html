@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% block title %}Create Account — GharKhana{% endblock %}
+
+{% block content %}
+<div class="auth-page animate-fade">
+  <div class="card auth-card" style="max-width: 520px;">
+
+    <div class="auth-logo">🍲</div>
+    <h2 style="font-size: 2rem; margin-bottom: 8px;">Create Account</h2>
+    <p class="auth-tagline">Join your neighbourhood kitchen today</p>
+
+    <form method="post" action="{% url 'accounts:register' %}">
+      {% csrf_token %}
+
+      <div class="form-group" style="text-align: left;">
+        <label class="form-label">I want to</label>
+        <div style="display: flex; gap: 12px;">
+          <label style="flex: 1; cursor: pointer;">
+            <input type="radio" name="role" value="CUSTOMER" checked style="display: none;" class="role-radio"/>
+            <div class="role-option" data-role="CUSTOMER">
+              <div style="font-size: 1.75rem; margin-bottom: 6px;">🍽️</div>
+              <div style="font-weight: 700; font-size: 1rem; color: var(--p-black);">Order</div>
+              <div style="font-size: 0.75rem; color: var(--p-gray-500);">I'm a diner</div>
+            </div>
+          </label>
+          <label style="flex: 1; cursor: pointer;">
+            <input type="radio" name="role" value="COOK" style="display: none;" class="role-radio"/>
+            <div class="role-option" data-role="COOK">
+              <div style="font-size: 1.75rem; margin-bottom: 6px;">👩‍🍳</div>
+              <div style="font-weight: 700; font-size: 1rem; color: var(--p-black);">Cook</div>
+              <div style="font-size: 0.75rem; color: var(--p-gray-500);">I'm a chef</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group" style="text-align: left;">
+        <label class="form-label">Full Name</label>
+        <input
+          type="text"
+          name="name"
+          class="form-input"
+          placeholder="Rahul Sharma"
+          required
+        />
+      </div>
+
+      <div class="grid-2" style="gap: 16px;">
+        <div class="form-group" style="text-align: left; margin-bottom: 16px;">
+          <label class="form-label">Email address</label>
+          <input
+            type="email"
+            name="email"
+            class="form-input"
+            placeholder="you@example.com"
+            required
+          />
+        </div>
+        <div class="form-group" style="text-align: left; margin-bottom: 16px;">
+          <label class="form-label">Phone number</label>
+          <input
+            type="tel"
+            name="phone"
+            class="form-input"
+            placeholder="98765 43210"
+            required
+          />
+        </div>
+      </div>
+
+      <div class="grid-2" style="gap: 16px;">
+        <div class="form-group" style="text-align: left; margin-bottom: 0;">
+          <label class="form-label">Password</label>
+          <input
+            type="password"
+            name="password"
+            class="form-input"
+            placeholder="Min. 8 chars"
+            required
+          />
+        </div>
+        <div class="form-group" style="text-align: left; margin-bottom: 0;">
+          <label class="form-label">Confirm Password</label>
+          <input
+            type="password"
+            name="confirm_password"
+            class="form-input"
+            placeholder="Repeat password"
+            required
+          />
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primary btn-full" style="margin-top: 32px; height: 52px; font-size: 1rem;">
+        Get Started
+      </button>
+    </form>
+
+    <div class="auth-divider">or continue with</div>
+
+    <p style="text-align: center; font-size: 0.95rem; color: var(--p-gray-500);">
+      Already have an account?
+      <a href="{% url 'accounts:login' %}" style="color: var(--p-orange); font-weight: 700;">
+        Sign in
+      </a>
+    </p>
+
+  </div>
+</div>
+
+<style>
+.role-option {
+  border: 1.5px solid var(--gray-300);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  text-align: center;
+  transition: border-color .15s, background .15s;
+}
+.role-option:hover { border-color: var(--orange-mid); background: var(--orange-light); }
+.role-option.selected { border-color: var(--orange); background: var(--orange-light); }
+</style>
+
+<script>
+document.querySelectorAll('.role-radio').forEach(function(radio) {
+  radio.addEventListener('change', function() {
+    document.querySelectorAll('.role-option').forEach(function(opt) {
+      opt.classList.remove('selected');
+    });
+    document.querySelector('.role-option[data-role="' + radio.value + '"]').classList.add('selected');
+  });
+});
+document.querySelector('.role-radio[value="CUSTOMER"]').dispatchEvent(new Event('change'));
+</script>
+
+{% endblock %}

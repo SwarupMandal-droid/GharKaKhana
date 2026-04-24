@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+{% block title %}Billing — GharKhana{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <div class="page-header">
+    <h2>Billing & Commission</h2>
+    <p>Track your earnings and commission invoices</p>
+  </div>
+
+  <!-- This month live preview -->
+  <div class="card" style="margin-bottom:24px;background:var(--orange);border-color:var(--orange-dark)">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">
+      <div>
+        <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">
+          This month's earnings · {{ today|date:"F Y" }}
+        </div>
+        <div style="font-family:'Syne',sans-serif;font-size:2.5rem;font-weight:800;color:white">
+          ₹{{ current_month_gross|floatformat:0 }}
+        </div>
+        <div style="font-size:13px;color:rgba(255,255,255,.8);margin-top:4px">
+          5% commission = ₹{{ current_month_commission|floatformat:2 }}
+          (billed on 1st of next month)
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:12px;color:rgba(255,255,255,.7);margin-bottom:4px">Outstanding</div>
+        <div style="font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:700;color:white">
+          ₹{{ total_unpaid|floatformat:2 }}
+        </div>
+        <div style="font-size:12px;color:rgba(255,255,255,.7);margin-top:2px">
+          ₹{{ total_paid|floatformat:2 }} paid total
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="gap:24px;align-items:start">
+
+    <!-- Invoices list -->
+    <div style="grid-column: span 2">
+      <div class="card">
+        <div class="card-header">
+          <h3>Commission invoices</h3>
+          <span class="text-sm text-muted">5% of monthly gross earnings</span>
+        </div>
+
+        {% if invoices %}
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Period</th>
+                <th>Gross earnings</th>
+                <th>Commission (5%)</th>
+                <th>Due date</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for invoice in invoices %}
+              <tr>
+                <td>
+                  <div style="font-weight:600">
+                    {{ invoice.period_start|date:"F Y" }}
+                  </div>
+                  <div style="font-size:12px;color:var(--gray-500)">
+                    {{ invoice.period_start|date:"d M" }} –
+                    {{ invoice.period_end|date:"d M Y" }}
+                  </div>
+                </td>
+                <td style="font-weight:600">₹{{ invoice.gross_earnings|floatformat:2 }}</td>
+                <td>
+                  <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:1.1rem;color:var(--orange)">
+                    ₹{{ invoice.commission_amount|floatformat:2 }}
+                  </span>
+                </td>
+                <td>
+                  <div style="font-size:13px">{{ invoice.due_date|date:"d M Y" }}</div>
+                  {% if invoice.status == 'UNPAID' %}
+                    {% now "Y-m-d" as today_str %}
+                    <div style="font-size:11px;color:var(--red)">
+                      Due in {{ invoice.due_date|timeuntil }}
+                    </div>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if invoice.status == 'PAID' %}
+                    <span class="badge badge-delivered">Paid</span>
+                    <div style="font-size:11px;color:var(--gray-500);margin-top:2px">
+                      {{ invoice.paid_at|date:"d M Y" }}
+                    </div>
+                  {% else %}
+                    <span class="badge badge-pending">Unpaid</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if invoice.status == 'UNPAID' %}
+                    {% if bank_detail and bank_detail.upi_id %}
+                    <a href="upi://pay?pa={{ bank_detail.upi_id }}&pn=GharKhana+Commission&am={{ invoice.commission_amount }}&tn=GharKhana+Commission+{{ invoice.period_start|date:'M+Y' }}&cu=INR"
+                       class="btn-primary btn-sm"
+                       style="display:inline-flex;align-items:center;gap:4px;white-space:nowrap">
+                      Pay ₹{{ invoice.commission_amount|floatformat:0 }} via UPI
+                    </a>
+                    {% else %}
+                    <a href="#bank-details"
+                       class="btn-secondary btn-sm">
+                      Add UPI to pay
+                    </a>
+                    {% endif %}
+                  {% else %}
+                    <span style="font-size:12px;color:var(--gray-500)">—</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        {% else %}
+        <div class="empty-state" style="padding:40px 0">
+          <div class="empty-state-icon">🧾</div>
+          <h3>No invoices yet</h3>
+          <p>Your first invoice will be generated on the 1st of next month.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- UPI / Bank details -->
+    <div id="bank-details">
+      <div class="card">
+        <div class="card-header">
+          <h3>Payment details</h3>
+          <span class="text-sm text-muted">Used for UPI Pay button</span>
+        </div>
+
+        <form method="post" action="/billing/cook/bank-details/">
+          {% csrf_token %}
+
+          <div class="form-group">
+            <label class="form-label">UPI ID</label>
+            <input type="text" name="upi_id" class="form-input"
+                   value="{{ bank_detail.upi_id|default:'' }}"
+                   placeholder="yourname@upi"/>
+            <div class="form-hint">
+              This is where GharKhana will direct commission payments.
+              Enter your UPI ID so the Pay button works.
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div style="font-size:13px;font-weight:600;color:var(--gray-500);margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em">
+            Bank account (optional)
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Account holder name</label>
+            <input type="text" name="account_name" class="form-input"
+                   value="{{ bank_detail.account_name|default:'' }}"
+                   placeholder="Full name as on bank account"/>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Account number</label>
+            <input type="text" name="account_number" class="form-input"
+                   value="{{ bank_detail.account_number|default:'' }}"
+                   placeholder="Bank account number"/>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">IFSC code</label>
+            <input type="text" name="ifsc_code" class="form-input"
+                   value="{{ bank_detail.ifsc_code|default:'' }}"
+                   placeholder="e.g. SBIN0001234"/>
+          </div>
+
+          <button type="submit" class="btn-primary">Save details</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- How commission works -->
+    <div>
+      <div class="card" style="background:var(--orange-light);border-color:var(--orange-mid)">
+        <h3 style="margin-bottom:12px;color:var(--orange-dark)">How commission works</h3>
+        <div style="display:flex;flex-direction:column;gap:10px;font-size:14px;color:var(--gray-700)">
+          <div style="display:flex;gap:10px">
+            <span style="color:var(--orange);font-weight:700;flex-shrink:0">1.</span>
+            <span>You receive full payment from customers (online or COD) throughout the month.</span>
+          </div>
+          <div style="display:flex;gap:10px">
+            <span style="color:var(--orange);font-weight:700;flex-shrink:0">2.</span>
+            <span>On the 1st of every month, GharKhana calculates 5% of your total delivered order earnings.</span>
+          </div>
+          <div style="display:flex;gap:10px">
+            <span style="color:var(--orange);font-weight:700;flex-shrink:0">3.</span>
+            <span>An invoice is generated with a 15-day payment window.</span>
+          </div>
+          <div style="display:flex;gap:10px">
+            <span style="color:var(--orange);font-weight:700;flex-shrink:0">4.</span>
+            <span>Click Pay via UPI to pay directly through your UPI app. Admin will confirm receipt.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

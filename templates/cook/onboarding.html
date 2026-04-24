@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+{% block title %}Complete Your Kitchen Profile — GharKhana{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:700px;padding:40px 20px">
+
+  <div style="text-align:center;margin-bottom:40px">
+    <div style="font-size:3.5rem;margin-bottom:12px">👩‍🍳</div>
+    <h1 style="font-size:2rem;margin-bottom:8px">Set Up Your Kitchen</h1>
+    <p style="color:var(--gray-500);max-width:480px;margin:0 auto">
+      Welcome to GharKhana! Complete your kitchen profile so customers can find and order from you.
+    </p>
+  </div>
+
+  <div class="card" style="padding:0">
+    <div style="background:linear-gradient(135deg,var(--orange),#e67e22);padding:20px 28px;border-radius:var(--radius-lg) var(--radius-lg) 0 0">
+      <h2 style="color:#fff;font-size:1.2rem;margin:0">Kitchen Details</h2>
+      <p style="color:rgba(255,255,255,0.8);font-size:0.875rem;margin:4px 0 0">Step 1 of 1 — Fill in your kitchen information</p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" style="padding:28px">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="message message-error" style="margin-bottom:20px">
+          {% for err in form.non_field_errors %}{{ err }}{% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="grid-2" style="gap:20px">
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Kitchen Name <span style="color:var(--orange)">*</span></label>
+          {{ form.kitchen_name }}
+          {% if form.kitchen_name.errors %}<p style="color:#e74c3c;font-size:12px;margin-top:4px">{{ form.kitchen_name.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Phone Number <span style="color:var(--orange)">*</span></label>
+          {{ form.phone }}
+          {% if form.phone.errors %}<p style="color:#e74c3c;font-size:12px;margin-top:4px">{{ form.phone.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Daily Order Cutoff Time <span style="color:var(--orange)">*</span></label>
+          {{ form.order_cutoff }}
+          <p style="font-size:12px;color:var(--gray-500);margin-top:4px">Orders after this time will not be accepted.</p>
+          {% if form.order_cutoff.errors %}<p style="color:#e74c3c;font-size:12px;margin-top:4px">{{ form.order_cutoff.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Kitchen Address <span style="color:var(--orange)">*</span></label>
+          {{ form.address }}
+          {% if form.address.errors %}<p style="color:#e74c3c;font-size:12px;margin-top:4px">{{ form.address.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Latitude <span style="color:var(--orange)">*</span></label>
+          {{ form.latitude }}
+          <p style="font-size:12px;color:var(--gray-500);margin-top:4px">e.g. 22.5726</p>
+          {% if form.latitude.errors %}<p style="color:#e74c3c;font-size:12px;margin-top:4px">{{ form.latitude.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Longitude <span style="color:var(--orange)">*</span></label>
+          {{ form.longitude }}
+          <p style="font-size:12px;color:var(--gray-500);margin-top:4px">e.g. 88.3639</p>
+          {% if form.longitude.errors %}<p style="color:#e74c3c;font-size:12px;margin-top:4px">{{ form.longitude.errors.0 }}</p>{% endif %}
+        </div>
+
+        <!-- Adding Map Feature -->
+        <div class="form-group" style="grid-column:1/-1; margin-bottom: 20px;">
+          <label class="form-label">Choose on Map</label>
+          <div id="map" style="height: 300px; border-radius: var(--radius-md); border: 1px solid var(--gray-200); overflow: hidden;"></div>
+          <p style="font-size:12px;color:var(--gray-500);margin-top:8px">
+            📍 Click anywhere on the map to set your kitchen location. Address, latitude and longitude will be auto-filled.
+          </p>
+        </div>
+
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Bio / About your kitchen</label>
+          {{ form.bio }}
+          {% if form.bio.errors %}<p style="color:#e74c3c;font-size:12px;margin-top:4px">{{ form.bio.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Cuisine Tags</label>
+          {{ form.cuisine_tags }}
+          <p style="font-size:12px;color:var(--gray-500);margin-top:4px">e.g. Bengali, North Indian, Chinese</p>
+          {% if form.cuisine_tags.errors %}<p style="color:#e74c3c;font-size:12px;margin-top:4px">{{ form.cuisine_tags.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Daily Capacity (max orders)</label>
+          {{ form.daily_capacity }}
+          {% if form.daily_capacity.errors %}<p style="color:#e74c3c;font-size:12px;margin-top:4px">{{ form.daily_capacity.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div class="form-group" style="grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:16px;background:var(--gray-50);border-radius:var(--radius-md)">
+          {{ form.same_day_enabled }}
+          <div>
+            <label class="form-label" style="margin:0">Allow Same-Day Orders</label>
+            <p style="font-size:12px;color:var(--gray-500);margin:0">Let customers order for the same day (up to 35% of capacity).</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:28px;display:flex;gap:12px">
+        <button type="submit" class="btn-primary" style="flex:1;height:48px;font-size:1rem">
+          Complete Profile & Go to Dashboard →
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+var map = L.map('map').setView([22.5726, 88.3639], 12);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap contributors'
+}).addTo(map);
+
+var marker = null;
+
+var orangeIcon = L.divIcon({
+  className: '',
+  html: '<div style="width:24px;height:24px;background:#FF6B00;border-radius:50%;border:4px solid white;box-shadow:0 4px 12px rgba(255,107,0,0.4)"></div>',
+  iconSize: [24, 24],
+  iconAnchor: [12, 12],
+});
+
+map.on('click', function(e) {
+  var lat = e.latlng.lat.toFixed(6);
+  var lng = e.latlng.lng.toFixed(6);
+
+  if (marker) {
+    marker.setLatLng(e.latlng);
+  } else {
+    marker = L.marker(e.latlng, { icon: orangeIcon, draggable: true }).addTo(map);
+    marker.on('dragend', function(ev) {
+      var pos = ev.target.getLatLng();
+      updateCoords(pos.lat.toFixed(6), pos.lng.toFixed(6));
+      reverseGeocode(pos.lat, pos.lng);
+    });
+  }
+
+  updateCoords(lat, lng);
+  reverseGeocode(lat, lng);
+});
+
+function updateCoords(lat, lng) {
+  var latInput = document.getElementById('id_latitude');
+  var lngInput = document.getElementById('id_longitude');
+  if (latInput) latInput.value = lat;
+  if (lngInput) lngInput.value = lng;
+}
+
+function reverseGeocode(lat, lng) {
+  fetch('https://nominatim.openstreetmap.org/reverse?lat=' + lat + '&lon=' + lng + '&format=json')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data && data.display_name) {
+        var addrInput = document.getElementById('id_address');
+        if (addrInput) addrInput.value = data.display_name;
+      }
+    })
+    .catch(function() {});
+}
+</script>
+{% endblock %}

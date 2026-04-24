@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+{% block title %}Admin Billing — GharKhana{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <div class="page-header">
+    <h2>Platform billing</h2>
+    <p>Commission invoices across all cooks</p>
+  </div>
+
+  <!-- Platform stats -->
+  <div class="grid-4" style="margin-bottom:28px">
+    <div class="stat-card">
+      <div class="stat-label">Commission collected</div>
+      <div class="stat-value">₹{{ total_commission_collected|floatformat:0 }}</div>
+      <div class="stat-sub up">All time</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Commission pending</div>
+      <div class="stat-value">₹{{ total_commission_pending|floatformat:0 }}</div>
+      <div class="stat-sub warn">Outstanding</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Platform fees collected</div>
+      <div class="stat-value">₹{{ total_platform_fee|floatformat:0 }}</div>
+      <div class="stat-sub up">0.2% per order</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total invoices</div>
+      <div class="stat-value">{{ invoices|length }}</div>
+      <div class="stat-sub up">All time</div>
+    </div>
+  </div>
+
+  <!-- Generate invoices manually -->
+  <div class="card" style="margin-bottom:24px;border-color:var(--orange-mid);background:var(--orange-light)">
+    <div class="card-header">
+      <h3 style="color:var(--orange-dark)">Generate invoices manually</h3>
+    </div>
+    <form method="post" action="/billing/admin/generate/"
+          style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
+      {% csrf_token %}
+      <div>
+        <label class="form-label">Month</label>
+        <select name="month" class="form-select" style="width:140px">
+          <option value="">Last month (default)</option>
+          {% for m in "123456789101112"|make_list %}
+          <option value="{{ forloop.counter }}">{{ forloop.counter }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Year</label>
+        <input type="number" name="year" class="form-input"
+               style="width:110px" placeholder="2026"/>
+      </div>
+      <button type="submit" class="btn-primary"
+              data-confirm="Generate commission invoices for all cooks?">
+        Generate invoices
+      </button>
+    </form>
+    <div class="form-hint" style="margin-top:10px">
+      Invoices auto-generate on the 1st of every month via management command.
+      Use this to regenerate manually if needed.
+    </div>
+  </div>
+
+  <!-- Filter -->
+  <div style="display:flex;gap:10px;margin-bottom:16px">
+    <a href="/billing/admin/"
+       class="btn-ghost btn-sm {% if not status_filter %}active-filter{% endif %}">
+      All
+    </a>
+    <a href="/billing/admin/?status=UNPAID"
+       class="btn-ghost btn-sm {% if status_filter == 'UNPAID' %}active-filter{% endif %}">
+      Unpaid
+    </a>
+    <a href="/billing/admin/?status=PAID"
+       class="btn-ghost btn-sm {% if status_filter == 'PAID' %}active-filter{% endif %}">
+      Paid
+    </a>
+  </div>
+
+  <!-- Invoices table -->
+  <div class="card">
+    {% if invoices %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Cook</th>
+            <th>Period</th>
+            <th>Gross earnings</th>
+            <th>Commission (5%)</th>
+            <th>Due date</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for invoice in invoices %}
+          <tr>
+            <td>
+              <div style="font-weight:600">{{ invoice.cook.kitchen_name }}</div>
+              <div style="font-size:12px;color:var(--gray-500)">
+                {{ invoice.cook.user.email }}
+              </div>
+            </td>
+            <td>
+              <div style="font-weight:600">{{ invoice.period_start|date:"F Y" }}</div>
+            </td>
+            <td style="font-weight:600">₹{{ invoice.gross_earnings|floatformat:2 }}</td>
+            <td>
+              <span style="font-family:'Syne',sans-serif;font-weight:700;
+                           font-size:1rem;color:var(--orange)">
+                ₹{{ invoice.commission_amount|floatformat:2 }}
+              </span>
+            </td>
+            <td>
+              <div style="font-size:13px">{{ invoice.due_date|date:"d M Y" }}</div>
+              {% if invoice.status == 'UNPAID' %}
+              <div style="font-size:11px;color:var(--red)">
+                {{ invoice.due_date|timeuntil }} left
+              </div>
+              {% endif %}
+            </td>
+            <td>
+              {% if invoice.status == 'PAID' %}
+                <span class="badge badge-delivered">Paid</span>
+                <div style="font-size:11px;color:var(--gray-500);margin-top:2px">
+                  {{ invoice.paid_at|date:"d M Y" }}
+                </div>
+                {% if invoice.payment_ref %}
+                <div style="font-size:11px;color:var(--gray-500)">
+                  Ref: {{ invoice.payment_ref }}
+                </div>
+                {% endif %}
+              {% else %}
+                <span class="badge badge-pending">Unpaid</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if invoice.status == 'UNPAID' %}
+              <button onclick="openPayModal({{ invoice.pk }}, '{{ invoice.cook.kitchen_name }}', '{{ invoice.commission_amount }}')"
+                      class="btn-success btn-sm">
+                Mark paid
+              </button>
+              {% else %}
+              <span style="font-size:12px;color:var(--gray-500)">—</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% else %}
+    <div class="empty-state" style="padding:40px 0">
+      <div class="empty-state-icon">🧾</div>
+      <h3>No invoices yet</h3>
+      <p>Generate invoices using the panel above.</p>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+
+<!-- Mark paid modal -->
+<div id="pay-modal"
+     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);
+            z-index:200;align-items:center;justify-content:center">
+  <div class="card" style="width:100%;max-width:420px;margin:20px">
+    <div class="card-header">
+      <h3>Mark invoice as paid</h3>
+      <button onclick="closePayModal()"
+              style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--gray-500)">×</button>
+    </div>
+    <p id="modal-cook-name"
+       style="font-size:14px;color:var(--gray-500);margin-bottom:16px"></p>
+    <form method="post" id="pay-form" action="">
+      {% csrf_token %}
+      <div class="form-group">
+        <label class="form-label">Payment reference (optional)</label>
+        <input type="text" name="payment_ref" class="form-input"
+               placeholder="UPI transaction ID or bank ref"/>
+        <div class="form-hint">
+          Enter the UPI transaction ID or bank reference for record keeping.
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:8px">
+        <button type="submit" class="btn-success">Confirm paid</button>
+        <button type="button" onclick="closePayModal()" class="btn-ghost">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.active-filter {
+  background: var(--orange-light);
+  color: var(--orange);
+  border-color: var(--orange-mid);
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openPayModal(invoiceId, cookName, amount) {
+  document.getElementById('pay-form').action =
+    '/billing/admin/invoice/' + invoiceId + '/paid/';
+  document.getElementById('modal-cook-name').textContent =
+    cookName + ' — ₹' + parseFloat(amount).toFixed(2) + ' commission';
+  document.getElementById('pay-modal').style.display = 'flex';
+}
+function closePayModal() {
+  document.getElementById('pay-modal').style.display = 'none';
+}
+document.getElementById('pay-modal').addEventListener('click', function(e) {
+  if (e.target === this) closePayModal();
+});
+</script>
+{% endblock %}

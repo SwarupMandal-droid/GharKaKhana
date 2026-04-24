@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% block title %}Add Address — GharKhana{% endblock %}
+
+{% block content %}<div class="container animate-fade" style="max-width: 720px;">
+  <div class="page-header" style="margin-bottom: 40px;">
+    <h1 style="font-size: 2.25rem;">Add Address</h1>
+    <p class="text-muted">Pin your exact delivery location for precise service</p>
+  </div>
+
+  <div class="card" style="padding: 32px;">
+    <!-- Leaflet map -->
+    <div style="margin-bottom: 32px;">
+      <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+        Pin your location
+        <span class="text-xs text-muted" style="font-weight: normal;">Search tool coming soon</span>
+      </label>
+      <div id="map" style="height: 360px; border-radius: var(--radius-lg); border: 2px solid var(--p-border); overflow: hidden; box-shadow: var(--shadow-sm);"></div>
+      <p class="text-xs text-muted" style="margin-top: 12px; display: flex; align-items: center; gap: 6px;">
+        <span style="font-size: 1rem;">📍</span> Click anywhere on the map to set your delivery point.
+      </p>
+    </div>
+
+    <form method="post" action="{% url 'accounts:add_address' %}">
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label class="form-label">Address label</label>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+          <input type="radio" name="label" value="Home" id="label_home" style="display: none;" {% if label == 'Home' or not label %}checked{% endif %}>
+          <label for="label_home" class="label-choice">Home</label>
+
+          <input type="radio" name="label" value="Office" id="label_office" style="display: none;" {% if label == 'Office' %}checked{% endif %}>
+          <label for="label_office" class="label-choice">Office</label>
+
+          <input type="radio" name="label" value="Other" id="label_other" style="display: none;" {% if label == 'Other' %}checked{% endif %}>
+          <label for="label_other" class="label-choice">Other</label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Detailed Address</label>
+        <textarea
+          name="address"
+          id="id_address"
+          class="form-textarea"
+          placeholder="Address will auto-fill when you pin location"
+          rows="3"
+          required
+        >{{ address|default:'' }}</textarea>
+      </div>
+
+      <div class="grid-2" style="gap: 16px;">
+        <div class="form-group">
+          <label class="form-label">Latitude</label>
+          <input type="text" name="latitude" id="id_latitude"
+                 class="form-input" style="background: var(--p-gray-100); cursor: not-allowed;" readonly placeholder="Pinned automatically"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Longitude</label>
+          <input type="text" name="longitude" id="id_longitude"
+                 class="form-input" style="background: var(--p-gray-100); cursor: not-allowed;" readonly placeholder="Pinned automatically"/>
+        </div>
+      </div>
+
+      <div class="form-group" style="padding: 16px; background: var(--p-orange-light); border-radius: var(--radius-md); border: 1px solid var(--p-orange-mid);">
+        <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+          <input type="checkbox" name="is_default" id="is_default" 
+                 {% if is_default %}checked{% endif %}
+                 style="width: 20px; height: 20px; accent-color: var(--p-orange); cursor: pointer;"/>
+          <span style="font-size: 0.9375rem; font-weight: 600; color: var(--p-orange-dark);">Set as default delivery address</span>
+        </label>
+      </div>
+
+      <div style="display: flex; gap: 16px; margin-top: 32px; padding-top: 32px; border-top: 1px solid var(--p-border);">
+        <button type="submit" class="btn-primary" style="flex: 2; height: 52px;">Save address</button>
+        <a href="{% url 'accounts:profile' %}" class="btn-outline" style="flex: 1; height: 52px; display: flex; align-items: center; justify-content: center;">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+.label-choice {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  border: 1.5px solid var(--p-border);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: var(--p-gray-700);
+  cursor: pointer;
+  transition: var(--transition);
+}
+input[type="radio"]:checked + .label-choice {
+  border-color: var(--p-orange);
+  background: var(--p-orange-light);
+  color: var(--p-orange);
+  box-shadow: 0 0 0 4px var(--p-orange-light);
+}
+.label-choice:hover {
+  background: var(--p-gray-100);
+}
+</style>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+var map = L.map('map').setView([22.6193, 88.4217], 14);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap contributors'
+}).addTo(map);
+
+var marker = null;
+
+var orangeIcon = L.divIcon({
+  className: '',
+  html: '<div style="width:24px;height:24px;background:#FF6B00;border-radius:50%;border:4px solid white;box-shadow:0 4px 12px rgba(255,107,0,0.4)"></div>',
+  iconSize: [24, 24],
+  iconAnchor: [12, 12],
+});
+
+map.on('click', function(e) {
+  var lat = e.latlng.lat.toFixed(6);
+  var lng = e.latlng.lng.toFixed(6);
+
+  if (marker) {
+    marker.setLatLng(e.latlng);
+  } else {
+    marker = L.marker(e.latlng, { icon: orangeIcon, draggable: true }).addTo(map);
+    marker.on('dragend', function(ev) {
+      var pos = ev.target.getLatLng();
+      updateCoords(pos.lat.toFixed(6), pos.lng.toFixed(6));
+      reverseGeocode(pos.lat, pos.lng);
+    });
+  }
+
+  updateCoords(lat, lng);
+  reverseGeocode(lat, lng);
+});
+
+function updateCoords(lat, lng) {
+  document.getElementById('id_latitude').value  = lat;
+  document.getElementById('id_longitude').value = lng;
+}
+
+function reverseGeocode(lat, lng) {
+  fetch('https://nominatim.openstreetmap.org/reverse?lat=' + lat + '&lon=' + lng + '&format=json')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data && data.display_name) {
+        document.getElementById('id_address').value = data.display_name;
+      }
+    })
+    .catch(function() {});
+}
+</script>
+{% endblock %}

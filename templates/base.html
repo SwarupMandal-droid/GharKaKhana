@@ -1,0 +1,74 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}GharKhana{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/main.css' %}">
+
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+  {% if user.is_authenticated %}
+  <nav class="navbar">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">GharKhana</a>
+      <div class="nav-links">
+        {% if user.role == 'CUSTOMER' %}
+          <a href="/cooks/" class="nav-link {% block nav_home %}{% endblock %}">Home</a>
+          <a href="/orders/" class="nav-link {% block nav_orders %}{% endblock %}">My Orders</a>
+          <a href="/accounts/profile/" class="nav-link {% block nav_profile %}{% endblock %}">Profile</a>
+        {% elif user.role == 'COOK' %}
+          <a href="/cook/dashboard/" class="nav-link {% block nav_dash %}{% endblock %}">Dashboard</a>
+          <a href="/cook/menu/" class="nav-link {% block nav_menu %}{% endblock %}">Menu</a>
+          <a href="/cook/orders/" class="nav-link {% block nav_cordrs %}{% endblock %}">Orders</a>
+          <a href="/cook/dishes/" class="nav-link {% block nav_dishes %}{% endblock %}">Dishes</a>
+          <a href="/billing/cook/" class="nav-link {% block nav_billing %}{% endblock %}">Billing</a>
+          <a href="/cook/settings/" class="nav-link {% block nav_settings %}{% endblock %}">Settings</a>
+        {% elif user.role == 'DELIVERY' %}
+          <a href="/delivery/dashboard/" class="nav-link {% block nav_del %}{% endblock %}">Dashboard</a>
+        {% elif user.role == 'ADMIN' %}
+          <a href="/admin-panel/"         class="nav-link">Dashboard</a>
+          <a href="/admin-panel/cooks/"   class="nav-link">Cook approvals</a>
+          <a href="/admin-panel/orders/"  class="nav-link">All orders</a>
+          <a href="/billing/admin/"       class="nav-link">Billing</a>
+        {% endif %}
+      </div>
+      <div class="nav-right">
+        <a href="/accounts/notifications/" class="nav-link" style="font-size: 1.2rem; padding: 8px 12px;" title="Notifications">
+          🔔
+        </a>
+
+        {% if user.role == 'CUSTOMER' %}
+          <a href="/orders/cart/" class="btn-ghost btn-sm">Cart</a>
+        {% endif %}
+        <a href="/accounts/logout/" class="btn-outline btn-sm">Sign out</a>
+      </div>
+    </div>
+  </nav>
+  {% endif %}
+
+  {% if messages %}
+  <div class="messages-wrap">
+    {% for message in messages %}
+    <div class="message message-{{ message.tags }}">
+      {{ message }}
+      <button class="message-close" onclick="this.parentElement.remove()">×</button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <script src="{% static 'js/main.js' %}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

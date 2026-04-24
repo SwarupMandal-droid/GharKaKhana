@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block title %}Kitchen Settings — GharKhana{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:700px">
+  <div style="margin-bottom:30px">
+    <h1 style="margin-bottom:4px">Kitchen Settings</h1>
+    <p style="color:var(--gray-500)">Update your kitchen details and preferences.</p>
+  </div>
+
+  <div class="card" style="padding:0;margin-bottom:24px">
+    <div style="padding:20px 28px;border-bottom:1px solid var(--gray-100)">
+      <h3 style="margin:0">Profile Information</h3>
+    </div>
+    <form method="post" enctype="multipart/form-data" style="padding:28px">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="message message-error" style="margin-bottom:20px">
+          {% for err in form.non_field_errors %}{{ err }}{% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="grid-2" style="gap:20px">
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Kitchen Name</label>
+          {{ form.kitchen_name }}
+          {% if form.kitchen_name.errors %}<p style="color:#e74c3c;font-size:12px;margin-top:4px">{{ form.kitchen_name.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Phone Number</label>
+          {{ form.phone }}
+          {% if form.phone.errors %}<p style="color:#e74c3c;font-size:12px;margin-top:4px">{{ form.phone.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Daily Order Cutoff Time</label>
+          {{ form.order_cutoff }}
+          {% if form.order_cutoff.errors %}<p style="color:#e74c3c;font-size:12px;margin-top:4px">{{ form.order_cutoff.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Kitchen Address</label>
+          {{ form.address }}
+          {% if form.address.errors %}<p style="color:#e74c3c;font-size:12px;margin-top:4px">{{ form.address.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Latitude</label>
+          {{ form.latitude }}
+          {% if form.latitude.errors %}<p style="color:#e74c3c;font-size:12px;margin-top:4px">{{ form.latitude.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Longitude</label>
+          {{ form.longitude }}
+          {% if form.longitude.errors %}<p style="color:#e74c3c;font-size:12px;margin-top:4px">{{ form.longitude.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Bio / About your kitchen</label>
+          {{ form.bio }}
+          {% if form.bio.errors %}<p style="color:#e74c3c;font-size:12px;margin-top:4px">{{ form.bio.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Cuisine Tags</label>
+          {{ form.cuisine_tags }}
+          <p style="font-size:12px;color:var(--gray-500);margin-top:4px">e.g. Bengali, North Indian</p>
+          {% if form.cuisine_tags.errors %}<p style="color:#e74c3c;font-size:12px;margin-top:4px">{{ form.cuisine_tags.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Daily Capacity</label>
+          {{ form.daily_capacity }}
+          {% if form.daily_capacity.errors %}<p style="color:#e74c3c;font-size:12px;margin-top:4px">{{ form.daily_capacity.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div class="form-group" style="grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:16px;background:var(--gray-50);border-radius:var(--radius-md)">
+          {{ form.same_day_enabled }}
+          <div>
+            <label class="form-label" style="margin:0">Allow Same-Day Orders</label>
+            <p style="font-size:12px;color:var(--gray-500);margin:0">Allow customers to order for the same day.</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:24px;display:flex;gap:12px">
+        <button type="submit" class="btn-primary">Save Changes</button>
+        <a href="{% url 'cook:dashboard' %}" class="btn-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+
+  <!-- Delivery Slots shortcut -->
+  <div class="card" style="padding:20px 28px;display:flex;align-items:center;justify-content:space-between">
+    <div>
+      <h3 style="margin:0 0 4px">Delivery Slots</h3>
+      <p style="color:var(--gray-500);margin:0;font-size:13px">Manage the time windows when you deliver orders.</p>
+    </div>
+    <a href="{% url 'cook:slot_list' %}" class="btn-secondary">Manage Slots →</a>
+  </div>
+</div>
+{% endblock %}

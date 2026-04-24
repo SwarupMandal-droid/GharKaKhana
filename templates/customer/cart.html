@@ -1,0 +1,283 @@
+{% extends 'base.html' %}
+{% block title %}Checkout — GharKhana{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:780px">
+
+  <div class="page-header">
+    <h2>Checkout</h2>
+    <p>Review your order before placing</p>
+  </div>
+
+  <div id="no-cart" style="display:none">
+    <div class="empty-state">
+      <div class="empty-state-icon">🛒</div>
+      <h3>Your cart is empty</h3>
+      <p>Go back and add some dishes first</p>
+      <a href="/cooks/" class="btn-primary" style="margin-top:16px;display:inline-block">
+        Browse cooks
+      </a>
+    </div>
+  </div>
+
+  <div id="cart-content">
+    <!-- Order items -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header">
+        <h3>Order items</h3>
+        <span id="cook-name" style="font-size:14px;color:var(--gray-500)"></span>
+      </div>
+      <div id="checkout-items"></div>
+    </div>
+
+    <!-- Delivery details -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header"><h3>Delivery details</h3></div>
+
+      <div class="form-group">
+        <label class="form-label">Delivery address</label>
+        {% if addresses %}
+        <select name="address_id" id="address_id" class="form-select">
+          {% for addr in addresses %}
+          <option value="{{ addr.pk }}" {% if addr.is_default %}selected{% endif %}>
+            {{ addr.label }} — {{ addr.address|truncatechars:60 }}
+          </option>
+          {% endfor %}
+        </select>
+        {% else %}
+        <div class="message message-warning">
+          No saved address.
+          <a href="/accounts/address/add/" style="color:inherit;font-weight:600;text-decoration:underline">
+            Add one first
+          </a>
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Delivery type</label>
+        <div style="display:flex;gap:10px">
+          <label style="flex:1;cursor:pointer">
+            <input type="radio" name="delivery_type" value="DELIVERY"
+                   id="type_delivery" checked style="display:none" class="delivery-radio"/>
+            <div class="delivery-type-card selected" id="card_delivery">
+              <div style="font-weight:600;font-size:15px">🛵 Delivery</div>
+              <div id="delivery-charge-label" style="font-size:13px;color:var(--gray-500);margin-top:2px">
+                Charge based on distance
+              </div>
+            </div>
+          </label>
+          <label style="flex:1;cursor:pointer" id="pickup-option" style="display:none">
+            <input type="radio" name="delivery_type" value="PICKUP"
+                   id="type_pickup" style="display:none" class="delivery-radio"/>
+            <div class="delivery-type-card" id="card_pickup">
+              <div style="font-weight:600;font-size:15px">🚶 Self pickup</div>
+              <div style="font-size:13px;color:var(--gray-500);margin-top:2px">Free · Within 1 km</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Payment method</label>
+        <div style="display:flex;gap:10px">
+          <label style="flex:1;cursor:pointer">
+            <input type="radio" name="payment_method" value="ONLINE"
+                   id="pay_online" checked style="display:none" class="pay-radio"/>
+            <div class="delivery-type-card selected" id="card_online">
+              <div style="font-weight:600;font-size:15px">💳 Pay now</div>
+              <div style="font-size:13px;color:var(--gray-500);margin-top:2px">UPI / Card / Net banking</div>
+            </div>
+          </label>
+          <label style="flex:1;cursor:pointer">
+            <input type="radio" name="payment_method" value="COD"
+                   id="pay_cod" style="display:none" class="pay-radio"/>
+            <div class="delivery-type-card" id="card_cod">
+              <div style="font-weight:600;font-size:15px">💵 Cash on delivery</div>
+              <div style="font-size:13px;color:var(--gray-500);margin-top:2px">Pay when food arrives</div>
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bill summary -->
+    <div class="card" style="margin-bottom:24px">
+      <div class="card-header"><h3>Bill summary</h3></div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;justify-content:space-between;font-size:14px">
+          <span style="color:var(--gray-500)">Subtotal</span>
+          <span id="bill-subtotal" style="font-weight:600">₹0</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:13px">
+          <span style="color:var(--gray-500)">Platform fee (0.2%)</span>
+          <span id="bill-fee">₹0</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:13px">
+          <span style="color:var(--gray-500)">Delivery charge</span>
+          <span id="bill-delivery">₹0</span>
+        </div>
+        <div style="height:1px;background:var(--gray-100);margin:4px 0"></div>
+        <div style="display:flex;justify-content:space-between;font-size:17px;font-weight:700">
+          <span>Total</span>
+          <span id="bill-total" style="color:var(--orange)">₹0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Place order -->
+    <form method="post" action="/orders/place/" id="checkout-form">
+      {% csrf_token %}
+      <input type="hidden" name="cook_id"    id="f_cook_id"/>
+      <input type="hidden" name="menu_id"    id="f_menu_id"/>
+      <input type="hidden" name="slot_id"    id="f_slot_id"/>
+      <input type="hidden" name="items_json" id="f_items_json"/>
+      <input type="hidden" name="address_id"      id="f_address_id"/>
+      <input type="hidden" name="delivery_type"   id="f_delivery_type"   value="DELIVERY"/>
+      <input type="hidden" name="payment_method"  id="f_payment_method"  value="ONLINE"/>
+
+      <button type="submit" class="btn-primary btn-full btn-lg" id="place-btn">
+        Place order
+      </button>
+    </form>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.delivery-type-card {
+  border: 1.5px solid var(--gray-300);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  transition: border-color .15s, background .15s;
+}
+.delivery-type-card:hover  { border-color: var(--orange-mid); }
+.delivery-type-card.selected {
+  border-color: var(--orange);
+  background: var(--orange-light);
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var cart = JSON.parse(localStorage.getItem('gk_cart') || 'null');
+
+if (!cart || !cart.items || Object.keys(cart.items).length === 0) {
+  document.getElementById('no-cart').style.display   = 'block';
+  document.getElementById('cart-content').style.display = 'none';
+} else {
+  loadCart();
+  // NEW: Show pickup option if within range
+  if (cart.pickup_ok) {
+    document.getElementById('pickup-option').style.display = 'block';
+  }
+}
+
+function loadCart() {
+  var items      = cart.items;
+  var keys       = Object.keys(items);
+  var subtotal   = 0;
+  var html       = '';
+  
+  if (keys.length === 0) return;
+
+  var firstItem  = items[keys[0]];
+  document.getElementById('f_cook_id').value = cart.cookId;
+  // Note: Backend currently supports one menu per order.
+  // We use the menuId from the first item.
+  document.getElementById('f_menu_id').value = firstItem.menuId;
+  // The slotId should come from the cart object if we saved it there
+  document.getElementById('f_slot_id').value = cart.slotId || '';
+
+  keys.forEach(function(k) {
+    var it = items[k];
+    var lineTotal = it.price * it.qty;
+    subtotal += lineTotal;
+    
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:15px 0;border-bottom:1px solid var(--gray-100);font-size:14px">'
+          + '<div style="flex:1">'
+          + '<div style="font-weight:600;font-size:15px;margin-bottom:2px">' + it.name + '</div>'
+          + '<div style="font-size:12px;color:var(--gray-500)">₹' + it.price + ' × ' + it.qty + ' · ' + it.slot + '</div>'
+          + '</div>'
+          + '<div style="font-weight:700;font-size:15px;color:var(--black)">₹' + lineTotal.toFixed(0) + '</div>'
+          + '</div>';
+  });
+
+  document.getElementById('checkout-items').innerHTML = html;
+  
+  // Prepare items for backend
+  var itemsForBackend = {};
+  keys.forEach(function(k) {
+    itemsForBackend[k] = { qty: items[k].qty };
+  });
+  document.getElementById('f_items_json').value = JSON.stringify(itemsForBackend);
+
+  updateBill(subtotal);
+}
+
+function updateBill(subtotal) {
+  var deliveryType = document.querySelector('.delivery-radio:checked')?.value || 'DELIVERY';
+  var charge       = deliveryType === 'PICKUP' ? 0 : (parseFloat(localStorage.getItem('gk_delivery_charge')) || 0);
+  var fee          = subtotal * 0.002;
+  var total        = subtotal + fee + charge;
+
+  document.getElementById('bill-subtotal').textContent  = '₹' + subtotal.toFixed(0);
+  document.getElementById('bill-fee').textContent       = '₹' + fee.toFixed(2);
+  document.getElementById('bill-delivery').textContent  = '₹' + charge.toFixed(0);
+  document.getElementById('bill-total').textContent     = '₹' + total.toFixed(0);
+  document.getElementById('f_delivery_type').value      = deliveryType;
+}
+
+// Delivery type toggle
+document.querySelectorAll('.delivery-radio').forEach(function(r) {
+  r.addEventListener('change', function() {
+    document.querySelectorAll('.delivery-type-card').forEach(function(c) {
+      c.classList.remove('selected');
+    });
+    if (r.value === 'DELIVERY') {
+      document.getElementById('card_delivery').classList.add('selected');
+    } else {
+      document.getElementById('card_pickup').classList.add('selected');
+    }
+    var subtotal = parseFloat(document.getElementById('bill-subtotal').textContent.replace('₹','')) || 0;
+    updateBill(subtotal);
+  });
+});
+
+// Payment method toggle
+document.querySelectorAll('.pay-radio').forEach(function(r) {
+  r.addEventListener('change', function() {
+    document.querySelectorAll('[id^="card_online"],[id^="card_cod"]').forEach(function(c) {
+      c.classList.remove('selected');
+    });
+    document.getElementById(r.value === 'ONLINE' ? 'card_online' : 'card_cod').classList.add('selected');
+    document.getElementById('f_payment_method').value = r.value;
+  });
+});
+
+// Address selection
+var addrSelect = document.getElementById('address_id');
+if (addrSelect) {
+  addrSelect.addEventListener('change', function() {
+    document.getElementById('f_address_id').value = this.value;
+  });
+  document.getElementById('f_address_id').value = addrSelect.value;
+}
+
+// Form submit — sync slot id from cart
+document.getElementById('checkout-form').addEventListener('submit', function(e) {
+  var items    = cart.items;
+  var firstKey = Object.keys(items)[0];
+  // slot_id stored in cart if available
+  document.getElementById('f_slot_id').value = cart.slotId || '';
+  document.getElementById('f_address_id').value = addrSelect ? addrSelect.value : '';
+  if (!document.getElementById('f_slot_id').value) {
+    e.preventDefault();
+    alert('Slot information missing. Please go back and re-add items.');
+  }
+});
+</script>
+{% endblock %}

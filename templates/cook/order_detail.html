@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+{% block nav_cordrs %}active{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1000px;">
+  <nav style="margin-bottom: 24px;">
+    <a href="{% url 'cook:order_list' %}" style="color: var(--gray-500); text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+      Back to Orders
+    </a>
+  </nav>
+
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; gap: 24px; flex-wrap: wrap;">
+    <div>
+      <h1 style="margin-bottom: 8px;">Order #{{ order.id }}</h1>
+      <div style="display: flex; align-items: center; gap: 12px; color: var(--gray-500); font-size: 15px;">
+        <span>Placed on {{ order.placed_at|date:"d M Y, h:i A" }}</span>
+        <span style="color: var(--gray-300)">|</span>
+        <span class="badge badge-{{ order.status|lower }}">{{ order.get_status_display }}</span>
+      </div>
+    </div>
+    
+    <!-- Status Management Card -->
+    <div class="card" style="padding: 20px; min-width: 300px; flex: 1; max-width: 400px; background: var(--gray-50); border: 1px solid var(--gray-200);">
+      <h4 style="margin-bottom: 16px; color: var(--gray-700);">Update Order Status</h4>
+      <form action="{% url 'cook:order_status_update' order.id %}" method="POST" style="display: flex; gap: 10px;">
+        {% csrf_token %}
+        <select name="status" class="input" style="flex: 1; margin-bottom: 0; background: white;">
+          {% for val, label in status_choices %}
+            <option value="{{ val }}" {% if order.status == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="btn-primary">Update</button>
+      </form>
+      <p style="margin-top: 12px; font-size: 12px; color: var(--gray-500);">
+        Updating the status will notify the customer about their order progress.
+      </p>
+    </div>
+  </div>
+
+  <div class="grid-2" style="gap: 24px; align-items: start;">
+    <!-- Left Column: Details -->
+    <div style="display: flex; flex-direction: column; gap: 24px;">
+      
+      <!-- Customer Info -->
+      <div class="card" style="padding: 24px;">
+        <h3 style="margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--gray-100);">Customer Details</h3>
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div>
+            <label style="display: block; font-size: 12px; color: var(--gray-500); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">Name</label>
+            <div style="font-weight: 600; font-size: 16px;">{{ order.customer.name }}</div>
+          </div>
+          <div style="display: flex; gap: 24px;">
+            <div style="flex: 1;">
+              <label style="display: block; font-size: 12px; color: var(--gray-500); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">Phone</label>
+              <div>{{ order.customer.phone }}</div>
+            </div>
+            <div style="flex: 1;">
+              <label style="display: block; font-size: 12px; color: var(--gray-500); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">Email</label>
+              <div>{{ order.customer.email }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Delivery/Pickup Info -->
+      <div class="card" style="padding: 24px;">
+        <h3 style="margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--gray-100);">Method & Location</h3>
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div style="display: flex; gap: 24px;">
+            <div style="flex: 1;">
+              <label style="display: block; font-size: 12px; color: var(--gray-500); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">Type</label>
+              <div class="badge badge-info" style="display: inline-block;">{{ order.get_delivery_type_display }}</div>
+            </div>
+            <div style="flex: 1;">
+              <label style="display: block; font-size: 12px; color: var(--gray-500); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">Time Slot</label>
+              <div style="font-weight: 600;">{{ order.slot.label }} ({{ order.slot.start_time|time:"h:i A" }} - {{ order.slot.end_time|time:"h:i A" }})</div>
+            </div>
+          </div>
+          {% if order.delivery_type == 'DELIVERY' %}
+            <div>
+              <label style="display: block; font-size: 12px; color: var(--gray-500); text-transform: uppercase; font-weight: 600; margin-bottom: 4px;">Delivery Address</label>
+              <div style="background: var(--gray-50); padding: 12px; border-radius: 8px; font-size: 14px; line-height: 1.6;">
+                {{ order.address.address }}
+              </div>
+              <a href="https://www.google.com/maps?q={{ order.address.latitude }},{{ order.address.longitude }}" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 13px; color: var(--orange); text-decoration: none;">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                View on Google Maps
+              </a>
+            </div>
+          {% else %}
+            <div style="padding: 12px; background: #e0f2fe; color: #0369a1; border-radius: 8px; font-size: 14px;">
+              <strong>Self Pickup:</strong> The customer will come to your kitchen to collect the order during the selected time slot.
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Order Items -->
+    <div class="card" style="padding: 0; overflow: hidden;">
+      <div style="padding: 24px; border-bottom: 1px solid var(--gray-100);">
+        <h3 style="margin: 0;">Order Items</h3>
+      </div>
+      <table style="width: 100%; border-collapse: collapse;">
+        <thead style="background: var(--gray-50); font-size: 12px; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.05em;">
+          <tr>
+            <th style="padding: 16px; text-align: left;">Item</th>
+            <th style="padding: 16px; text-align: center;">Qty</th>
+            <th style="padding: 16px; text-align: right;">Price</th>
+            <th style="padding: 16px; text-align: right;">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in order.items.all %}
+            <tr style="border-bottom: 1px solid var(--gray-50);">
+              <td style="padding: 16px;">
+                <div style="font-weight: 600;">{{ item.dish_name }}</div>
+              </td>
+              <td style="padding: 16px; text-align: center;">{{ item.quantity }}</td>
+              <td style="padding: 16px; text-align: right; color: var(--gray-600);">₹{{ item.unit_price }}</td>
+              <td style="padding: 16px; text-align: right; font-weight: 600;">₹{{ item.line_total }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div style="padding: 24px; background: var(--gray-50);">
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; font-size: 14px; color: var(--gray-600);">
+            <span>Subtotal</span>
+            <span>₹{{ order.subtotal }}</span>
+          </div>
+          {% if order.delivery_charge > 0 %}
+            <div style="display: flex; justify-content: space-between; font-size: 14px; color: var(--gray-600);">
+              <span>Delivery Charge</span>
+              <span>₹{{ order.delivery_charge }}</span>
+            </div>
+          {% endif %}
+          <div style="display: flex; justify-content: space-between; font-size: 14px; color: var(--gray-600);">
+            <span>Platform Fee (0.2%)</span>
+            <span>₹{{ order.platform_fee }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--gray-200); font-size: 20px; font-weight: 800;">
+            <span>Total Earnings</span>
+            <span style="color: var(--orange);">₹{{ order.total }}</span>
+          </div>
+          <div style="margin-top: 16px; padding: 12px; background: #fef3c7; color: #92400e; border-radius: 8px; font-size: 13px; display: flex; align-items: flex-start; gap: 8px;">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20" style="margin-top: 2px;"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
+            <div>
+              <strong>Payment:</strong> {{ order.get_payment_method_display }} ({{ order.get_payment_status_display }})
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

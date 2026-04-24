@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% block title %}Home — GharKhana{% endblock %}
+{% block nav_home %}active{% endblock %}
+
+{% block content %}
+<div class="container animate-fade">
+
+  <!-- Header -->
+  <div class="page-header" style="margin-bottom: 40px;">
+    <h1 style="font-size: 2.25rem;">
+      {% if default_address %}
+        Cooks near <span class="text-orange">{{ default_address.label }}</span>
+      {% else %}
+        All Home Cooks
+      {% endif %}
+    </h1>
+    {% if not default_address %}
+    <div class="message message-warning" style="margin-top: 20px;">
+      <span style="font-size: 1.25rem; margin-right: 8px;">📍</span>
+      <span>
+        Set your delivery address in 
+        <a href="/accounts/profile/" style="font-weight: 700; text-decoration: underline;">Profile</a>
+        to see accurate distances and delivery charges.
+      </span>
+    </div>
+    {% else %}
+    <p class="text-muted" style="margin-top: 8px;">{{ cook_data|length }} expert chef{{ cook_data|length|pluralize }} found in your area · sorted by distance</p>
+    {% endif %}
+  </div>
+
+  <!-- Filters -->
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 40px; align-items: center;">
+    <a href="?{% if meal_type %}meal_type={{ meal_type }}{% endif %}"
+       class="btn-filter {% if not food_type %}active{% endif %}">
+      All Cuisines
+    </a>
+    <a href="?food_type=VEG{% if meal_type %}&meal_type={{ meal_type }}{% endif %}"
+       class="btn-filter {% if food_type == 'VEG' %}active{% endif %}">
+      🥦 Veg
+    </a>
+    <a href="?food_type=NONVEG{% if meal_type %}&meal_type={{ meal_type }}{% endif %}"
+       class="btn-filter {% if food_type == 'NONVEG' %}active{% endif %}">
+      🍗 Non-veg
+    </a>
+    
+    <div style="width: 1px; height: 24px; background: var(--p-border); margin: 0 8px;"></div>
+
+    <a href="?meal_type=LUNCH{% if food_type %}&food_type={{ food_type }}{% endif %}"
+       class="btn-filter {% if meal_type == 'LUNCH' %}active{% endif %}">
+      🌞 Lunch
+    </a>
+    <a href="?meal_type=DINNER{% if food_type %}&food_type={{ food_type }}{% endif %}"
+       class="btn-filter {% if meal_type == 'DINNER' %}active{% endif %}">
+      🌙 Dinner
+    </a>
+
+    {% if food_type or meal_type %}
+      <a href="?" class="text-xs" style="color: var(--p-gray-500); font-weight: 600; text-transform: uppercase; margin-left: 12px;">Reset Filters</a>
+    {% endif %}
+  </div>
+
+  <!-- Cook grid -->
+  {% if cook_data %}
+  <div class="grid-3" style="gap: 32px;">
+    {% for item in cook_data %}
+    <a href="/cooks/{{ item.cook.pk }}/">
+      <div class="card cook-card-premium">
+
+        <!-- Image / banner -->
+        <div class="cook-card-img" style="height: 180px; position: relative; border-radius: var(--radius-md); overflow: hidden; margin-bottom: 20px;">
+          {% if item.cook.photo %}
+            <img src="{{ item.cook.photo.url }}" style="width: 100%; height: 100%; object-fit: cover;" alt="{{ item.cook.kitchen_name }}"/>
+          {% else %}
+            <div style="width: 100%; height: 100%; background: var(--p-orange-light); color: var(--p-orange); display: flex; align-items: center; justify-content: center; font-size: 3rem; font-family: 'Poppins', sans-serif; font-weight: 800;">
+              {{ item.cook.kitchen_name|first|upper }}
+            </div>
+          {% endif %}
+
+          {% if item.same_day %}
+          <div style="position: absolute; top: 12px; left: 12px; background: var(--p-success); color: white; font-size: 0.7rem; font-weight: 800; padding: 4px 10px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.05em;">
+            Same Day
+          </div>
+          {% endif %}
+        </div>
+
+        <div>
+          <div class="flex-between">
+            <h3 style="font-size: 1.25rem;">{{ item.cook.kitchen_name }}</h3>
+            {% if item.avg_rating %}
+            <div style="display: flex; align-items: center; gap: 4px; font-weight: 700; font-size: 0.9rem;">
+              <span style="color: #F2994A;">★</span>
+              <span>{{ item.avg_rating }}</span>
+            </div>
+            {% endif %}
+          </div>
+
+          <p class="text-sm text-muted" style="margin: 4px 0 16px;">
+            {{ item.cook.cuisine_tags|default:"authentic Home Cuisines" }}
+          </p>
+
+          <div style="display: flex; gap: 8px; margin-bottom: 20px;">
+            {% if item.has_menu %}
+            <span class="badge badge-confirmed" style="background: var(--p-orange-light); color: var(--p-orange); border: none;">🔥 Booking Open</span>
+            {% else %}
+            <span class="badge badge-failed" style="background: var(--p-gray-100); color: var(--p-gray-500); border: none;">Resting</span>
+            {% endif %}
+          </div>
+
+          <div style="padding-top: 16px; border-top: 1px solid var(--p-border); display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-size: 0.8125rem; font-weight: 600; color: var(--p-gray-500); display: flex; align-items: center; gap: 4px;">
+              📍 {% if item.distance %}{{ item.distance }} km{% else %}Location set{% endif %}
+            </div>
+            <div style="font-size: 0.9rem; font-weight: 800; color: var(--p-black);">
+              {% if item.charge %}₹{{ item.charge }} <span style="font-size: 0.7rem; color: var(--p-gray-500); font-weight: 500;">del. fee</span>{% else %}Free Delivery{% endif %}
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="empty-state" style="padding: 120px 20px;">
+    <div class="empty-state-icon" style="font-size: 4rem; opacity: 0.5;">🍳</div>
+    <h2 style="margin-bottom: 12px;">No cooks found yet</h2>
+    <p class="text-muted">We're expanding rapidly. Check back soon for home kitchens in your area!</p>
+  </div>
+  {% endif %}
+
+</div>
+
+<style>
+.btn-filter {
+  padding: 10px 20px;
+  border-radius: 100px;
+  background: var(--p-white);
+  border: 1px solid var(--p-border);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--p-gray-700);
+  transition: var(--transition);
+}
+.btn-filter:hover {
+  border-color: var(--p-orange-mid);
+  background: var(--p-gray-100);
+}
+.btn-filter.active {
+  background: var(--p-orange);
+  color: var(--p-white);
+  border-color: var(--p-orange);
+  box-shadow: var(--shadow-orange);
+}
+.cook-card-premium {
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.cook-card-premium:hover {
+  transform: translateY(-8px) scale(1.02);
+}
+</style>
+{% endblock %}

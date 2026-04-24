@@ -1,0 +1,192 @@
+{% extends 'base.html' %}
+{% block title %}Order #{{ order.pk }} — GharKhana{% endblock %}
+{% block nav_orders %}active{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:680px">
+
+  <a href="/orders/" style="display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--gray-500);margin-bottom:20px">
+    ← My Orders
+  </a>
+
+  <!-- Order header -->
+  <div class="card" style="margin-bottom:20px">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+      <div>
+        <h2 style="margin-bottom:4px">Order #{{ order.pk }}</h2>
+        <div style="font-size:13px;color:var(--gray-500)">
+          {{ order.placed_at|date:"d M Y, h:i A" }} ·
+          {{ order.cook.kitchen_name }}
+        </div>
+      </div>
+      <span class="badge badge-{{ order.status|lower }}">
+        {{ order.get_status_display }}
+      </span>
+    </div>
+
+    <!-- Status tracker -->
+    <div class="status-track">
+      {% with status=order.status %}
+      <div class="status-step {% if status == 'CONFIRMED' or status == 'PREPARING' or status == 'OUT_FOR_DELIVERY' or status == 'DELIVERED' %}done{% endif %}">
+        <div class="status-dot {% if status == 'CONFIRMED' %}active{% endif %}"></div>
+        <div class="status-step-label {% if status == 'CONFIRMED' %}active{% endif %}">Confirmed</div>
+      </div>
+      <div class="status-step {% if status == 'PREPARING' or status == 'OUT_FOR_DELIVERY' or status == 'DELIVERED' %}done{% endif %}">
+        <div class="status-dot {% if status == 'PREPARING' %}active{% endif %}"></div>
+        <div class="status-step-label {% if status == 'PREPARING' %}active{% endif %}">Preparing</div>
+      </div>
+      <div class="status-step {% if status == 'OUT_FOR_DELIVERY' or status == 'DELIVERED' %}done{% endif %}">
+        <div class="status-dot {% if status == 'OUT_FOR_DELIVERY' %}active{% endif %}"></div>
+        <div class="status-step-label {% if status == 'OUT_FOR_DELIVERY' %}active{% endif %}">On the way</div>
+      </div>
+      <div class="status-step {% if status == 'DELIVERED' %}done{% endif %}">
+        <div class="status-dot {% if status == 'DELIVERED' %}active{% endif %}"></div>
+        <div class="status-step-label {% if status == 'DELIVERED' %}active{% endif %}">Delivered</div>
+      </div>
+      {% endwith %}
+    </div>
+
+    <!-- PIN box -->
+    {% if order.pin_code and order.status != 'DELIVERED' %}
+    <div class="pin-box">
+      <div>
+        <div class="pin-label">Your delivery PIN — share with delivery person</div>
+        <div class="pin-value">{{ order.pin_code }}</div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Order items -->
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-header"><h3>Items ordered</h3></div>
+    {% for item in order.items.all %}
+    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-100);font-size:14px">
+      <div>
+        <span style="font-weight:600">{{ item.dish_name }}</span>
+        <span style="color:var(--gray-500)"> × {{ item.quantity }}</span>
+      </div>
+      <span style="font-weight:600">₹{{ item.line_total }}</span>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Bill + delivery -->
+  <div class="grid-2" style="gap:16px;margin-bottom:20px">
+    <div class="card">
+      <div class="card-header"><h3>Bill summary</h3></div>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:14px">
+        <div style="display:flex;justify-content:space-between">
+          <span style="color:var(--gray-500)">Subtotal</span>
+          <span>₹{{ order.subtotal }}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          <span style="color:var(--gray-500)">Platform fee</span>
+          <span>₹{{ order.platform_fee }}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          <span style="color:var(--gray-500)">Delivery charge</span>
+          <span>₹{{ order.delivery_charge }}</span>
+        </div>
+        <div style="height:1px;background:var(--gray-100);margin:4px 0"></div>
+        <div style="display:flex;justify-content:space-between;font-weight:700;font-size:15px">
+          <span>Total</span>
+          <span style="color:var(--orange)">₹{{ order.total }}</span>
+        </div>
+        <div style="font-size:12px;color:var(--gray-500);margin-top:4px">
+          {{ order.get_payment_method_display }} ·
+          <span style="color:{% if order.payment_status == 'PAID' %}var(--green){% else %}var(--egg){% endif %}">
+            {{ order.get_payment_status_display }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3>Delivery info</h3></div>
+      <div style="font-size:14px;display:flex;flex-direction:column;gap:8px">
+        <div>
+          <div style="color:var(--gray-500);font-size:12px">Slot</div>
+          <div style="font-weight:600">{{ order.slot.label }}</div>
+        </div>
+        <div>
+          <div style="color:var(--gray-500);font-size:12px">Type</div>
+          <div style="font-weight:600">{{ order.get_delivery_type_display }}</div>
+        </div>
+        {% if order.address %}
+        <div>
+          <div style="color:var(--gray-500);font-size:12px">Address</div>
+          <div style="font-weight:500;font-size:13px">{{ order.address.address|truncatechars:80 }}</div>
+        </div>
+        {% endif %}
+        <div>
+          <div style="color:var(--gray-500);font-size:12px">Cook contact</div>
+          <a href="tel:{{ order.cook.phone }}"
+             style="color:var(--orange);font-weight:600;font-size:13px">
+            {{ order.cook.phone }}
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Review (if delivered and no review yet) -->
+  {% if order.status == 'DELIVERED' %}
+    {% if not order.review %}
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header"><h3>Rate your experience</h3></div>
+      <form method="post" action="/orders/{{ order.pk }}/review/">
+        {% csrf_token %}
+        <div class="form-group">
+          <label class="form-label">Rating</label>
+          <div style="display:flex;gap:8px">
+            {% for i in "12345" %}
+            <label style="cursor:pointer">
+              <input type="radio" name="rating" value="{{ forloop.counter }}"
+                     style="display:none" class="star-radio"
+                     {% if forloop.counter == 5 %}checked{% endif %}/>
+              <span class="star-btn" data-val="{{ forloop.counter }}"
+                    style="font-size:2rem;cursor:pointer;opacity:.3">★</span>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Write a review (optional)</label>
+          <textarea name="comment" class="form-textarea"
+                    placeholder="How was the food? Tell other customers..."></textarea>
+        </div>
+        <button type="submit" class="btn-primary">Submit review</button>
+      </form>
+    </div>
+    {% else %}
+    <div class="card" style="margin-bottom:20px;background:var(--green-light);border-color:#A5D6A7">
+      <div style="font-weight:600;color:var(--green);margin-bottom:4px">You reviewed this order</div>
+      <div style="color:#F5A623">
+        {% for i in "12345" %}
+          {% if forloop.counter <= order.review.rating %}★{% else %}☆{% endif %}
+        {% endfor %}
+      </div>
+      {% if order.review.comment %}
+      <p style="font-size:14px;color:var(--gray-700);margin-top:6px">{{ order.review.comment }}</p>
+      {% endif %}
+    </div>
+    {% endif %}
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.star-radio').forEach(function(radio) {
+  radio.addEventListener('change', function() {
+    var val = parseInt(this.value);
+    document.querySelectorAll('.star-btn').forEach(function(star) {
+      star.style.opacity = parseInt(star.dataset.val) <= val ? '1' : '.3';
+    });
+  });
+});
+document.querySelector('.star-radio[value="5"]')?.dispatchEvent(new Event('change'));
+</script>
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}Delivery Slots — GharKhana{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:30px">
+    <div>
+      <h1 style="margin-bottom:4px">Delivery Slots</h1>
+      <p style="color:var(--gray-500)">Define the time windows in which you deliver orders.</p>
+    </div>
+  </div>
+
+  <div class="grid-2" style="gap:24px;align-items:start">
+
+    <!-- Add Slot Form -->
+    <div class="card">
+      <div class="card-header"><h3 style="margin:0">Add New Slot</h3></div>
+      <form method="post" action="{% url 'cook:slot_add' %}" style="padding:4px 0 0">
+        {% csrf_token %}
+        {% for field in form %}
+          <div class="form-group">
+            <label class="form-label">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}<p style="color:#e74c3c;font-size:12px;margin-top:4px">{{ field.errors.0 }}</p>{% endif %}
+          </div>
+        {% endfor %}
+        <button type="submit" class="btn-primary" style="width:100%;margin-top:8px">Add Slot</button>
+      </form>
+    </div>
+
+    <!-- Slot List -->
+    <div>
+      {% if slots %}
+        {% for slot in slots %}
+          <div class="card" style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;margin-bottom:12px">
+            <div>
+              <div style="font-weight:700;font-size:1rem">{{ slot.label }}</div>
+              <div style="color:var(--gray-500);font-size:13px;margin-top:2px">
+                {{ slot.start_time|time:"g:i A" }} — {{ slot.end_time|time:"g:i A" }}
+              </div>
+              {% if not slot.is_active %}
+                <span class="badge badge-failed" style="font-size:10px;margin-top:4px">Inactive</span>
+              {% else %}
+                <span class="badge badge-confirmed" style="font-size:10px;margin-top:4px">Active</span>
+              {% endif %}
+            </div>
+            <form method="post" action="{% url 'cook:slot_delete' slot.pk %}" onsubmit="return confirm('Delete this slot?')">
+              {% csrf_token %}
+              <button type="submit" class="btn-secondary" style="color:#e74c3c;border-color:#e74c3c;padding:6px 14px;font-size:12px">Delete</button>
+            </form>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="card" style="padding:48px 20px;text-align:center">
+          <div style="font-size:3rem;margin-bottom:16px">⏰</div>
+          <h3>No delivery slots yet</h3>
+          <p style="color:var(--gray-500)">Add at least one slot so customers can place orders.</p>
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}

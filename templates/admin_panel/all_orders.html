@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block title %}All Orders — GharKhana{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <div class="page-header">
+    <h2>All orders</h2>
+    <p>Platform-wide order history</p>
+  </div>
+
+  <!-- Filters -->
+  <div class="card" style="margin-bottom:20px">
+    <form method="get" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+      <div>
+        <label class="form-label">Status</label>
+        <select name="status" class="form-select" style="width:180px">
+          <option value="">All statuses</option>
+          {% for s in statuses %}
+          <option value="{{ s }}" {% if status == s %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Date</label>
+        <input type="date" name="date" value="{{ date_str }}"
+               class="form-input" style="width:180px"/>
+      </div>
+      <div>
+        <label class="form-label">Cook</label>
+        <select name="cook" class="form-select" style="width:200px">
+          <option value="">All cooks</option>
+          {% for c in cooks %}
+          <option value="{{ c.pk }}" {% if cook_id == c.pk|stringformat:"s" %}selected{% endif %}>
+            {{ c.kitchen_name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn-primary">Filter</button>
+      <a href="/admin-panel/orders/" class="btn-ghost">Clear</a>
+    </form>
+  </div>
+
+  <div class="card">
+    {% if orders %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Customer</th>
+            <th>Cook</th>
+            <th>Type</th>
+            <th>Slot</th>
+            <th>Items</th>
+            <th>Total</th>
+            <th>Payment</th>
+            <th>Status</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in orders %}
+          <tr>
+            <td style="font-weight:600;font-size:13px">{{ order.pk }}</td>
+            <td>
+              <div style="font-weight:500;font-size:13px">{{ order.customer.name }}</div>
+              <div style="font-size:11px;color:var(--gray-500)">{{ order.customer.phone }}</div>
+            </td>
+            <td style="font-size:13px">{{ order.cook.kitchen_name }}</td>
+            <td>
+              <span class="badge {% if order.order_type == 'PREORDER' %}badge-confirmed{% else %}badge-pending{% endif %}">
+                {{ order.get_order_type_display }}
+              </span>
+            </td>
+            <td style="font-size:12px">{{ order.slot.label }}</td>
+            <td style="font-size:12px">{{ order.items.count }}</td>
+            <td style="font-weight:600;font-size:13px">₹{{ order.total|floatformat:0 }}</td>
+            <td>
+              <span class="badge {% if order.payment_method == 'ONLINE' %}badge-confirmed{% else %}badge-ofd{% endif %}">
+                {{ order.get_payment_method_display }}
+              </span>
+            </td>
+            <td>
+              <span class="badge badge-{{ order.status|lower }}">
+                {{ order.get_status_display }}
+              </span>
+            </td>
+            <td style="font-size:11px;color:var(--gray-500)">
+              {{ order.placed_at|date:"d M, h:i A" }}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state" style="padding:40px 0">
+      <div class="empty-state-icon">📋</div>
+      <h3>No orders found</h3>
+      <p>Try adjusting your filters</p>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

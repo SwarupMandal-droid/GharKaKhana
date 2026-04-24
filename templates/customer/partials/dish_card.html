@@ -1,0 +1,67 @@
+<div class="card dish-card-premium" data-slot-id="{{ menu.slot.pk }}" style="padding: 16px; margin-bottom: 16px; border-radius: var(--radius-md); transition: var(--transition); display: flex; gap: 20px; align-items: stretch; border: 1px solid var(--p-border);">
+  <div class="dish-card-img" style="width: 140px; height: 140px; border-radius: var(--radius-sm); overflow: hidden; flex-shrink: 0; background: var(--p-gray-100);">
+    {% if item.dish.photo %}
+      <img src="{{ item.dish.photo.url }}" alt="{{ item.dish.name }}" style="width: 100%; height: 100%; object-fit: cover;"/>
+    {% else %}
+      <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 2rem; background: var(--p-orange-light); color: var(--p-orange); opacity: 0.6;">🍛</div>
+    {% endif %}
+  </div>
+  
+  <div class="dish-card-info" style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+    <div>
+      <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 6px;">
+        <h4 style="font-size: 1.125rem; font-weight: 700; color: var(--p-black);">{{ item.dish.name }}</h4>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end;">
+          {% if item.dish.food_type == 'VEG' %}
+            <span class="badge" style="background: var(--p-success-bg); color: var(--p-success); border: none; font-size: 0.65rem;">🟢 VEG</span>
+          {% elif item.dish.food_type == 'NONVEG' %}
+            <span class="badge" style="background: var(--p-error-bg); color: var(--p-error); border: none; font-size: 0.65rem;">🔴 NON-VEG</span>
+          {% endif %}
+          
+          {% if item.dish.spice_level == 'SPICY' %}
+            <span class="badge" style="background: var(--p-orange-light); color: var(--p-orange); border: none; font-size: 0.65rem;">🌶️ SPICY</span>
+          {% endif %}
+        </div>
+      </div>
+      
+      {% if item.dish.description %}
+      <p style="font-size: 0.875rem; color: var(--p-gray-500); line-height: 1.5; margin-bottom: 12px;">{{ item.dish.description|truncatechars:100 }}</p>
+      {% endif %}
+
+      {% if item.dish.allergens %}
+      <div class="text-xs" style="color: var(--p-error); font-weight: 500; margin-bottom: 8px; display: flex; align-items: center; gap: 4px;">
+        <span>⚠️</span> Contains: {{ item.dish.allergens }}
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="dish-card-footer" style="display: flex; align-items: center; justify-content: space-between; padding-top: 12px; border-top: 1px dotted var(--p-border);">
+      <div style="font-size: 1.125rem; font-weight: 800; color: var(--p-black);">₹{{ item.effective_price }}</div>
+      
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span class="qty-left-span text-xs" data-id="{{ item.pk }}" data-initial="{{ item.quantity_available }}" style="color: var(--p-gray-500); font-weight: 600;">{{ item.quantity_available }} left</span>
+        <button
+          class="btn-primary btn-sm add-btn"
+          style="padding: 8px 24px; border-radius: 100px; box-shadow: var(--shadow-orange);"
+          data-id="{{ item.pk }}"
+          onclick="addToCart(
+            {{ item.pk }},
+            '{{ item.dish.name|escapejs }}',
+            {{ item.effective_price }},
+            {{ menu.pk }},
+            '{{ menu.slot.label|escapejs }}',
+            {{ menu.slot.pk }}
+          )"
+        >ADD</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.dish-card-premium:hover {
+  border-color: var(--p-orange-mid) !important;
+  box-shadow: var(--shadow-sm);
+  transform: translateX(4px);
+}
+</style>

@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Delivery Dashboard — GharKhana 2026{% endblock %}
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/delivery_premium.css' %}">
+<style>
+  body { background: var(--p-cream); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-12 delivery-premium-body">
+
+  <!-- Premium Hero Header -->
+  <div class="p-hero animate-fade">
+    <div class="p-hero-content">
+      <h1 class="p-hero-title">Welcome back, {{ request.user.name }}</h1>
+      <p class="p-hero-sub">
+        <span style="color: var(--p-orange)">📍</span> {{ cook.kitchen_name }} · {{ today|date:"l, d F Y" }}
+      </p>
+    </div>
+    <div style="display: flex; gap: 12px;">
+      <div style="text-align: right">
+        <div style="font-size: 0.8rem; color: var(--p-gray-600); font-weight: 600; text-transform: uppercase">Status</div>
+        <div style="display: flex; align-items: center; gap: 6px; font-weight: 700; color: var(--p-success)">
+          <span class="dot dot-green"></span> Online & Active
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Section -->
+  <div class="p-stats-grid">
+    <div class="p-stat-card animate-fade" style="animation-delay: 0.1s">
+      <div class="p-stat-icon">📊</div>
+      <div class="p-stat-value">{{ slot_batches|length }}</div>
+      <div class="p-stat-label">Active Slots</div>
+    </div>
+    <div class="p-stat-card animate-fade" style="animation-delay: 0.2s">
+      <div class="p-stat-icon">🛵</div>
+      <div class="p-stat-value">{% with total=0 %}{% for b in slot_batches %}{% with total=total|add:b.total %}{% endwith %}{% endfor %}{{ total }}{% endwith %}</div>
+      <div class="p-stat-label">Total Orders</div>
+    </div>
+    <div class="p-stat-card animate-fade" style="animation-delay: 0.3s">
+      <div class="p-stat-icon">✅</div>
+      <div class="p-stat-value">{% with done=0 %}{% for b in slot_batches %}{% with done=done|add:b.done %}{% endwith %}{% endfor %}{{ done }}{% endwith %}</div>
+      <div class="p-stat-label">Delivered</div>
+    </div>
+    <div class="p-stat-card animate-fade" style="animation-delay: 0.4s">
+      <div class="p-stat-icon">📏</div>
+      <div class="p-stat-value">{% with km=0 %}{% for b in slot_batches %}{% with km=km|add:b.total_km %}{% endwith %}{% endfor %}{{ km }}{% endwith %}</div>
+      <div class="p-stat-label">Total KM</div>
+    </div>
+  </div>
+
+  {% if slot_batches %}
+    {% for batch in slot_batches %}
+    <div class="p-batch-card animate-fade" style="animation-delay: {{ forloop.counter|add:0.5 }}s">
+      
+      <!-- Slot Info -->
+      <div class="p-slot-header">
+        <div class="p-slot-title-group">
+          <h2 class="p-slot-label">{{ batch.slot.label }} Batch</h2>
+          <p class="p-slot-meta">
+            {{ batch.done }} of {{ batch.total }} orders completed 
+            {% if batch.total_km %}· {{ batch.total_km }} km route{% endif %}
+          </p>
+        </div>
+        {% if batch.maps_url %}
+        <a href="{{ batch.maps_url }}" target="_blank" class="p-btn p-btn-orange">
+          🗺️ Open Full Route
+        </a>
+        {% endif %}
+      </div>
+
+      <!-- Animated Progress Bar -->
+      <div class="capacity-bar-wrap" style="margin-bottom: 32px">
+        <div class="capacity-bar-track" style="height: 12px; background: var(--p-gray-100); border-radius: 6px">
+          <div class="capacity-bar-fill {% if batch.done == batch.total %}full{% endif %}"
+               style="width:{% widthratio batch.done batch.total 100 %}%; background: var(--p-orange); border-radius: 6px; height: 100%">
+          </div>
+        </div>
+      </div>
+
+      <!-- Route Timeline -->
+      {% if batch.route %}
+      <div class="p-route-timeline">
+        {% for stop in batch.route %}
+        {% with delivery=stop.delivery order=stop.delivery.order %}
+        <div class="p-stop-item {% if delivery.status == 'COMPLETED' %}completed{% endif %}">
+          <div class="p-stop-dot"></div>
+          
+          <!-- Stop Header -->
+          <div style="display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; width: 60px">
+            <span class="p-stop-num">{{ forloop.counter }}</span>
+            <span style="font-size: 0.75rem; color: var(--p-gray-600); font-weight: 700">{{ stop.distance }} km</span>
+          </div>
+
+          <!-- Customer Info -->
+          <div class="p-stop-content">
+            <h3 class="p-customer-name">{{ order.customer.name }}</h3>
+            <p class="p-address">📍 {{ order.address.address }}</p>
+            
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px">
+              {% for item in order.items.all %}
+              <span class="p-item-badge">{{ item.quantity }}× {{ item.dish_name }}</span>
+              {% endfor %}
+              
+              {% if order.payment_method == 'COD' %}
+              <span class="p-order-badge" style="background: #FFF9E6; color: #D4A017; border: 1px solid #FFEDCC">COD · ₹{{ order.total }}</span>
+              {% else %}
+              <span class="p-order-badge" style="background: var(--p-success-light); color: var(--p-success); border: 1px solid #D4F0E0">Prepaid</span>
+              {% endif %}
+
+              <span class="p-order-badge p-status-{% if order.status == 'CONFIRMED' %}confirmed{% elif order.status == 'PREPARING' %}preparing{% elif order.status == 'OUT_FOR_DELIVERY' %}ofd{% else %}confirmed{% endif %}">
+                {{ order.get_status_display }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Actions Panel -->
+          <div style="display: flex; flex-direction: column; gap: 10px; align-items: flex-end; min-width: 160px">
+            {% if delivery.status == 'COMPLETED' %}
+              <div class="p-order-badge p-status-confirmed" style="padding: 10px 20px; font-size: 0.9rem">
+                ✓ Delivered
+              </div>
+            {% else %}
+              <a href="https://maps.google.com/?q={{ order.address.latitude }},{{ order.address.longitude }}"
+                 target="_blank" class="p-btn p-btn-white p-btn-full">
+                📍 Navigate
+              </a>
+
+              {% if order.payment_method == 'COD' %}
+              <form method="post" action="/delivery/confirm/{{ order.pk }}/" style="width: 100%">
+                {% csrf_token %}
+                <button type="submit" class="p-btn p-btn-orange p-btn-full"
+                        data-confirm="Collect ₹{{ order.total }} and mark delivered?">
+                  💰 Collect Cash
+                </button>
+              </form>
+              {% else %}
+              <button onclick="openPinModal({{ order.pk }}, '{{ order.customer.name }}')"
+                      class="p-btn p-btn-orange p-btn-full">
+                🔑 Enter PIN
+              </button>
+              {% endif %}
+
+              <a href="/delivery/failed/{{ order.pk }}/" style="font-size: 0.8rem; color: #E74C3C; font-weight: 600; text-decoration: underline">
+                Report Issue
+              </a>
+            {% endif %}
+          </div>
+        </div>
+        {% endwith %}
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Completed History Mini-view -->
+      {% if batch.completed %}
+      <div style="margin-top: 40px; padding-top: 32px; border-top: 1px dashed var(--p-border)">
+        <h4 style="font-size: 0.9rem; color: var(--p-gray-400); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px">Completed in this slot</h4>
+        {% for delivery in batch.completed %}
+        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px; opacity: 0.6">
+          <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--p-success-light); display: flex; align-items: center; justify-content: center; color: var(--p-success); font-weight: 700">✓</div>
+          <div style="flex: 1">
+            <div style="font-weight: 600">{{ delivery.order.customer.name }}</div>
+            <div style="font-size: 0.8rem">Delivered at {{ delivery.delivered_at|date:"h:i A" }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="card animate-fade" style="text-align: center; padding: 80px 40px; border-radius: 32px">
+      <div style="font-size: 4rem; margin-bottom: 24px">🛵</div>
+      <h2 style="font-family: 'Poppins', sans-serif; font-size: 1.8rem; margin-bottom: 12px">No deliveries yet</h2>
+      <p style="color: var(--p-gray-600)">Grab a coffee! Your deliveries for today will appear here once orders are confirmed.</p>
+    </div>
+  {% endif %}
+
+</div>
+
+<!-- Premium PIN Modal -->
+<div id="pin-modal" style="display:none; position:fixed; inset:0; background:rgba(15,15,15,0.8); backdrop-filter: blur(8px); z-index:1000; align-items:center; justify-content:center">
+  <div class="animate-fade" style="background:var(--p-white); width:100%; max-width:440px; padding:40px; border-radius:32px; box-shadow:0 20px 60px rgba(0,0,0,0.3); border:1px solid var(--p-border)">
+    <div style="text-align: center; margin-bottom: 32px">
+      <div style="font-size: 3rem; margin-bottom: 16px">🔐</div>
+      <h2 style="font-family: 'Poppins', sans-serif; margin-bottom: 8px">Verify Delivery</h2>
+      <p id="pin-customer-name" style="color:var(--p-gray-600)">Enter PIN from customer</p>
+    </div>
+    
+    <form method="post" id="pin-form" action="">
+      {% csrf_token %}
+      <div style="display:flex; gap:16px; margin-bottom:32px; justify-content:center">
+        <input type="text" maxlength="1" class="pin-digit" name="p1" style="width:64px; height:72px; text-align:center; font-size:2rem; font-weight:700; border:2px solid var(--p-gray-100); border-radius:16px; outline:none; transition: border-color 0.3s; background: var(--p-gray-100)" />
+        <input type="text" maxlength="1" class="pin-digit" name="p2" style="width:64px; height:72px; text-align:center; font-size:2rem; font-weight:700; border:2px solid var(--p-gray-100); border-radius:16px; outline:none; transition: border-color 0.3s; background: var(--p-gray-100)" />
+        <input type="text" maxlength="1" class="pin-digit" name="p3" style="width:64px; height:72px; text-align:center; font-size:2rem; font-weight:700; border:2px solid var(--p-gray-100); border-radius:16px; outline:none; transition: border-color 0.3s; background: var(--p-gray-100)" />
+        <input type="text" maxlength="1" class="pin-digit" name="p4" style="width:64px; height:72px; text-align:center; font-size:2rem; font-weight:700; border:2px solid var(--p-gray-100); border-radius:16px; outline:none; transition: border-color 0.3s; background: var(--p-gray-100)" />
+      </div>
+      
+      <div style="display: flex; gap: 12px">
+        <button type="button" onclick="closePinModal()" class="p-btn p-btn-white p-btn-full" style="border: none; color: var(--p-gray-600)">Cancel</button>
+        <button type="submit" class="p-btn p-btn-orange p-btn-full">Verify & Deliver</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openPinModal(orderId, customerName) {
+  document.getElementById('pin-form').action = '/delivery/confirm/' + orderId + '/';
+  document.getElementById('pin-customer-name').textContent = 'Ask ' + customerName + ' for their 4-digit PIN';
+  document.getElementById('pin-modal').style.display = 'flex';
+  document.querySelector('.pin-digit').focus();
+}
+function closePinModal() {
+  document.getElementById('pin-modal').style.display = 'none';
+  document.querySelectorAll('.pin-digit').forEach(function(i){ i.value=''; });
+}
+
+/* PIN digit logic */
+var pinDigits = document.querySelectorAll('.pin-digit');
+pinDigits.forEach(function(input, idx) {
+  input.addEventListener('focus', function() { this.style.borderColor = 'var(--p-orange)'; this.style.background = 'white'; });
+  input.addEventListener('blur', function() { if(!this.value) { this.style.borderColor = 'var(--p-gray-100)'; this.style.background = 'var(--p-gray-100)'; } });
+  
+  input.addEventListener('input', function() {
+    this.value = this.value.replace(/\D/g,'').slice(0,1);
+    if (this.value && idx < pinDigits.length - 1) { pinDigits[idx+1].focus(); }
+  });
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'Backspace' && !this.value && idx > 0) { pinDigits[idx-1].focus(); }
+  });
+});
+
+window.onclick = function(event) {
+  if (event.target == document.getElementById('pin-modal')) closePinModal();
+};
+</script>
+{% endblock %}

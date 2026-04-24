@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block nav_dishes %}active{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:30px">
+    <div>
+      <h1 style="margin-bottom:4px">My Dishes</h1>
+      <p style="color:var(--gray-500)">Manage the dishes available in your kitchen.</p>
+    </div>
+    <a href="{% url 'cook:dish_add' %}" class="btn-primary">+ Add New Dish</a>
+  </div>
+
+  {% if dishes %}
+    <div class="grid-3" style="gap:24px">
+      {% for dish in dishes %}
+        <div class="card" style="padding:0;overflow:hidden;display:flex;flex-direction:column">
+          <div style="height:160px;background:var(--gray-100);position:relative">
+            {% if dish.photo %}
+              <img src="{{ dish.photo.url }}" style="width:100%;height:100%;object-fit:cover"/>
+            {% else %}
+              <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--gray-300);font-size:3rem">
+                🍲
+              </div>
+            {% endif %}
+            <div style="position:absolute;top:12px;right:12px">
+              <span class="badge {% if dish.food_type == 'VEG' %}badge-confirmed{% else %}badge-cancelled{% endif %}" style="background:white;color:var(--black);border:1px solid var(--gray-200)">
+                {{ dish.get_food_type_display }}
+              </span>
+            </div>
+          </div>
+          <div style="padding:16px;flex:1;display:flex;flex-direction:column">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+              <h3 style="font-size:1.1rem;margin:0">{{ dish.name }}</h3>
+              <div style="font-weight:700;color:var(--orange)">₹{{ dish.base_price }}</div>
+            </div>
+            <p style="font-size:13px;color:var(--gray-500);margin-bottom:12px;flex:1">
+              {{ dish.description|truncatechars:80 }}
+            </p>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:auto">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:12px;padding:4px 8px;background:var(--gray-50);border-radius:4px;color:var(--gray-600)">
+                  Spice: {{ dish.get_spice_level_display }}
+                </span>
+                {% if not dish.is_active %}
+                  <span class="badge badge-failed" style="font-size:10px">Inactive</span>
+                {% endif %}
+              </div>
+              <a href="{% url 'cook:dish_edit' dish.pk %}" class="btn-secondary" style="padding:4px 12px;font-size:12px;height:auto">Edit</a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card" style="padding:60px 20px;text-align:center">
+      <div style="font-size:4rem;margin-bottom:20px">🥘</div>
+      <h2>No dishes added yet</h2>
+      <p style="color:var(--gray-500);max-width:400px;margin:0 auto 24px">
+        Start by adding your first dish. Once added, you can include them in your daily menus for customers to order.
+      </p>
+      <a href="{% url 'cook:dish_add' %}" class="btn-primary">Add Your First Dish</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

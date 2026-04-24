@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}My Orders — GharKhana{% endblock %}
+{% block nav_orders %}active{% endblock %}
+
+{% block content %}
+<div class="container animate-fade">
+  <div class="page-header" style="margin-bottom: 40px;">
+    <h1 style="font-size: 2.25rem;">My Orders 🍱</h1>
+    <p class="text-muted">Track and manage your culinary journeys</p>
+  </div>
+
+  {% if orders %}
+  <div style="display: flex; flex-direction: column; gap: 20px;">
+    {% for order in orders %}
+    <a href="/orders/{{ order.pk }}/">
+      <div class="card order-card-premium" style="padding: 24px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+          <div style="display: flex; align-items: center; gap: 20px;">
+            <div style="width: 60px; height: 60px; background: var(--p-orange-light); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--p-orange);">
+               🏠
+            </div>
+            <div>
+              <div style="font-weight: 800; font-size: 1.125rem; color: var(--p-black); margin-bottom: 4px;">
+                {{ order.cook.kitchen_name }}
+              </div>
+              <div class="text-xs" style="color: var(--p-gray-500); font-weight: 600;">
+                Order #{{ order.pk }} · {{ order.placed_at|date:"d M Y" }} · {{ order.slot.label }}
+              </div>
+              <div class="text-xs" style="color: var(--p-orange); font-weight: 700; margin-top: 4px;">
+                {{ order.items.count }} item{{ order.items.count|pluralize }} ordered
+              </div>
+            </div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-family: 'Poppins', sans-serif; font-size: 1.25rem; font-weight: 800; color: var(--p-black); margin-bottom: 8px;">
+              ₹{{ order.total }}
+            </div>
+            <span class="badge badge-{{ order.status|lower }}" style="font-weight: 700; border: none; padding: 6px 16px;">
+              {{ order.get_status_display }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="empty-state" style="padding: 100px 20px;">
+    <div style="font-size: 4rem; opacity: 0.3; margin-bottom: 24px;">🥗</div>
+    <h2 style="margin-bottom: 12px;">No orders found</h2>
+    <p class="text-muted" style="margin-bottom: 32px;">You haven't ordered anything yet. Time to explore local kitchens!</p>
+    <a href="/cooks/" class="btn-primary" style="padding: 16px 40px; border-radius: 100px; box-shadow: var(--shadow-orange);">
+      Start Exploring
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+
+<style>
+.order-card-premium {
+  transition: var(--transition);
+  border: 1px solid var(--p-border);
+}
+.order-card-premium:hover {
+  transform: scale(1.01);
+  border-color: var(--p-orange-mid);
+  box-shadow: var(--shadow-md);
+}
+</style>
+{% endblock %}

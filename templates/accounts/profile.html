@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}My Profile — GharKhana{% endblock %}
+
+{% block content %}
+<div class="container animate-fade">
+  <div class="page-header" style="margin-bottom: 40px;">
+    <h1 style="font-size: 2.25rem;">My Profile</h1>
+    <p class="text-muted">Manage your personal information and delivery addresses</p>
+  </div>
+
+  <div class="grid-2" style="gap: 32px; align-items: flex-start;">
+    
+    <!-- Account Details -->
+    <div class="card">
+      <div class="card-header">
+        <h3>Account settings</h3>
+        <div class="badge badge-confirmed">Active</div>
+      </div>
+      
+      <div style="display: flex; flex-direction: column; gap: 24px; padding-top: 8px;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--p-orange-light); color: var(--p-orange); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 800;">
+            {{ user.name|slice:":1"|upper }}
+          </div>
+          <div>
+            <div class="text-xs text-muted" style="text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700;">Full name</div>
+            <div style="font-weight: 700; font-size: 1.1rem; color: var(--p-gray-900);">{{ user.name }}</div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 24px;">
+          <div>
+            <div class="text-xs text-muted" style="text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700;">Email address</div>
+            <div style="font-weight: 600; font-size: 0.9375rem; color: var(--p-gray-900); margin-top: 4px;">{{ user.email }}</div>
+          </div>
+          <div>
+            <div class="text-xs text-muted" style="text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700;">Phone number</div>
+            <div style="font-weight: 600; font-size: 0.9375rem; color: var(--p-gray-900); margin-top: 4px;">{{ user.phone }}</div>
+          </div>
+          <div>
+            <div class="text-xs text-muted" style="text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700;">Account type</div>
+            <div style="font-weight: 600; font-size: 0.9375rem; color: var(--p-gray-900); margin-top: 4px;">{{ user.get_role_display }}</div>
+          </div>
+          <div>
+            <div class="text-xs text-muted" style="text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700;">Member since</div>
+            <div style="font-weight: 600; font-size: 0.9375rem; color: var(--p-gray-900); margin-top: 4px;">{{ user.created_at|date:"d M Y" }}</div>
+          </div>
+        </div>
+
+        <div style="margin-top: 12px; padding-top: 24px; border-top: 1px solid var(--p-border);">
+          <a href="#" class="btn-outline btn-sm" style="opacity: 0.5; cursor: not-allowed;">Edit profile details</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Saved Addresses -->
+    <div class="card">
+      <div class="card-header">
+        <h3>Saved addresses</h3>
+        <a href="/accounts/address/add/" class="btn-primary btn-sm" style="box-shadow: none; padding: 8px 16px;">+ Add new</a>
+      </div>
+
+      {% if addresses %}
+        <div style="display: flex; flex-direction: column; gap: 0;">
+          {% for addr in addresses %}
+          <div style="padding: 20px 0; border-bottom: 1px solid var(--p-border); display: flex; justify-content: space-between; align-items: flex-start;">
+            <div style="display: flex; gap: 16px;">
+              <div style="font-size: 1.25rem;">🏠</div>
+              <div>
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 4px;">
+                  <span style="font-weight: 700; color: var(--p-gray-900);">{{ addr.label }}</span>
+                  {% if addr.is_default %}
+                    <span class="badge badge-confirmed" style="font-size: 0.65rem;">Default</span>
+                  {% endif %}
+                </div>
+                <div class="text-sm text-muted" style="line-height: 1.5; max-width: 300px;">{{ addr.address }}</div>
+              </div>
+            </div>
+            <button class="text-xs" style="color: var(--p-gray-500); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Edit</button>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state" style="padding: 40px 0;">
+          <div class="empty-state-icon" style="font-size: 2.5rem; margin-bottom: 16px;">📍</div>
+          <h4 style="margin-bottom: 8px;">No addresses saved</h4>
+          <p class="text-sm">Add a delivery address to start ordering delicious home-cooked meals.</p>
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}

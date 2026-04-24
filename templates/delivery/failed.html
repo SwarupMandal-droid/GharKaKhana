@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}Report Failed Delivery — GharKhana{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:540px">
+
+  <a href="/delivery/dashboard/"
+     style="display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--gray-500);margin-bottom:20px">
+    ← Back to dashboard
+  </a>
+
+  <div class="page-header">
+    <h2>Report failed delivery</h2>
+    <p>Order #{{ order.pk }} · {{ order.customer.name }}</p>
+  </div>
+
+  <div class="card">
+    <div style="background:var(--red-light);border:1px solid #EF9A9A;border-radius:var(--radius-md);padding:14px 16px;margin-bottom:20px;font-size:14px;color:var(--red)">
+      ⚠️ Only report if you genuinely cannot complete this delivery.
+      If the customer has paid online, they will be notified and a photo of the food donation will be sent to them.
+    </div>
+
+    <form method="post" enctype="multipart/form-data"
+          action="/delivery/failed/{{ order.pk }}/">
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label class="form-label">Reason for failed delivery</label>
+        <select name="reason" class="form-select">
+          <option value="NOT_HOME">Customer not home</option>
+          <option value="WRONG_ADDRESS">Wrong address</option>
+          <option value="REFUSED">Customer refused delivery</option>
+          <option value="OTHER">Other reason</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Additional notes</label>
+        <textarea name="notes" class="form-textarea"
+                  placeholder="Any additional details about why delivery failed..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">
+          Photo of food donation
+          {% if order.payment_method == 'ONLINE' %}
+          <span style="color:var(--red);font-size:12px">* Required for prepaid orders</span>
+          {% endif %}
+        </label>
+        <input type="file" name="photo" class="form-input"
+               accept="image/*"
+               {% if order.payment_method == 'ONLINE' %}required{% endif %}/>
+        <div class="form-hint">
+          Take a clear photo of the food being given to a person in need or someone with disability.
+          {% if order.payment_method == 'ONLINE' %}
+          This photo will be sent to the customer.
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Order summary -->
+      <div style="background:var(--gray-100);border-radius:var(--radius-md);padding:14px 16px;margin-bottom:20px">
+        <div style="font-size:12px;font-weight:600;color:var(--gray-500);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">
+          Order contents
+        </div>
+        {% for item in order.items.all %}
+        <div style="font-size:13px;color:var(--gray-700);margin-bottom:4px">
+          {{ item.quantity }}× {{ item.dish_name }}
+        </div>
+        {% endfor %}
+        <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--gray-300);font-size:13px;font-weight:600">
+          Total: ₹{{ order.total }} ·
+          {% if order.payment_method == 'ONLINE' %}
+            <span style="color:var(--green)">Prepaid online</span>
+          {% else %}
+            <span style="color:var(--egg)">Cash on delivery</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px">
+        <button type="submit" class="btn-danger"
+                data-confirm="Are you sure? This will mark the order as failed and notify the customer.">
+          Submit report
+        </button>
+        <a href="/delivery/dashboard/" class="btn-ghost">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

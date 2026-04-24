@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block nav_menu %}active{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:30px">
+    <div>
+      <h1 style="margin-bottom:4px">Daily Menus</h1>
+      <p style="color:var(--gray-500)">Plan and manage your daily offerings for customers.</p>
+    </div>
+    <a href="{% url 'cook:menu_create' %}" class="btn-primary">+ Create New Menu</a>
+  </div>
+
+  {% if menus %}
+    <div style="display:flex;flex-direction:column;gap:20px">
+      {% for menu in menus %}
+        <div class="card" style="padding:20px;display:flex;align-items:center;justify-content:space-between;gap:24px">
+          <div style="display:flex;align-items:center;gap:20px;flex:1">
+            <div style="width:56px;height:56px;background:var(--orange-light);color:var(--orange-dark);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Syne',sans-serif">
+              <span style="font-size:12px;font-weight:800;line-height:1">{{ menu.menu_date|date:"D"|upper }}</span>
+              <span style="font-size:20px;font-weight:800;line-height:1">{{ menu.menu_date|date:"d" }}</span>
+            </div>
+            <div>
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+                <h3 style="margin:0">{{ menu.get_meal_type_display }}</h3>
+                <span class="badge badge-{{ menu.status|lower }}" style="font-size:11px">{{ menu.get_status_display }}</span>
+              </div>
+              <div style="font-size:14px;color:var(--gray-500)">
+                {{ menu.slot.label|default:"No slot assigned" }} · {{ menu.items.count }} dishes
+              </div>
+            </div>
+          </div>
+          
+          <div style="display:flex;align-items:center;gap:40px">
+            <div style="text-align:right">
+              <div style="font-size:12px;font-weight:600;color:var(--gray-400);margin-bottom:4px;text-transform:uppercase">Order Cutoff</div>
+              <div style="font-weight:600;font-size:14px">{{ menu.order_cutoff }}</div>
+            </div>
+            <div style="display:flex;gap:12px">
+              <a href="{% url 'cook:menu_edit' menu.pk %}" class="btn-outline btn-sm">Edit</a>
+              {% if menu.status == 'DRAFT' %}
+                <button class="btn-primary btn-sm">Publish</button>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card" style="padding:60px 20px;text-align:center">
+      <div style="font-size:4rem;margin-bottom:20px">🗓️</div>
+      <h2>No menus planned</h2>
+      <p style="color:var(--gray-500);max-width:400px;margin:0 auto 24px">
+        Create a menu for tomorrow or future dates. You can select your prepared dishes and set a custom price and quantity.
+      </p>
+      <a href="{% url 'cook:menu_create' %}" class="btn-primary">Create Your First Menu</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

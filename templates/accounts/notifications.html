@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}Notifications — GharKhana{% endblock %}
+
+{% block content %}
+<div class="container animate-fade" style="max-width: 720px;">
+
+  <div class="page-header" style="margin-bottom: 40px; display: flex; justify-content: space-between; align-items: flex-end;">
+    <div>
+      <h1 style="font-size: 2.25rem;">Notifications</h1>
+      <p class="text-muted">Stay updated with your order status and activity</p>
+    </div>
+    {% if notifications %}
+    <button class="text-xs" style="color: var(--p-orange); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; padding-bottom: 8px;">Mark all as read</button>
+    {% endif %}
+  </div>
+
+  {% if notifications %}
+  <div style="display: flex; flex-direction: column; gap: 16px;">
+    {% for notif in notifications %}
+    <div class="card"
+         style="padding: 24px; 
+                {% if not notif.is_read %}
+                  background: linear-gradient(to right, var(--p-orange-light), var(--p-white)); 
+                  border-color: var(--p-orange-mid);
+                {% endif %}
+                transition: var(--transition);
+                cursor: pointer;">
+      
+      <div style="display: flex; gap: 20px;">
+        <!-- Icon/Indicator -->
+        <div style="width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1.25rem;
+          {% if notif.type == 'ORDER_DELIVERED' %} background: var(--p-success-bg); color: var(--p-success);
+          {% elif notif.type == 'ORDER_FAILED' %} background: var(--p-error-bg); color: var(--p-error);
+          {% elif notif.type == 'ORDER_CONFIRMED' %} background: var(--p-orange-light); color: var(--p-orange);
+          {% elif notif.type == 'INVOICE_CREATED' %} background: #FEF3DC; color: #D4900A;
+          {% else %} background: var(--p-gray-100); color: var(--p-gray-700); {% endif %}">
+          {% if notif.type == 'ORDER_DELIVERED' %}✅
+          {% elif notif.type == 'ORDER_FAILED' %}❌
+          {% elif notif.type == 'ORDER_CONFIRMED' %}📦
+          {% elif notif.type == 'INVOICE_CREATED' %}📄
+          {% else %}🔔{% endif %}
+        </div>
+
+        <div style="flex: 1;">
+          <div class="flex-between" style="margin-bottom: 4px;">
+            <div style="font-weight: 700; font-size: 1.05rem; color: var(--p-black);">{{ notif.title }}</div>
+            <div style="font-size: 0.75rem; font-weight: 600; color: var(--p-gray-500); background: var(--p-gray-100); padding: 4px 10px; border-radius: 100px;">
+              {{ notif.created_at|timesince }} ago
+            </div>
+          </div>
+          <div style="font-size: 0.9375rem; color: var(--p-gray-700); line-height: 1.5;">{{ notif.message }}</div>
+          
+          {% if notif.photo %}
+          <div style="margin-top: 16px;">
+            <img src="{{ notif.photo.url }}"
+                 style="max-width: 100%; height: 200px; object-fit: cover; border-radius: var(--radius-md); border: 1px solid var(--p-border);"/>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="empty-state" style="padding: 100px 20px;">
+    <div class="empty-state-icon" style="font-size: 3.5rem; margin-bottom: 24px; opacity: 0.5;">🔔</div>
+    <h2 style="color: var(--p-gray-900); margin-bottom: 12px;">All caught up!</h2>
+    <p class="text-muted" style="font-size: 1.1rem;">You don't have any new notifications at the moment.</p>
+    <a href="/" class="btn-primary" style="margin-top: 32px;">Back to Home</a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

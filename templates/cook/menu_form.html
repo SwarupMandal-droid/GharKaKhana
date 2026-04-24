@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% block title %}
+    {% if menu %}Edit Menu: {{ menu.menu_date }}{% else %}Create Daily Menu{% endif %} — GharKhana
+{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:800px">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+        <div>
+            <h1 style="margin-bottom:4px">
+                {% if menu %}Edit Daily Menu{% else %}Create Daily Menu{% endif %}
+            </h1>
+            <p style="color:var(--gray-500)">
+                {% if menu %}Update menu details and manage dishes.{% else %}Set up a new menu for a specific date and slot.{% endif %}
+            </p>
+        </div>
+        <a href="{% url 'cook:menu_list' %}" class="btn-ghost">Back to List</a>
+    </div>
+
+    <div class="grid-2" style="align-items:start;gap:24px">
+        
+        <!-- Menu Form -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Menu Details</h3>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                <div class="message message-error" style="margin-bottom:16px">
+                    {{ form.non_field_errors.0 }}
+                </div>
+                {% endif %}
+
+                {% for field in form %}
+                <div class="form-group">
+                    <label class="form-label">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                    <div class="message message-error">{{ field.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                <div style="margin-top:24px">
+                    <button type="submit" class="btn-primary btn-full">
+                        {% if menu %}Update Details{% else %}Create Menu{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Menu Item Management (Only if menu exists) -->
+        {% if menu %}
+        <div class="card">
+            <div class="card-header">
+                <h3>Manage Dishes</h3>
+            </div>
+
+            <!-- Existing Items -->
+            <div style="margin-bottom:24px">
+                <h4 style="margin-bottom:12px;font-size:14px;color:var(--gray-500)">Current Dishes</h4>
+                {% if menu_items %}
+                    <div style="display:flex;flex-direction:column;gap:12px">
+                        {% for item in menu_items %}
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--gray-100);border-radius:12px">
+                            <div>
+                                <div style="font-weight:600;font-size:14px">{{ item.dish.name }}</div>
+                                <div style="font-size:12px;color:var(--gray-500)">
+                                    Qty: {{ item.quantity_available }} · ₹{{ item.effective_price }}
+                                </div>
+                            </div>
+                            <form method="post" action="{% url 'cook:menu_item_remove' item.pk %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-danger btn-sm" style="padding:4px 8px">Remove</button>
+                            </form>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p style="font-size:13px;color:var(--gray-400);font-style:italic">No dishes added yet.</p>
+                {% endif %}
+            </div>
+
+            <!-- Add New Item -->
+            {% if available_dishes %}
+            <div style="border-top:1px solid var(--gray-200);padding-top:20px">
+                <h4 style="margin-bottom:12px;font-size:14px;color:var(--gray-500)">Add a Dish</h4>
+                <form method="post" action="{% url 'cook:menu_item_add' menu.pk %}" style="display:flex;flex-direction:column;gap:12px">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <select name="dish_id" class="form-select" required>
+                            <option value="">Select a dish...</option>
+                            {% for dish in available_dishes %}
+                            <option value="{{ dish.pk }}">{{ dish.name }} (₹{{ dish.base_price }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                        <div class="form-group">
+                            <input type="number" name="quantity" placeholder="Quantity" class="form-input" required min="1">
+                        </div>
+                        <div class="form-group">
+                            <input type="number" name="price_override" placeholder="Price (optional)" class="form-input" step="0.01">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary">Add dish to menu</button>
+                </form>
+            </div>
+            {% else %}
+                <div class="message message-info" style="font-size:12px">
+                    All your active dishes are already in this menu, or you need to <a href="{% url 'cook:dish_add' %}" style="color:inherit;font-weight:700">create more dishes</a>.
+                </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,367 @@
+{% extends 'base.html' %}
+{% block title %}{{ cook.kitchen_name }} — GharKhana{% endblock %}
+
+{% block content %}
+<div class="container animate-fade">
+
+  <!-- Back -->
+  <a href="/cooks/" style="display: inline-flex; align-items: center; gap: 8px; font-size: 0.875rem; font-weight: 600; color: var(--p-gray-500); margin-bottom: 24px; transition: var(--transition);" class="hover-orange">
+    ← Explore more kitchens
+  </a>
+
+  <!-- Cook hero -->
+<div class="card" style="margin-bottom: 32px; padding: 0; overflow: hidden; border: none; box-shadow: var(--shadow-md); position: relative;">
+    <div style="height: 280px; background: var(--p-orange); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;">
+      {% if cook.photo %}
+        <img src="{{ cook.photo.url }}" style="width: 100%; height: 100%; object-fit: cover; filter: brightness(0.9);"/>
+      {% else %}
+        <div style="font-family: 'Poppins', sans-serif; font-size: 10rem; font-weight: 800; color: rgba(255, 255, 255, 0.15); user-select: none;">
+          {{ cook.kitchen_name|first|upper }}
+        </div>
+      {% endif %}
+      <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 160px; background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);"></div>
+    </div>
+
+    <div style="padding: 32px; position: relative; margin-top: -80px; background: var(--p-white); border-radius: var(--radius-xl) var(--radius-xl) 0 0; z-index: 10;">
+      <div style="display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 24px; margin-bottom: 32px;">
+        <div style="flex: 1; min-width: 300px;">
+          <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px;">
+            <h1 style="font-size: 3rem; margin: 0; letter-spacing: -1px;">{{ cook.kitchen_name }}</h1>
+            {% if avg_rating %}
+            <div style="background: var(--p-success); color: white; padding: 6px 16px; border-radius: 12px; font-weight: 800; font-size: 1.25rem; display: flex; align-items: center; gap: 6px; box-shadow: var(--shadow-sm);">
+              ★ {{ avg_rating }}
+            </div>
+            {% endif %}
+          </div>
+          
+          <div class="text-sm" style="color: var(--p-gray-500); font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 16px; opacity: 0.8;">
+            <span style="display: flex; align-items: center; gap: 6px;">🍝 {{ cook.cuisine_tags|default:"Authentic Home Cooking" }}</span>
+            <span style="width: 6px; height: 6px; background: var(--p-gray-300); border-radius: 50%;"></span>
+            <span style="display: flex; align-items: center; gap: 6px;">💬 {{ reviews|length }} reviews</span>
+          </div>
+
+          {% if cook.bio %}
+          <p style="font-size: 1.1rem; color: var(--p-gray-700); max-width: 800px; line-height: 1.7;">{{ cook.bio }}</p>
+          {% endif %}
+        </div>
+
+        <div style="text-align: right; flex-shrink: 0;">
+          {% if distance %}
+          <div style="font-size: 1.5rem; font-weight: 800; color: var(--p-black); margin-bottom: 4px;">📍 {{ distance }} km</div>
+          <div style="font-size: 0.9375rem; color: var(--p-gray-500); font-weight: 600;">
+            Delivery ₹{{ charge }} {% if pickup_ok %} · <span style="color: var(--p-success);">Free pickup</span>{% endif %}
+          </div>
+          {% endif %}
+          
+          <div style="display: flex; gap: 12px; margin-top: 24px; justify-content: flex-end;">
+            <a href="tel:{{ cook.phone }}" class="btn-primary" style="display: flex; align-items: center; gap: 12px; border-radius: 100px; padding: 12px 32px;">
+              <span style="font-size: 1.25rem;">📞</span> <span>Call Kitchen</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Info Bar -->
+      <div style="padding-top: 32px; border-top: 1px solid var(--p-border); display: flex; gap: 60px; flex-wrap: wrap;">
+        {% if slots %}
+        <div>
+          <div class="text-xs text-muted" style="text-transform: uppercase; letter-spacing: 0.15em; font-weight: 800; margin-bottom: 16px; opacity: 0.6;">Service Windows</div>
+          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            {% for slot in slots %}
+            <span class="badge" style="background: var(--p-orange-light); color: var(--p-orange); border: 1px solid var(--p-orange-mid); font-weight: 800; font-size: 0.8125rem; padding: 6px 16px;">{{ slot.label }}</span>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <div>
+          <div class="text-xs text-muted" style="text-transform: uppercase; letter-spacing: 0.15em; font-weight: 800; margin-bottom: 16px; opacity: 0.6;">Kitchen Policy</div>
+          <div style="font-size: 1rem; font-weight: 700; color: var(--p-gray-900);">
+            Cutoff: <span style="color: var(--p-orange);">{{ cook.order_cutoff }}</span> &nbsp;·&nbsp; Capacity: {{ cook.daily_capacity }} meals/day
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2-custom" style="display: grid; grid-template-columns: 1fr 360px; gap: 48px; align-items: start;">
+
+    <!-- Left Column: Menu -->
+    <div style="min-width: 0;">
+      <!-- Menus Section continues... -->
+
+      <!-- Today's Menu -->
+      {% if today_menus %}
+      <div style="margin-bottom: 48px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+          <h2 style="font-size: 1.5rem; display: flex; align-items: center; gap: 12px;">
+            Today's Fresh Menu <span style="font-size: 1.5rem;">🔥</span>
+          </h2>
+          <span class="badge badge-confirmed" style="font-weight: 700;">LIVE FOR BOOKING</span>
+        </div>
+        {% for menu in today_menus %}
+        <div style="margin-bottom: 32px;" data-slot-id="{{ menu.slot.pk }}">
+          <div style="font-size: 0.8125rem; font-weight: 800; color: var(--p-orange); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.1em; display: flex; align-items: center; gap: 10px;">
+            {{ menu.get_meal_type_display }} · {{ menu.slot.label }}
+            <div style="flex: 1; height: 1px; background: var(--p-orange-mid);"></div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            {% for item in menu.items.all %}
+            {% include 'customer/partials/dish_card.html' with item=item menu=menu %}
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Tomorrow's Menu -->
+      {% if tomorrow_menus %}
+      <div style="margin-bottom: 48px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+          <h2 style="font-size: 1.5rem; display: flex; align-items: center; gap: 12px;">
+            Tomorrow's Menu <span style="font-size: 1.5rem;">🌅</span>
+          </h2>
+          <span class="badge" style="background: var(--p-blue-bg); color: var(--p-blue); font-weight: 700;">PRE-ORDER OPEN</span>
+        </div>
+        {% for menu in tomorrow_menus %}
+        <div style="margin-bottom: 32px;" data-slot-id="{{ menu.slot.pk }}">
+          <div style="font-size: 0.8125rem; font-weight: 800; color: var(--p-blue); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.1em; display: flex; align-items: center; gap: 10px;">
+            {{ menu.get_meal_type_display }} · {{ menu.slot.label }}
+            <div style="flex: 1; height: 1px; background: var(--p-blue-bg); border: 1px solid var(--p-blue);"></div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            {% for item in menu.items.all %}
+            {% include 'customer/partials/dish_card.html' with item=item menu=menu %}
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% elif not today_menus %}
+      <div class="card" style="padding: 60px 40px; text-align: center; border: 2px dashed var(--p-border); background: transparent; box-shadow: none;">
+        <div style="font-size: 4rem; margin-bottom: 24px; opacity: 0.3;">🥣</div>
+        <h2 style="margin-bottom: 12px;">Resting for a bit</h2>
+        <p class="text-muted" style="font-size: 1.1rem; max-width: 400px; margin: 0 auto;">This kitchen hasn't published today or tomorrow's menu yet. Please check back soon!</p>
+      </div>
+      {% endif %}
+
+    </div>
+
+    <!-- Right Column: Cart & Reviews -->
+    <div style="flex: 1; min-width: 320px;">
+
+      <!-- Premium Cart Panel -->
+      <div class="card" style="margin-bottom: 32px; position: sticky; top: 100px; padding: 0; box-shadow: var(--shadow-lg); border: 1px solid var(--p-orange-mid);" id="cart-panel">
+        <div style="padding: 24px; background: var(--p-orange); color: white; border-radius: var(--radius-md) var(--radius-md) 0 0;">
+          <div class="flex-between">
+            <h3 style="color: white; font-size: 1.25rem;">Your Order</h3>
+            <span id="cart-count" style="font-size: 0.875rem; font-weight: 700; background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 100px;">0 items</span>
+          </div>
+        </div>
+        
+        <div id="cart-items-list" style="padding: 8px 0;">
+          <div class="empty-state" style="padding: 48px 24px;" id="cart-empty">
+            <div style="font-size: 2.5rem; margin-bottom: 12px; opacity: 0.2;">🛒</div>
+            <p style="font-size: 0.9375rem; font-weight: 600; color: var(--p-gray-500);">Your cart is empty.</p>
+            <p class="text-xs" style="color: var(--p-gray-400); margin-top: 4px;">Add delicious dishes to get started</p>
+          </div>
+        </div>
+
+        <div id="cart-summary" style="display: none; padding: 24px; background: var(--p-gray-100); border-top: 1px solid var(--p-border);">
+          <div style="display: flex; justify-content: space-between; font-size: 0.9375rem; margin-bottom: 8px;">
+            <span style="color: var(--p-gray-500);">Subtotal</span>
+            <span id="cart-subtotal" style="font-weight: 700; color: var(--p-black);">₹0</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.8125rem; margin-bottom: 8px;">
+            <span style="color: var(--p-gray-500);">Platform fee (0.2%)</span>
+            <span id="cart-fee">₹0</span>
+          </div>
+          {% if distance %}
+          <div style="display: flex; justify-content: space-between; font-size: 0.8125rem; margin-bottom: 16px;">
+            <span style="color: var(--p-gray-500);">Delivery charge</span>
+            <span id="delivery-charge" data-charge="{{ charge }}" style="color: var(--p-black); font-weight: 600;">₹{{ charge }}</span>
+          </div>
+          {% endif %}
+          
+          <div style="display: flex; justify-content: space-between; font-size: 1.25rem; font-weight: 800; color: var(--p-black); margin-bottom: 24px; padding-top: 16px; border-top: 1px solid var(--p-gray-300);">
+            <span>Order Total</span>
+            <span id="cart-total" style="color: var(--p-orange);">₹0</span>
+          </div>
+          <button class="btn-primary" style="width: 100%; height: 56px; font-size: 1rem; font-weight: 800; border-radius: var(--radius-md); box-shadow: var(--shadow-orange);" onclick="proceedToCheckout()">
+            Proceed to Checkout →
+          </button>
+        </div>
+      </div>
+
+      <!-- Reviews Section -->
+      {% if reviews %}
+      <div class="card" style="padding: 0;">
+        <div class="card-header" style="padding: 24px 32px; border-bottom: 1px solid var(--p-border);">
+          <h3 style="font-size: 1.125rem;">Kitchen Reviews</h3>
+          {% if avg_rating %}
+          <div style="color: var(--p-orange); font-weight: 800; font-size: 1.125rem;">★ {{ avg_rating }}</div>
+          {% endif %}
+        </div>
+        <div style="padding: 8px 32px 32px;">
+          {% for review in reviews %}
+          <div style="padding: 20px 0; border-bottom: 1px solid var(--p-border);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+              <div style="font-weight: 700; font-size: 0.9375rem; color: var(--p-black);">{{ review.customer.name }}</div>
+              <div style="color: #F2C94C; font-size: 0.875rem; letter-spacing: 2px;">
+                {% for i in "12345" %}
+                  {% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}
+                {% endfor %}
+              </div>
+            </div>
+            {% if review.comment %}
+            <p style="font-size: 0.875rem; color: var(--p-gray-700); line-height: 1.5;">{{ review.comment }}</p>
+            {% endif %}
+            <div style="font-size: 0.75rem; color: var(--p-gray-400); margin-top: 8px; font-weight: 500;">
+              {{ review.created_at|date:"d M Y" }}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+
+<style>
+.hover-orange:hover {
+  color: var(--p-orange) !important;
+}
+#cart-panel {
+  transition: transform 0.3s ease;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var cartItems = {};
+var cookId    = {{ cook.pk }};
+var deliveryCharge = {{ charge|default:0 }};
+
+function addToCart(menuItemId, dishName, price, menuId, slotLabel, slotId) {
+  // Check stock
+  var span = document.querySelector('.qty-left-span[data-id="' + menuItemId + '"]');
+  var initialStock = span ? parseInt(span.dataset.initial) : 999;
+  var currentInCart = cartItems[menuItemId] ? cartItems[menuItemId].qty : 0;
+
+  if (currentInCart >= initialStock) {
+    alert("Sorry, no more " + dishName + " left!");
+    return;
+  }
+
+  if (cartItems[menuItemId]) {
+    cartItems[menuItemId].qty += 1;
+  } else {
+    cartItems[menuItemId] = {
+      name: dishName, price: price,
+      qty: 1, menuId: menuId, slot: slotLabel, slotId: slotId
+    };
+  }
+  updateCartUI();
+}
+
+
+function removeFromCart(menuItemId) {
+  if (cartItems[menuItemId]) {
+    cartItems[menuItemId].qty -= 1;
+    if (cartItems[menuItemId].qty <= 0) delete cartItems[menuItemId];
+  }
+  updateCartUI();
+}
+
+function updateCartUI() {
+  var keys    = Object.keys(cartItems);
+  var count   = keys.reduce(function(s,k){ return s + cartItems[k].qty; }, 0);
+  var subtotal= keys.reduce(function(s,k){ return s + cartItems[k].price * cartItems[k].qty; }, 0);
+  var fee     = subtotal * 0.002;
+  var total   = subtotal + fee + (count > 0 ? deliveryCharge : 0);
+
+  document.getElementById('cart-count').textContent = count + ' item' + (count !== 1 ? 's' : '');
+  document.getElementById('cart-subtotal').textContent = '₹' + subtotal.toFixed(0);
+  document.getElementById('cart-fee').textContent      = '₹' + fee.toFixed(2);
+  document.getElementById('cart-total').textContent    = '₹' + total.toFixed(0);
+
+  var listEl    = document.getElementById('cart-items-list');
+  var summaryEl = document.getElementById('cart-summary');
+
+  if (keys.length === 0) {
+    summaryEl.style.display = 'none';
+    listEl.innerHTML = '<div class="empty-state" style="padding:24px 0" id="cart-empty"><p style="font-size:13px">Add dishes from the menu</p></div>';
+  } else {
+    summaryEl.style.display = 'block';
+    var html = '';
+    keys.forEach(function(k) {
+      var it = cartItems[k];
+      // Escape single quotes for use in onclick
+      var safeName = it.name.replace(/'/g, "\\'");
+      var safeSlot = it.slot.replace(/'/g, "\\'");
+
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-100);font-size:13px">'
+            + '<div style="flex:1;padding-right:8px"><div style="font-weight:600">' + it.name + '</div>'
+            + '<div style="color:var(--gray-500);font-size:11px">' + it.slot + '</div></div>'
+            + '<div style="display:flex;align-items:center;gap:8px;margin:0 10px">'
+            + '<button onclick="removeFromCart(' + k + ')" style="width:24px;height:24px;border-radius:50%;border:1.5px solid var(--gray-300);background:white;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center">−</button>'
+            + '<span style="font-weight:600;min-width:16px;text-align:center">' + it.qty + '</span>'
+            + '<button onclick="addToCart(' + k + ',\'' + safeName + '\',' + it.price + ',' + it.menuId + ',\'' + safeSlot + '\',' + it.slotId + ')" style="width:24px;height:24px;border-radius:50%;background:var(--orange);border:none;color:white;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center">+</button>'
+            + '</div>'
+            + '<div style="font-weight:700;min-width:60px;text-align:right">₹' + (it.price * it.qty).toFixed(0) + '</div>'
+            + '</div>';
+    });
+    listEl.innerHTML = html;
+  }
+
+  // Update add buttons on menu cards
+  document.querySelectorAll('.add-btn').forEach(function(btn) {
+    var id  = btn.dataset.id;
+    var qty = cartItems[id] ? cartItems[id].qty : 0;
+    if (qty > 0) {
+      btn.textContent = 'Added (' + qty + ')';
+      btn.style.background = 'var(--black)';
+    } else {
+      btn.textContent = 'Add';
+      btn.style.background = 'var(--orange)';
+    }
+  });
+
+  // Update left counters
+  document.querySelectorAll('.qty-left-span').forEach(function(span) {
+    var id  = span.dataset.id;
+    var initial = parseInt(span.dataset.initial);
+    var inCart  = cartItems[id] ? cartItems[id].qty : 0;
+    span.textContent = (initial - inCart) + ' left';
+  });
+}
+
+
+function proceedToCheckout() {
+  var keys = Object.keys(cartItems);
+  if (keys.length === 0) return;
+
+  // NEW: Prevent multi-slot/multi-menu orders (Business Rule: 1 Menu/Order)
+  var menuIds = [...new Set(keys.map(k => cartItems[k].menuId))];
+  if (menuIds.length > 1) {
+    alert("Please only add items from a single menu (e.g., only Lunch OR only Dinner).");
+    return;
+  }
+
+  var firstItem = cartItems[keys[0]];
+
+  localStorage.setItem('gk_cart', JSON.stringify({
+    cookId:    cookId,
+    items:     cartItems,
+    slotId:    firstItem.slotId,
+    pickup_ok: {{ pickup_ok|yesno:"true,false" }}
+  }));
+  localStorage.setItem('gk_delivery_charge', deliveryCharge);
+  window.location.href = '/orders/cart/';
+}
+</script>
+{% endblock %}
