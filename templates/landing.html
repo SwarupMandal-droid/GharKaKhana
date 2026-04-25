@@ -1,0 +1,1443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GharKhana — Ghar ke haath, ghar ka swaad</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+
+<!-- GSAP & SplitType -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+<script src="https://unpkg.com/split-type"></script>
+
+<style>
+/* ── Reset & Variables ─────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --turmeric:    #C8760A;
+  --turmeric-lt: #E8960C;
+  --beige:       #F5EDD6;
+  --cream:       #FFFBF2;
+  --charcoal:    #1E1A14;
+  --charcoal-2:  #2C2519;
+  --warm-gray:   #7A6E60;
+  --warm-gray-lt:#B0A494;
+  --haldi:       #F0C040;
+  --green:       #4A6741;
+  --green-lt:    #8FAB84;
+  --white:       #FFFFFF;
+  --serif:       'Playfair Display', Georgia, serif;
+  --sans:        'Plus Jakarta Sans', sans-serif;
+  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+}
+html{scroll-behavior:auto;font-size:16px}
+body{
+  font-family:var(--sans);
+  background:var(--cream);
+  color:var(--charcoal);
+  overflow-x:hidden;
+  cursor:none; /* We will use our custom cursor */
+}
+
+/* ── Custom Cursor ─────────────────────────────────────────── */
+.cursor-dot,
+.cursor-outline {
+  position: fixed;
+  top: 0;
+  left: 0;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.cursor-dot {
+  width: 8px;
+  height: 8px;
+  background-color: var(--turmeric);
+}
+
+.cursor-outline {
+  width: 40px;
+  height: 40px;
+  border: 1.5px solid var(--turmeric);
+  transition: width 0.2s ease-in-out, height 0.2s ease-in-out, background-color 0.2s ease-in-out;
+}
+
+/* Hover States */
+body:hover .cursor-dot,
+body:hover .cursor-outline {
+  opacity: 1;
+}
+
+.cursor-hover .cursor-outline {
+  width: 60px;
+  height: 60px;
+  background-color: rgba(200, 118, 10, 0.1);
+  border-color: transparent;
+}
+
+.cursor-drag .cursor-outline {
+  width: 70px;
+  height: 70px;
+  background-color: var(--turmeric);
+  border-color: transparent;
+  mix-blend-mode: difference;
+}
+.cursor-drag .cursor-outline::after {
+  content: 'DRAG';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+/* ── Grain Overlay ─────────────────────────────────────────── */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:1000;opacity:.4;
+}
+
+/* ── Navigation ────────────────────────────────────────────── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:500;
+  padding:20px 48px;
+  display:flex;align-items:center;justify-content:space-between;
+  transition:background .4s, padding .4s;
+}
+nav.scrolled{
+  background:rgba(255,251,242,.92);
+  backdrop-filter:blur(12px);
+  padding:14px 48px;
+  box-shadow:0 1px 0 rgba(200,118,10,.12);
+}
+.nav-logo{
+  font-family:var(--serif);
+  font-size:1.6rem;font-weight:900;
+  color:var(--charcoal);letter-spacing:-.02em;
+  text-decoration:none;
+}
+.nav-logo span{color:var(--turmeric)}
+.nav-links{display:flex;align-items:center;gap:32px}
+.nav-links a{
+  font-size:.9rem;font-weight:500;
+  color:var(--warm-gray);text-decoration:none;
+  transition:color .2s;letter-spacing:.01em;
+}
+.nav-links a:hover{color:var(--charcoal)}
+.nav-cta{
+  background:var(--charcoal);color:var(--cream);
+  padding:10px 24px;border-radius:100px;
+  font-size:.875rem;font-weight:600;
+  text-decoration:none;letter-spacing:.01em;
+  display:inline-block;
+  transition:background .2s;
+}
+.nav-cta:hover{background:var(--turmeric);}
+.nav-hamburger{display:none}
+
+/* ── Split Text Utility ────────────────────────────────────── */
+.split-char { overflow: hidden; display: inline-block; }
+.split-word { overflow: hidden; display: inline-block; }
+.split-line { overflow: hidden; display: block; }
+
+/* ── Section 1: Hero ───────────────────────────────────────── */
+#hero{
+  min-height:100vh;
+  display:grid;grid-template-columns:1fr 1.1fr;
+  position:relative;overflow:hidden;
+}
+.hero-left{
+  display:flex;flex-direction:column;justify-content:center;
+  padding:120px 64px 80px;
+  position:relative;z-index:2;
+}
+.hero-tag{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--beige);border:1px solid rgba(200,118,10,.2);
+  padding:6px 16px;border-radius:100px;
+  font-size:.8rem;font-weight:600;color:var(--turmeric);
+  letter-spacing:.06em;text-transform:uppercase;
+  margin-bottom:28px;width:fit-content;
+}
+.hero-tag::before{
+  content:'';width:6px;height:6px;background:var(--turmeric);
+  border-radius:50%;
+}
+.hero-headline{
+  font-family:var(--serif);
+  font-size:clamp(3rem, 5vw, 5.5rem);
+  font-weight:900;line-height:1.05;
+  letter-spacing:-.02em;color:var(--charcoal);
+}
+.hero-headline em{
+  font-style:italic;color:var(--turmeric);
+  display:block;
+}
+.hero-sub{
+  font-size:1.05rem;color:var(--warm-gray);
+  line-height:1.7;margin-top:24px;
+  max-width:420px;
+  font-weight:400;
+}
+.hero-actions{
+  display:flex;align-items:center;gap:16px;
+  margin-top:40px;flex-wrap:wrap;
+}
+.btn-primary-hero{
+  background:var(--turmeric);color:var(--white);
+  padding:16px 32px;border-radius:100px;
+  font-size:1rem;font-weight:700;
+  text-decoration:none;letter-spacing:.01em;
+  display:inline-block;
+  box-shadow:0 8px 32px rgba(200,118,10,.3);
+}
+.btn-primary-hero:hover{
+  background:var(--turmeric-lt);
+}
+.btn-secondary-hero{
+  color:var(--charcoal);font-size:.95rem;font-weight:600;
+  text-decoration:none;display:flex;align-items:center;gap:8px;
+  border-bottom:2px solid var(--turmeric);padding-bottom:2px;
+  transition:color .2s, gap .2s;
+}
+.btn-secondary-hero:hover{color:var(--turmeric);gap:12px}
+.hero-stats{
+  display:flex;gap:32px;margin-top:56px;
+  padding-top:32px;border-top:1px solid rgba(200,118,10,.15);
+}
+.hero-stat-num{
+  font-family:var(--serif);font-size:1.8rem;font-weight:700;
+  color:var(--charcoal);line-height:1;
+}
+.hero-stat-label{
+  font-size:.8rem;color:var(--warm-gray);font-weight:500;
+  margin-top:4px;letter-spacing:.02em;
+}
+
+.hero-right{
+  position:relative;overflow:hidden;
+  height: 100vh;
+}
+.hero-img-wrapper {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: absolute;
+  top: 0; left: 0;
+  /* Clip-path for initial reveal animation */
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+.hero-img-main{
+  width:100%;height:120%; /* Extra height for parallax */
+  object-fit:cover;
+  position: absolute;
+  top: -10%; left: 0;
+  filter:saturate(1.1);
+}
+.hero-img-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(to right, var(--cream) 0%, transparent 20%),
+             linear-gradient(to top, rgba(30,26,20,.4) 0%, transparent 50%);
+  z-index: 1;
+}
+.hero-float-card{
+  position:absolute;bottom:48px;right:32px;
+  background:rgba(255,251,242,.92);
+  backdrop-filter:blur(16px);
+  border:1px solid rgba(200,118,10,.15);
+  border-radius:20px;padding:16px 20px;
+  max-width:220px;
+  z-index: 2;
+  box-shadow:0 20px 60px rgba(30,26,20,.15);
+}
+.float-card-name{
+  font-family:var(--serif);font-size:1rem;font-weight:700;
+  color:var(--charcoal);margin-bottom:2px;
+}
+.float-card-meta{font-size:.8rem;color:var(--warm-gray);margin-bottom:12px}
+.float-card-dish{
+  background:var(--beige);border-radius:10px;padding:10px 12px;
+  font-size:.85rem;font-weight:600;color:var(--charcoal);
+  display:flex;justify-content:space-between;align-items:center;
+}
+.float-card-dish span{color:var(--turmeric);font-weight:700}
+
+/* ── Section 2: Feeling ────────────────────────────────────── */
+#feeling{
+  background:var(--charcoal);
+  padding:140px 48px;
+  text-align:center;
+  position:relative;overflow:hidden;
+}
+#feeling::before{
+  content:'';position:absolute;
+  width:600px;height:600px;
+  background:radial-gradient(circle, rgba(200,118,10,.12) 0%, transparent 70%);
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  pointer-events:none;
+}
+.feeling-quote{
+  font-family:var(--serif);
+  font-size:clamp(1.8rem, 4vw, 3.2rem);
+  font-weight:700;font-style:italic;
+  color:var(--cream);line-height:1.35;
+  max-width:780px;margin:0 auto;
+  letter-spacing:-.01em;
+}
+.feeling-quote em{color:var(--haldi);font-style:normal}
+.feeling-sub{
+  font-size:1rem;color:var(--warm-gray-lt);
+  margin-top:28px;font-style:italic;
+  font-family:var(--serif);
+}
+.feeling-divider{
+  width:60px;height:3px;background:var(--turmeric);
+  margin:48px auto 0;border-radius:2px;
+}
+
+/* ── Section 3: How it works ───────────────────────────────── */
+#how{
+  padding:120px 48px;background:var(--beige);
+  position:relative;
+}
+.section-tag{
+  font-size:.75rem;font-weight:700;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--turmeric);
+  margin-bottom:16px;
+}
+.section-headline{
+  font-family:var(--serif);
+  font-size:clamp(2rem, 4vw, 3.2rem);
+  font-weight:800;line-height:1.15;
+  letter-spacing:-.02em;color:var(--charcoal);
+  max-width:520px;
+}
+.section-headline em{font-style:italic;color:var(--turmeric)}
+.how-steps{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:48px;margin-top:72px;
+}
+.how-step{
+  position:relative;
+}
+.how-step-num{
+  font-family:var(--serif);font-size:5rem;font-weight:900;
+  color:rgba(200,118,10,.08);line-height:1;
+  position:absolute;top:-20px;left:-8px;
+  pointer-events:none;user-select:none;
+}
+.how-step-icon{
+  width:56px;height:56px;
+  background:var(--charcoal);border-radius:16px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.6rem;margin-bottom:24px;
+  position:relative;z-index:1;
+  transition:transform .3s var(--ease-out);
+}
+.how-step:hover .how-step-icon{transform:rotate(-5deg) scale(1.1)}
+.how-step-title{
+  font-family:var(--serif);font-size:1.3rem;font-weight:700;
+  color:var(--charcoal);margin-bottom:12px;
+  position:relative;z-index:1;
+}
+.how-step-desc{
+  font-size:.95rem;color:var(--warm-gray);
+  line-height:1.7;position:relative;z-index:1;
+}
+.how-connector{
+  position:absolute;top:28px;right:-24px;
+  width:48px;height:1px;
+  border-top:2px dashed rgba(200,118,10,.3);
+}
+.how-step:last-child .how-connector{display:none}
+
+/* ── Section 4: Meet the cooks ─────────────────────────────── */
+#cooks{
+  padding:120px 48px;background:var(--cream);
+  overflow:hidden;
+}
+.cooks-header{
+  display:flex;align-items:flex-end;justify-content:space-between;
+  margin-bottom:64px;gap:24px;flex-wrap:wrap;
+}
+.cooks-header-left .section-headline{max-width:400px}
+.cooks-header-right{
+  font-size:.9rem;color:var(--warm-gray);
+  max-width:280px;line-height:1.6;text-align:right;
+}
+.cooks-scroll{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:28px;
+}
+.cook-card{
+  background:var(--beige);border-radius:24px;overflow:hidden;
+  border:1px solid rgba(200,118,10,.1);
+  position:relative;
+}
+.cook-card:nth-child(2){margin-top:40px}
+.cook-card-photo-wrapper {
+  width: 100%;
+  height: 280px;
+  overflow: hidden;
+}
+.cook-card-photo{
+  width:100%;height:100%;object-fit:cover;
+  filter:saturate(1.1) contrast(1.05);
+  display:block;
+  transition: transform 0.6s var(--ease-out);
+}
+.cook-card:hover .cook-card-photo{
+  transform: scale(1.08);
+}
+.cook-card-body{padding:24px}
+.cook-card-name{
+  font-family:var(--serif);font-size:1.3rem;font-weight:700;
+  color:var(--charcoal);margin-bottom:4px;
+}
+.cook-card-meta{
+  font-size:.8rem;color:var(--warm-gray);
+  margin-bottom:16px;font-style:italic;
+}
+.cook-card-tags{
+  display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;
+}
+.cook-tag{
+  background:var(--cream);border:1px solid rgba(200,118,10,.2);
+  border-radius:100px;padding:4px 12px;
+  font-size:.75rem;font-weight:600;color:var(--turmeric);
+}
+.cook-card-rating{
+  display:flex;align-items:center;justify-content:space-between;
+  padding-top:16px;border-top:1px solid rgba(200,118,10,.12);
+}
+.rating-stars{color:var(--haldi);font-size:.9rem;letter-spacing:1px}
+.rating-num{
+  font-family:var(--serif);font-weight:700;font-size:1.1rem;
+  color:var(--charcoal);
+}
+.rating-count{font-size:.75rem;color:var(--warm-gray)}
+.cook-card-cta{
+  display:block;text-align:center;
+  background:var(--charcoal);color:var(--cream);
+  margin:16px;border-radius:12px;padding:12px;
+  font-size:.875rem;font-weight:600;
+  text-decoration:none;letter-spacing:.02em;
+  transition:background .2s;
+}
+.cook-card-cta:hover{background:var(--turmeric);}
+
+/* ── Section 5: The Food ───────────────────────────────────── */
+#food{
+  padding:120px 0;
+  background:var(--charcoal);overflow:hidden;
+}
+.food-header{
+  padding:0 48px;margin-bottom:56px;
+}
+.food-header .section-tag{color:var(--haldi);opacity:.7}
+.food-header .section-headline{color:var(--cream)}
+.food-header .section-headline em{color:var(--haldi)}
+.food-track-wrapper {
+  position: relative;
+}
+.food-track{
+  display:flex;gap:24px;padding:0 48px;
+  overflow-x:auto;scroll-snap-type:x mandatory;
+  scrollbar-width:none;-ms-overflow-style:none;
+}
+.food-track::-webkit-scrollbar{display:none}
+.dish-card{
+  flex:0 0 300px;scroll-snap-align:start;
+  background:var(--charcoal-2);border-radius:20px;
+  overflow:hidden;border:1px solid rgba(255,255,255,.06);
+  position:relative;
+}
+.dish-card-img-wrapper {
+  width: 100%;
+  height: 220px;
+  overflow: hidden;
+}
+.dish-card-img{
+  width:100%;height:100%;object-fit:cover;
+  display:block;filter:saturate(1.2);
+  transition:transform .6s var(--ease-out);
+}
+.dish-card:hover .dish-card-img{transform:scale(1.1) rotate(1deg)}
+.dish-card-body{padding:20px}
+.dish-dot{
+  display:inline-block;width:8px;height:8px;border-radius:50%;
+  margin-right:6px;vertical-align:middle;
+  margin-top:-2px;
+}
+.dish-dot.veg{background:#4A6741}
+.dish-dot.nonveg{background:#C0392B}
+.dish-card-name{
+  font-family:var(--serif);font-size:1.1rem;font-weight:700;
+  color:var(--cream);margin-bottom:4px;
+}
+.dish-card-cook{
+  font-size:.8rem;color:var(--warm-gray-lt);font-style:italic;margin-bottom:14px;
+}
+.dish-card-footer{
+  display:flex;align-items:center;justify-content:space-between;
+  padding-top:14px;border-top:1px solid rgba(255,255,255,.06);
+}
+.dish-price{
+  font-family:var(--serif);font-size:1.2rem;font-weight:700;
+  color:var(--haldi);
+}
+.dish-order-btn{
+  background:rgba(200,118,10,.15);
+  color:var(--turmeric-lt);border:1px solid rgba(200,118,10,.3);
+  padding:6px 16px;border-radius:100px;
+  font-size:.8rem;font-weight:600;cursor:pointer;
+  transition:background .2s, color .2s;text-decoration:none;
+}
+.dish-order-btn:hover{background:var(--turmeric);color:var(--white)}
+
+/* ── Section 6: Numbers ────────────────────────────────────── */
+#numbers{
+  padding:100px 48px;
+  background:var(--beige);
+  position:relative;
+}
+#numbers::before{
+  content:'"';
+  font-family:var(--serif);font-size:40rem;font-weight:900;
+  color:rgba(200,118,10,.04);
+  position:absolute;top:-120px;right:-40px;line-height:1;
+  pointer-events:none;user-select:none;
+}
+.numbers-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:4px;
+}
+.number-box{
+  background:var(--cream);padding:48px 32px;
+  position:relative;overflow:hidden;
+  transition:background .3s var(--ease-out);
+}
+.number-box:hover{background:var(--charcoal)}
+.number-box:hover .number-val{color:var(--haldi); transform: translateY(-4px);}
+.number-box:hover .number-label{color:var(--warm-gray-lt)}
+.number-box:hover .number-desc{color:rgba(255,255,255,.4)}
+.number-val{
+  font-family:var(--serif);font-size:clamp(2.5rem, 5vw, 4rem);
+  font-weight:900;color:var(--charcoal);
+  line-height:1;margin-bottom:8px;
+  transition:color .3s, transform .3s;
+  display: inline-block;
+}
+.number-label{
+  font-size:.9rem;font-weight:600;color:var(--turmeric);
+  margin-bottom:8px;letter-spacing:.02em;
+  transition:color .3s;
+}
+.number-desc{
+  font-size:.8rem;color:var(--warm-gray);line-height:1.5;
+  transition:color .3s;
+}
+
+/* ── Section 7: For Cooks ──────────────────────────────────── */
+#for-cooks{
+  padding:0;background:var(--charcoal);
+  display:grid;grid-template-columns:1fr 1fr;
+  min-height:600px;
+  overflow: hidden;
+}
+.for-cooks-img{
+  position:relative;overflow:hidden;
+  height: 100%;
+}
+.for-cooks-img-el{
+  width:100%;height:120%; /* Extra for parallax */
+  object-fit:cover;
+  display:block;
+  filter:saturate(1.1) brightness(.85);
+  position: absolute;
+  top: -10%; left: 0;
+}
+.for-cooks-img::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(to right, transparent 60%, var(--charcoal) 100%);
+}
+.for-cooks-content{
+  padding:80px 64px;
+  display:flex;flex-direction:column;justify-content:center;
+}
+.for-cooks-content .section-tag{color:var(--haldi);opacity:.7}
+.for-cooks-content .section-headline{
+  color:var(--cream);margin-bottom:24px;
+}
+.for-cooks-content .section-headline em{color:var(--haldi)}
+.for-cooks-desc{
+  font-size:1rem;color:var(--warm-gray-lt);
+  line-height:1.75;margin-bottom:40px;max-width:400px;
+}
+.for-cooks-perks{
+  display:flex;flex-direction:column;gap:12px;margin-bottom:40px;
+}
+.perk{
+  display:flex;align-items:center;gap:12px;
+  font-size:.9rem;color:var(--cream);font-weight:500;
+}
+.perk::before{
+  content:'';width:20px;height:20px;flex-shrink:0;
+  background:var(--turmeric);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background-image:url("data:image/svg+xml,%3Csvg width='12' height='9' viewBox='0 0 12 9' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 4L4.5 7.5L11 1' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:center;
+}
+.btn-cook-cta{
+  background:var(--turmeric);color:var(--white);
+  padding:16px 36px;border-radius:100px;
+  font-size:1rem;font-weight:700;text-decoration:none;
+  display:inline-block;width:fit-content;
+  box-shadow:0 8px 32px rgba(200,118,10,.25);
+  letter-spacing:.01em;
+}
+.btn-cook-cta:hover{
+  background:var(--turmeric-lt);
+}
+.cook-trust{
+  display:flex;gap:24px;margin-top:28px;flex-wrap:wrap;
+}
+.cook-trust-item{
+  font-size:.8rem;color:var(--warm-gray-lt);
+  display:flex;align-items:center;gap:6px;
+}
+.cook-trust-item::before{
+  content:'✓';color:var(--green-lt);font-weight:700;font-size:.85rem;
+}
+
+/* ── Section 8: Testimonials ───────────────────────────────── */
+#testimonials{
+  padding:120px 48px;background:var(--cream);
+}
+.testimonials-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:28px;margin-top:64px;
+}
+.testimonial-card{
+  background:var(--beige);border-radius:20px;
+  padding:32px;border:1px solid rgba(200,118,10,.1);
+  position:relative;
+}
+.testimonial-card::before{
+  content:'\201C';
+  font-family:var(--serif);font-size:5rem;font-weight:900;
+  color:rgba(200,118,10,.12);position:absolute;
+  top:8px;left:20px;line-height:1;
+}
+.testimonial-text{
+  font-family:var(--serif);font-style:italic;
+  font-size:1rem;color:var(--charcoal);
+  line-height:1.7;margin-bottom:24px;
+  position:relative;z-index:1;
+}
+.testimonial-author{
+  display:flex;align-items:center;gap:12px;
+}
+.testimonial-avatar{
+  width:44px;height:44px;border-radius:50%;
+  background:linear-gradient(135deg, var(--turmeric), #8B4513);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--serif);font-size:1.1rem;font-weight:700;color:var(--white);
+  flex-shrink:0;
+  overflow: hidden;
+}
+.testimonial-avatar img {
+  width: 100%; height: 100%; object-fit: cover;
+}
+.testimonial-name{
+  font-weight:700;font-size:.9rem;color:var(--charcoal);
+}
+.testimonial-role{
+  font-size:.78rem;color:var(--warm-gray);margin-top:1px;
+}
+
+/* ── CTA Banner ────────────────────────────────────────────── */
+#cta-banner{
+  background:var(--turmeric);
+  padding:80px 48px;text-align:center;
+  position:relative;overflow:hidden;
+}
+#cta-banner::before{
+  content:'';position:absolute;
+  width:400px;height:400px;border-radius:50%;
+  background:rgba(255,255,255,.08);
+  top:-100px;right:-100px;pointer-events:none;
+}
+#cta-banner::after{
+  content:'';position:absolute;
+  width:300px;height:300px;border-radius:50%;
+  background:rgba(0,0,0,.06);
+  bottom:-80px;left:-80px;pointer-events:none;
+}
+.cta-banner-headline{
+  font-family:var(--serif);
+  font-size:clamp(2rem, 5vw, 4rem);
+  font-weight:900;color:var(--white);
+  line-height:1.1;margin-bottom:16px;
+  letter-spacing:-.02em;position:relative;z-index:1;
+}
+.cta-banner-sub{
+  font-size:1.05rem;color:rgba(255,255,255,.8);
+  margin-bottom:36px;position:relative;z-index:1;
+  font-style:italic;font-family:var(--serif);
+}
+.cta-banner-actions{
+  display:flex;gap:16px;justify-content:center;
+  flex-wrap:wrap;position:relative;z-index:1;
+}
+.btn-cta-white{
+  background:var(--white);color:var(--turmeric);
+  padding:16px 36px;border-radius:100px;
+  font-size:1rem;font-weight:700;text-decoration:none;
+  box-shadow:0 8px 32px rgba(0,0,0,.15);
+  display: inline-block;
+}
+.btn-cta-white:hover{background:var(--beige);}
+.btn-cta-outline{
+  background:transparent;color:var(--white);
+  border:2px solid rgba(255,255,255,.5);
+  padding:14px 36px;border-radius:100px;
+  font-size:1rem;font-weight:600;text-decoration:none;
+  display: inline-block;
+  transition: background .2s, border-color .2s;
+}
+.btn-cta-outline:hover{border-color:var(--white);background:rgba(255,255,255,.1)}
+
+/* ── Footer ────────────────────────────────────────────────── */
+footer{
+  background:var(--charcoal);
+  padding:80px 48px 40px;
+}
+.footer-top{
+  display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;
+  gap:48px;margin-bottom:64px;
+}
+.footer-brand-name{
+  font-family:var(--serif);font-size:2rem;font-weight:900;
+  color:var(--cream);margin-bottom:12px;
+}
+.footer-brand-name span{color:var(--turmeric)}
+.footer-tagline{
+  font-family:var(--serif);font-style:italic;
+  font-size:.95rem;color:var(--warm-gray-lt);
+  line-height:1.6;margin-bottom:24px;
+}
+.footer-social{display:flex;gap:12px}
+.social-btn{
+  width:36px;height:36px;border-radius:50%;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.85rem;color:var(--warm-gray-lt);text-decoration:none;
+  transition:background .2s, color .2s;
+}
+.social-btn:hover{background:var(--turmeric);color:var(--white)}
+.footer-col-title{
+  font-size:.8rem;font-weight:700;
+  color:var(--warm-gray-lt);letter-spacing:.1em;
+  text-transform:uppercase;margin-bottom:20px;
+}
+.footer-links{display:flex;flex-direction:column;gap:12px}
+.footer-links a{
+  font-size:.9rem;color:rgba(255,255,255,.5);text-decoration:none;
+  transition:color .2s;
+}
+.footer-links a:hover{color:var(--cream)}
+.footer-bottom{
+  padding-top:32px;border-top:1px solid rgba(255,255,255,.06);
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:16px;
+}
+.footer-copy{
+  font-size:.8rem;color:rgba(255,255,255,.3);
+}
+.footer-love{
+  font-size:.8rem;color:rgba(255,255,255,.3);
+  font-family:var(--serif);font-style:italic;
+}
+.footer-love span{color:var(--turmeric)}
+
+/* ── Responsive ────────────────────────────────────────────── */
+@media(max-width:1024px){
+  #hero{grid-template-columns:1fr}
+  .hero-right{height:60vh;display:block}
+  .hero-left{padding:120px 32px 60px}
+  .how-steps{grid-template-columns:1fr}
+  .how-connector{display:none}
+  .cooks-scroll{grid-template-columns:1fr}
+  .cook-card:nth-child(2){margin-top:0}
+  .numbers-grid{grid-template-columns:repeat(2,1fr)}
+  #for-cooks{grid-template-columns:1fr}
+  .for-cooks-img{display:none}
+  .for-cooks-content{padding:80px 32px}
+  .testimonials-grid{grid-template-columns:1fr}
+  .footer-top{grid-template-columns:1fr 1fr}
+  .food-track{padding:0 24px}
+  nav{padding:16px 24px}
+}
+@media(max-width:768px){
+  #hero,#feeling,#how,#cooks,#numbers,#for-cooks,#testimonials,#cta-banner,footer{
+    padding-left:24px;padding-right:24px;
+  }
+  .numbers-grid{grid-template-columns:1fr 1fr}
+  .footer-top{grid-template-columns:1fr}
+  nav{padding:14px 20px}
+  .nav-links{display:none}
+  .nav-hamburger{display:block;background:none;border:none;font-size:1.5rem;cursor:none}
+}
+</style>
+</head>
+<body>
+
+<!-- Custom Cursor -->
+<div class="cursor-dot" id="cursor-dot"></div>
+<div class="cursor-outline" id="cursor-outline"></div>
+
+<!-- Navigation -->
+<nav id="navbar">
+  <a href="/" class="nav-logo" data-magnetic>Ghar<span>Khana</span></a>
+  <div class="nav-links">
+    <a href="#how" data-magnetic>How it works</a>
+    <a href="#cooks" data-magnetic>Our cooks</a>
+    <a href="#for-cooks" data-magnetic>Cook with us</a>
+    <a href="/accounts/login/" data-magnetic>Sign in</a>
+  </div>
+  <a href="/accounts/register/" class="nav-cta" data-magnetic>Order now →</a>
+  <button class="nav-hamburger">☰</button>
+</nav>
+
+<!-- ── Section 1: Hero ── -->
+<section id="hero">
+  <div class="hero-left">
+    <div class="hero-tag gs-reveal">Now in your neighbourhood</div>
+    <h1 class="hero-headline gs-split">
+      Ghar ke haath.<br/>
+      <em>Ghar ka swaad.</em><br/>
+      Aapke darwaze tak.
+    </h1>
+    <p class="hero-sub gs-reveal">
+      Real home food from real home cooks near you.
+      Pre-order today, delivered fresh tomorrow —
+      just like Amma used to make.
+    </p>
+    <div class="hero-actions gs-reveal">
+      <a href="/accounts/register/" class="btn-primary-hero" data-magnetic>Order today's khana</a>
+      <a href="#for-cooks" class="btn-secondary-hero" data-magnetic>Cook with us →</a>
+    </div>
+    <div class="hero-stats gs-reveal">
+      <div>
+        <div class="hero-stat-num" data-count="47">47</div>
+        <div class="hero-stat-label">Home cooks</div>
+      </div>
+      <div>
+        <div class="hero-stat-num" data-count="1200">1,200+</div>
+        <div class="hero-stat-label">Meals delivered</div>
+      </div>
+      <div>
+        <div class="hero-stat-num">4.9 ★</div>
+        <div class="hero-stat-label">Average rating</div>
+      </div>
+    </div>
+  </div>
+  <div class="hero-right">
+    <div class="hero-img-wrapper" id="hero-img-wrapper">
+      <img src="https://images.unsplash.com/photo-1585937421612-70a008356fbe?auto=format&fit=crop&q=80&w=2000" alt="Home cooked Indian meal" class="hero-img-main" id="hero-img"/>
+    </div>
+    <div class="hero-img-overlay"></div>
+    <div class="hero-float-card" id="hero-float-card">
+      <div class="float-card-name">Savitri Devi</div>
+      <div class="float-card-meta">Bengali kitchen · Dum Dum · ★ 4.9</div>
+      <div class="float-card-dish">
+        Today's special
+        <span>Macher Jhol</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Section 2: Feeling ── -->
+<section id="feeling">
+  <p class="feeling-quote gs-split">
+    "There is no restaurant in the world that can replicate
+    what a <em>mother makes</em> — that pinch of love,
+    that memory in every bite."
+  </p>
+  <p class="feeling-sub gs-reveal">GharKhana comes close.</p>
+  <div class="feeling-divider gs-scale"></div>
+</section>
+
+<!-- ── Section 3: How it works ── -->
+<section id="how">
+  <div class="section-tag gs-reveal">Simple as ordering from home</div>
+  <h2 class="section-headline gs-split">
+    Teen kadam,<br/><em>ek pyaari thali.</em>
+  </h2>
+  <div class="how-steps">
+    <div class="how-step gs-stagger">
+      <div class="how-step-num">01</div>
+      <div class="how-step-icon">🔍</div>
+      <div class="how-connector"></div>
+      <h3 class="how-step-title">Apna cook dhundo</h3>
+      <p class="how-step-desc">
+        Browse verified home cooks within 5km of you.
+        See their menus, ratings, and specialities.
+        Real people, real kitchens, real food.
+      </p>
+    </div>
+    <div class="how-step gs-stagger">
+      <div class="how-step-num">02</div>
+      <div class="how-step-icon">🍱</div>
+      <div class="how-connector"></div>
+      <h3 class="how-step-title">Kal ka order aaj</h3>
+      <p class="how-step-desc">
+        Pre-order by 10 PM tonight. Your cook preps
+        fresh tomorrow morning — no shortcuts,
+        no reheating, no compromise.
+      </p>
+    </div>
+    <div class="how-step gs-stagger">
+      <div class="how-step-num">03</div>
+      <div class="how-step-icon">🛵</div>
+      <h3 class="how-step-title">Darwaze pe delivery</h3>
+      <p class="how-step-desc">
+        Choose your delivery slot. We deliver in batches —
+        hot, fresh, and on time. Or pick up yourself
+        if you're close enough.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ── Section 4: Meet the cooks ── -->
+<section id="cooks">
+  <div class="cooks-header">
+    <div class="cooks-header-left">
+      <div class="section-tag gs-reveal">The heart of GharKhana</div>
+      <h2 class="section-headline gs-split">
+        Meet the<br/><em>real cooks.</em>
+      </h2>
+    </div>
+    <div class="cooks-header-right gs-reveal">
+      Every cook on GharKhana is a real person from your
+      neighbourhood — verified, passionate, and cooking
+      with love since before you were born.
+    </div>
+  </div>
+  <div class="cooks-scroll">
+    {% for cook in top_cooks %}
+    <div class="cook-card gs-stagger">
+      <div class="cook-card-photo-wrapper">
+        {% if cook.photo %}
+        <img src="{{ cook.photo.url }}" alt="{{ cook.user.name }}" class="cook-card-photo"/>
+        {% else %}
+        <img src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&q=80&w=800" alt="{{ cook.user.name }}" class="cook-card-photo"/>
+        {% endif %}
+      </div>
+      <div class="cook-card-body">
+        <div class="cook-card-name">{{ cook.user.name }}</div>
+        <div class="cook-card-meta">{{ cook.kitchen_name }} · {{ cook.address|truncatechars:30 }}</div>
+        <div class="cook-card-tags">
+          {% if cook.cuisine_tags %}
+            <span class="cook-tag">{{ cook.cuisine_tags }}</span>
+          {% else %}
+            <span class="cook-tag">Home Style</span>
+          {% endif %}
+        </div>
+        <div class="cook-card-rating">
+          <div>
+            <div class="rating-stars">★★★★★</div>
+            <div class="rating-count">Top Rated</div>
+          </div>
+          <div class="rating-num">4.9</div>
+        </div>
+      </div>
+      <a href="{% url 'customer:cook_detail' cook.id %}" class="cook-card-cta" data-magnetic>Order from {{ cook.user.name.split.0 }} →</a>
+    </div>
+    {% empty %}
+      <p style="padding: 24px; color: var(--warm-gray);">More cooks joining soon!</p>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- ── Section 5: The Food ── -->
+<section id="food">
+  <div class="food-header">
+    <div class="section-tag gs-reveal">Today's specials</div>
+    <h2 class="section-headline gs-split">
+      Khana jo<br/><em>yaad rehta hai.</em>
+    </h2>
+  </div>
+  <div class="food-track-wrapper" data-cursor="drag">
+    <div class="food-track" id="food-track">
+      {% for dish in top_dishes %}
+      <div class="dish-card">
+        <div class="dish-card-img-wrapper">
+          {% if dish.photo %}
+          <img src="{{ dish.photo.url }}" class="dish-card-img" alt="{{ dish.name }}"/>
+          {% else %}
+          <img src="https://images.unsplash.com/photo-1598514982205-f36b96d1e8d4?auto=format&fit=crop&q=80&w=800" class="dish-card-img" alt="{{ dish.name }}"/>
+          {% endif %}
+        </div>
+        <div class="dish-card-body">
+          <div>
+            {% if dish.food_type == 'VEG' %}
+              <span class="dish-dot veg"></span><small style="font-size:.75rem;color:var(--warm-gray-lt)">Veg</small>
+            {% elif dish.food_type == 'NONVEG' %}
+              <span class="dish-dot nonveg"></span><small style="font-size:.75rem;color:var(--warm-gray-lt)">Non-veg</small>
+            {% else %}
+              <span class="dish-dot" style="background:var(--haldi)"></span><small style="font-size:.75rem;color:var(--warm-gray-lt)">Egg</small>
+            {% endif %}
+          </div>
+          <div class="dish-card-name">{{ dish.name }}</div>
+          <div class="dish-card-cook">by {{ dish.cook.user.name }}</div>
+          <div class="dish-card-footer">
+            <div class="dish-price">₹{{ dish.base_price|floatformat:0 }}</div>
+            <a href="{% url 'customer:cook_detail' dish.cook.id %}" class="dish-order-btn" data-magnetic>Order</a>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+        <p style="padding: 24px; color: var(--warm-gray);">Delicious dishes coming soon!</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ── Section 6: Numbers ── -->
+<section id="numbers">
+  <div class="numbers-grid">
+    <div class="number-box gs-reveal">
+      <div class="number-val" data-count="47">47</div>
+      <div class="number-label">Home cooks</div>
+      <div class="number-desc">Verified, passionate, cooking fresh every day</div>
+    </div>
+    <div class="number-box gs-reveal">
+      <div class="number-val" data-count="1200">1,200+</div>
+      <div class="number-label">Meals delivered</div>
+      <div class="number-desc">And every single one made fresh that morning</div>
+    </div>
+    <div class="number-box gs-reveal">
+      <div class="number-val">4.9★</div>
+      <div class="number-label">Average rating</div>
+      <div class="number-desc">Because home food doesn't need marketing</div>
+    </div>
+    <div class="number-box gs-reveal">
+      <div class="number-val" data-count="12">12</div>
+      <div class="number-label">Neighbourhoods</div>
+      <div class="number-desc">And growing — one kitchen at a time</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Section 7: For Cooks ── -->
+<section id="for-cooks">
+  <div class="for-cooks-img" id="for-cooks-img-wrapper">
+    <img src="https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&q=80&w=1600" alt="Kitchen action" class="for-cooks-img-el" id="for-cooks-img"/>
+  </div>
+  <div class="for-cooks-content">
+    <div class="section-tag gs-reveal">For home cooks</div>
+    <h2 class="section-headline gs-split">
+      Aapka kitchen,<br/><em>aapki kamai.</em>
+    </h2>
+    <p class="for-cooks-desc gs-reveal">
+      Turn your passion for cooking into a real income.
+      GharKhana handles the orders, payments, and delivery.
+      You just do what you love — cook.
+    </p>
+    <div class="for-cooks-perks gs-reveal">
+      <div class="perk">No upfront cost. Free to join.</div>
+      <div class="perk">You set your own menu and prices.</div>
+      <div class="perk">We send you orders, you cook, we deliver.</div>
+      <div class="perk">Get paid directly to your UPI account.</div>
+      <div class="perk">Dedicated delivery person for your kitchen.</div>
+    </div>
+    <div class="gs-reveal">
+      <a href="/accounts/register/" class="btn-cook-cta" data-magnetic>Register your kitchen →</a>
+    </div>
+    <div class="cook-trust gs-reveal">
+      <div class="cook-trust-item">Free to join</div>
+      <div class="cook-trust-item">No equipment needed</div>
+      <div class="cook-trust-item">You set your prices</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Section 8: Testimonials ── -->
+<section id="testimonials">
+  <div class="section-tag gs-reveal">What they say</div>
+  <h2 class="section-headline gs-split">
+    Dil se<br/><em>bolte hain.</em>
+  </h2>
+  <div class="testimonials-grid">
+    <div class="testimonial-card gs-stagger">
+      <p class="testimonial-text">
+        "Finally, real ghar ka khana. My wife tried GharKhana
+        when she was travelling and said it reminded her of
+        her mother's cooking. That's the highest praise possible."
+      </p>
+      <div class="testimonial-author">
+        <div class="testimonial-avatar">
+          <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80" alt="User"/>
+        </div>
+        <div>
+          <div class="testimonial-name">Rahul Ghosh</div>
+          <div class="testimonial-role">Customer · Dum Dum</div>
+        </div>
+      </div>
+    </div>
+    <div class="testimonial-card gs-stagger">
+      <p class="testimonial-text">
+        "I've been cooking for my family for 30 years. Now I
+        cook for 20 more families every day. GharKhana gave
+        me confidence that my food has value beyond my home."
+      </p>
+      <div class="testimonial-author">
+        <div class="testimonial-avatar">
+          <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150&q=80" alt="User"/>
+        </div>
+        <div>
+          <div class="testimonial-name">Savitri Devi</div>
+          <div class="testimonial-role">Home cook · Dum Dum</div>
+        </div>
+      </div>
+    </div>
+    <div class="testimonial-card gs-stagger">
+      <p class="testimonial-text">
+        "No restaurant could give me the Bengali fish curry
+        I craved. GharKhana connected me with Savitri aunty
+        literally 1.2km from my house. Life changing."
+      </p>
+      <div class="testimonial-author">
+        <div class="testimonial-avatar">
+          <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" alt="User"/>
+        </div>
+        <div>
+          <div class="testimonial-name">Priya Chatterjee</div>
+          <div class="testimonial-role">Customer · Shyambazar</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA Banner ── -->
+<section id="cta-banner">
+  <h2 class="cta-banner-headline gs-split">
+    Bhook lagi hai?<br/>Ghar ka khana order karo.
+  </h2>
+  <p class="cta-banner-sub gs-reveal">
+    Real food. Real cooks. Real love.
+  </p>
+  <div class="cta-banner-actions gs-reveal">
+    <a href="/accounts/register/" class="btn-cta-white" data-magnetic>Order now — it's free</a>
+    <a href="#for-cooks" class="btn-cta-outline" data-magnetic>Become a cook →</a>
+  </div>
+</section>
+
+<!-- ── Footer ── -->
+<footer>
+  <div class="footer-top">
+    <div>
+      <div class="footer-brand-name">Ghar<span>Khana</span></div>
+      <p class="footer-tagline">
+        "Home food, made with love.<br/>
+        Ghar ke haath ka jadoo,<br/>
+        aapke darwaze tak."
+      </p>
+      <div class="footer-social">
+        <a href="#" class="social-btn" data-magnetic>f</a>
+        <a href="#" class="social-btn" data-magnetic>in</a>
+        <a href="#" class="social-btn" data-magnetic>ig</a>
+        <a href="#" class="social-btn" data-magnetic>yt</a>
+      </div>
+    </div>
+    <div>
+      <div class="footer-col-title">Platform</div>
+      <div class="footer-links">
+        <a href="/accounts/register/">Order food</a>
+        <a href="#for-cooks">Cook with us</a>
+        <a href="#how">How it works</a>
+        <a href="/accounts/login/">Sign in</a>
+      </div>
+    </div>
+    <div>
+      <div class="footer-col-title">Company</div>
+      <div class="footer-links">
+        <a href="#">Our story</a>
+        <a href="#">Blog</a>
+        <a href="#">Careers</a>
+        <a href="#">Press</a>
+      </div>
+    </div>
+    <div>
+      <div class="footer-col-title">Support</div>
+      <div class="footer-links">
+        <a href="#">Help centre</a>
+        <a href="#">Contact us</a>
+        <a href="#">Privacy policy</a>
+        <a href="#">Terms of service</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-copy">© 2026 GharKhana. Made with love in your neighbourhood.</div>
+    <div class="footer-love">Ghar ke haath ka <span>jadoo</span> — always.</div>
+  </div>
+</footer>
+
+<script>
+/* ── Register GSAP Plugins ── */
+gsap.registerPlugin(ScrollTrigger);
+
+/* ── Custom Cursor with Magnetic Effect ── */
+const cursorDot = document.getElementById('cursor-dot');
+const cursorOutline = document.getElementById('cursor-outline');
+let mouseX = 0, mouseY = 0;
+let outlineX = 0, outlineY = 0;
+
+window.addEventListener('mousemove', (e) => {
+  mouseX = e.clientX;
+  mouseY = e.clientY;
+  
+  // Dot follows instantly
+  gsap.set(cursorDot, { x: mouseX, y: mouseY });
+});
+
+// Smoothly follow the outline
+gsap.ticker.add(() => {
+  outlineX += (mouseX - outlineX) * 0.15;
+  outlineY += (mouseY - outlineY) * 0.15;
+  gsap.set(cursorOutline, { x: outlineX, y: outlineY });
+});
+
+// Hover states for links
+document.querySelectorAll('a, button').forEach(el => {
+  el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
+  el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
+});
+
+// Drag state for food track
+document.querySelectorAll('[data-cursor="drag"]').forEach(el => {
+  el.addEventListener('mouseenter', () => document.body.classList.add('cursor-drag'));
+  el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-drag'));
+});
+
+// Magnetic Buttons
+document.querySelectorAll('[data-magnetic]').forEach(elem => {
+  elem.addEventListener('mousemove', (e) => {
+    const rect = elem.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    
+    gsap.to(elem, {
+      x: x * 0.3,
+      y: y * 0.3,
+      duration: 0.4,
+      ease: 'power2.out'
+    });
+  });
+  
+  elem.addEventListener('mouseleave', () => {
+    gsap.to(elem, {
+      x: 0,
+      y: 0,
+      duration: 0.7,
+      ease: 'elastic.out(1, 0.3)'
+    });
+  });
+});
+
+/* ── Initial Load Animations ── */
+const tl = gsap.timeline();
+
+// Hero Image Clip Path Reveal
+tl.fromTo('.hero-img-wrapper', 
+  { clipPath: 'polygon(0 100%, 100% 100%, 100% 100%, 0 100%)' },
+  { clipPath: 'polygon(0 0%, 100% 0%, 100% 100%, 0 100%)', duration: 1.5, ease: 'power4.inOut' }
+)
+// Hero Image Slight Zoom Out
+.fromTo('#hero-img', 
+  { scale: 1.2 },
+  { scale: 1, duration: 2, ease: 'power3.out' }, '-=1.2'
+)
+// Floating Card Pop-in
+.fromTo('#hero-float-card', 
+  { y: 50, opacity: 0 }, 
+  { y: 0, opacity: 1, duration: 1, ease: 'back.out(1.7)' }, '-=1'
+);
+
+/* ── Scroll Animations ── */
+
+// 1. Text Splitting & Reveal
+const splitElements = document.querySelectorAll('.gs-split');
+splitElements.forEach(el => {
+  const text = new SplitType(el, { types: 'lines, words', lineClass: 'split-line', wordClass: 'split-word' });
+  
+  // Wrap words to hide overflow for the reveal effect
+  text.words.forEach(word => {
+    const wrapper = document.createElement('div');
+    wrapper.style.display = 'inline-block';
+    wrapper.style.overflow = 'hidden';
+    word.parentNode.insertBefore(wrapper, word);
+    wrapper.appendChild(word);
+  });
+
+  gsap.from(text.words, {
+    scrollTrigger: {
+      trigger: el,
+      start: 'top 85%',
+    },
+    y: '100%',
+    opacity: 0,
+    duration: 0.8,
+    stagger: 0.03,
+    ease: 'power3.out'
+  });
+});
+
+// 2. Simple Reveals (Fade Up)
+gsap.utils.toArray('.gs-reveal').forEach(elem => {
+  gsap.from(elem, {
+    scrollTrigger: {
+      trigger: elem,
+      start: 'top 90%',
+    },
+    y: 30,
+    opacity: 0,
+    duration: 1,
+    ease: 'power3.out'
+  });
+});
+
+// 3. Staggered Groups (Cards, Steps)
+const staggerSections = [
+  { trigger: '.how-steps', targets: '.how-step' },
+  { trigger: '.cooks-scroll', targets: '.cook-card' },
+  { trigger: '.testimonials-grid', targets: '.testimonial-card' }
+];
+
+staggerSections.forEach(section => {
+  const elem = document.querySelector(section.trigger);
+  if(elem) {
+    gsap.from(gsap.utils.toArray(section.targets), {
+      scrollTrigger: {
+        trigger: elem,
+        start: 'top 80%',
+      },
+      y: 50,
+      opacity: 0,
+      duration: 0.8,
+      stagger: 0.15,
+      ease: 'power2.out'
+    });
+  }
+});
+
+// 4. Scale elements (Dividers)
+gsap.utils.toArray('.gs-scale').forEach(elem => {
+  gsap.from(elem, {
+    scrollTrigger: {
+      trigger: elem,
+      start: 'top 90%',
+    },
+    scaleX: 0,
+    transformOrigin: 'left center',
+    duration: 1,
+    ease: 'power3.out'
+  });
+});
+
+// 5. Parallax Image Effects
+gsap.to('#hero-img', {
+  scrollTrigger: {
+    trigger: '#hero',
+    start: 'top top',
+    end: 'bottom top',
+    scrub: true
+  },
+  yPercent: 15,
+  ease: 'none'
+});
+
+gsap.to('#for-cooks-img', {
+  scrollTrigger: {
+    trigger: '#for-cooks',
+    start: 'top bottom',
+    end: 'bottom top',
+    scrub: true
+  },
+  yPercent: 20,
+  ease: 'none'
+});
+
+/* ── Navbar Scroll Color ── */
+const navbar = document.getElementById('navbar');
+window.addEventListener('scroll', () => {
+  navbar.classList.toggle('scrolled', window.scrollY > 60);
+});
+
+/* ── Count-up animation ── */
+function countUp(el, target, duration=1800) {
+  const start = performance.now();
+  function update(now) {
+    const elapsed = Math.min((now - start) / duration, 1);
+    const ease    = 1 - Math.pow(1 - elapsed, 3);
+    const current = Math.round(ease * target);
+    el.textContent = current >= 1000 ? current.toLocaleString('en-IN') + '+' : current;
+    if (elapsed < 1) requestAnimationFrame(update);
+    else el.textContent = target >= 1000 ? target.toLocaleString('en-IN') + '+' : target;
+  }
+  requestAnimationFrame(update);
+}
+
+const countEls = document.querySelectorAll('[data-count]');
+countEls.forEach(el => {
+  ScrollTrigger.create({
+    trigger: el,
+    start: 'top 90%',
+    once: true,
+    onEnter: () => countUp(el, parseInt(el.dataset.count))
+  });
+});
+
+/* ── Drag to scroll food track ── */
+const track = document.getElementById('food-track');
+let isDragging = false, startX, scrollLeft;
+track.addEventListener('mousedown', e => {
+  isDragging = true; startX = e.pageX - track.offsetLeft;
+  scrollLeft = track.scrollLeft;
+});
+track.addEventListener('mouseleave', () => isDragging = false);
+track.addEventListener('mouseup', () => isDragging = false);
+track.addEventListener('mousemove', e => {
+  if (!isDragging) return;
+  e.preventDefault();
+  const x = e.pageX - track.offsetLeft;
+  const walk = (x - startX) * 1.5;
+  track.scrollLeft = scrollLeft - walk;
+});
+
+let touchStartX = 0;
+track.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+track.addEventListener('touchmove',  e => {
+  const diff = touchStartX - e.touches[0].clientX;
+  track.scrollLeft += diff * 0.5;
+  touchStartX = e.touches[0].clientX;
+});
+</script>
+</body>
+</html>

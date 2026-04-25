@@ -4,7 +4,15 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import User
 from orders.models import SavedAddress
+from cooks.models import CookProfile, Dish
 
+def landing_page(request):
+    top_cooks = CookProfile.objects.filter(is_active=True, is_approved=True)[:3]
+    top_dishes = Dish.objects.filter(is_active=True)[:6]
+    return render(request, 'landing.html', {
+        'top_cooks': top_cooks,
+        'top_dishes': top_dishes,
+    })
 
 def login_view(request):
     if request.user.is_authenticated:
@@ -28,7 +36,7 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     messages.success(request, 'You have been signed out.')
-    return redirect('accounts:login')
+    return redirect('landing')
 
 
 def register_view(request):
