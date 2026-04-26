@@ -1,54 +1,422 @@
-{% extends 'base.html' %}
-{% block title %}Sign In — GharKhana{% endblock %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sign In — GharKhana</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 
-{% block content %}
-<div class="auth-page animate-fade">
-  <div class="card auth-card">
+<!-- GSAP -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 
-    <div class="auth-logo">🛵</div>
-    <h2 style="font-size: 2rem; margin-bottom: 8px;">Welcome back</h2>
-    <p class="auth-tagline">Sign in to your GharKhana account</p>
+<style>
+/* ── Reset & Variables ─────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --turmeric:    #C8760A;
+  --turmeric-lt: #E8960C;
+  --beige:       #F5EDD6;
+  --cream:       #FFFBF2;
+  --charcoal:    #1E1A14;
+  --warm-gray:   #7A6E60;
+  --white:       #FFFFFF;
+  --serif:       'Playfair Display', Georgia, serif;
+  --sans:        'Plus Jakarta Sans', sans-serif;
+  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+}
+html, body {
+  height: 100%;
+  font-family: var(--sans);
+  background: var(--cream);
+  color: var(--charcoal);
+  overflow: hidden; /* Prevent scrolling on auth page */
+}
 
-    <form method="post" action="{% url 'accounts:login' %}">
-      {% csrf_token %}
+/* ── Grain Overlay ─────────────────────────────────────────── */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:1000;opacity:.4;
+}
 
-      <div class="form-group" style="text-align: left;">
-        <label class="form-label">Email address</label>
-        <input
-          type="email"
-          name="email"
-          class="form-input"
-          placeholder="name@example.com"
-          required
-          autofocus
-        />
-      </div>
+/* ── Split Layout ──────────────────────────────────────────── */
+.auth-container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+}
 
-      <div class="form-group" style="text-align: left;">
-        <label class="form-label">Password</label>
-        <input
-          type="password"
-          name="password"
-          class="form-input"
-          placeholder="••••••••"
-          required
-        />
-      </div>
+.auth-left {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 60px;
+}
 
-      <button type="submit" class="btn-primary btn-full" style="margin-top: 12px; height: 52px; font-size: 1rem;">
-        Sign in
-      </button>
-    </form>
+.auth-bg-slider {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+}
 
-    <div class="auth-divider">or continue with</div>
+.auth-bg-slide {
+  position: absolute;
+  top: -5%; left: -5%;
+  width: 110%; height: 110%;
+  object-fit: cover;
+  filter: saturate(1.1) brightness(0.95);
+  opacity: 0;
+}
 
-    <p style="text-align: center; font-size: 0.95rem; color: var(--p-gray-500);">
-      New to GharKhana?
-      <a href="{% url 'accounts:register' %}" style="color: var(--p-orange); font-weight: 700;">
-        Create account
-      </a>
-    </p>
+.auth-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, transparent 30%, rgba(30,26,20,0.3) 100%),
+              linear-gradient(to top, rgba(30,26,20,0.8) 0%, transparent 40%);
+  z-index: 2;
+}
 
+.auth-left-content {
+  position: relative;
+  z-index: 3;
+}
+
+.auth-logo {
+  font-family: var(--serif);
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--white);
+  text-decoration: none;
+  letter-spacing: -0.02em;
+}
+.auth-logo span { color: var(--turmeric); }
+
+.auth-quote {
+  position: relative;
+  z-index: 3;
+  max-width: 480px;
+}
+.auth-quote-text {
+  font-family: var(--serif);
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: var(--white);
+  line-height: 1.2;
+  margin-bottom: 16px;
+}
+.auth-quote-author {
+  font-size: 1rem;
+  color: rgba(255,255,255,0.8);
+}
+
+.auth-right {
+  width: 500px;
+  background: var(--cream);
+  position: relative;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  box-shadow: -20px 0 60px rgba(30,26,20,0.1);
+}
+
+.auth-form-wrapper {
+  width: 100%;
+  max-width: 380px;
+}
+
+.auth-title {
+  font-family: var(--serif);
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--charcoal);
+  margin-bottom: 8px;
+  letter-spacing: -0.02em;
+}
+
+.auth-subtitle {
+  font-size: 0.95rem;
+  color: var(--warm-gray);
+  margin-bottom: 40px;
+}
+
+.form-group {
+  margin-bottom: 24px;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--charcoal);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.form-input {
+  width: 100%;
+  padding: 14px 16px;
+  background: transparent;
+  border: 1px solid rgba(200,118,10,0.2);
+  border-radius: 12px;
+  font-family: var(--sans);
+  font-size: 1rem;
+  color: var(--charcoal);
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.form-input:focus {
+  outline: none;
+  border-color: var(--turmeric);
+  box-shadow: 0 0 0 4px rgba(200,118,10,0.1);
+}
+
+.btn-primary {
+  width: 100%;
+  background: var(--turmeric);
+  color: var(--white);
+  padding: 16px;
+  border: none;
+  border-radius: 12px;
+  font-family: var(--sans);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+  box-shadow: 0 8px 24px rgba(200,118,10,0.25);
+  margin-top: 8px;
+}
+.btn-primary:hover {
+  background: var(--turmeric-lt);
+  transform: translateY(-2px);
+}
+
+.auth-divider {
+  text-align: center;
+  margin: 32px 0;
+  position: relative;
+}
+.auth-divider::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 0; right: 0;
+  height: 1px;
+  background: rgba(200,118,10,0.15);
+  z-index: 1;
+}
+.auth-divider span {
+  background: var(--cream);
+  padding: 0 16px;
+  font-size: 0.85rem;
+  color: var(--warm-gray);
+  position: relative;
+  z-index: 2;
+}
+
+.auth-footer {
+  text-align: center;
+  font-size: 0.95rem;
+  color: var(--warm-gray);
+}
+.auth-footer a {
+  color: var(--turmeric);
+  font-weight: 700;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.auth-footer a:hover {
+  color: var(--turmeric-lt);
+}
+
+/* Messages */
+.messages-wrap {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.message {
+  background: var(--charcoal);
+  color: var(--cream);
+  padding: 16px 24px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 12px 32px rgba(30,26,20,0.2);
+  min-width: 300px;
+  border-left: 4px solid var(--turmeric);
+}
+.message-error { border-left-color: #E74C3C; }
+.message-success { border-left-color: #2ECC71; }
+.message-close {
+  background: none; border: none; color: rgba(255,255,255,0.6);
+  font-size: 1.2rem; cursor: pointer; padding: 0 0 0 16px;
+}
+.message-close:hover { color: var(--white); }
+
+/* Mobile Support */
+@media (max-width: 900px) {
+  .auth-left { display: none; }
+  .auth-right { width: 100%; padding: 32px; }
+}
+</style>
+</head>
+<body>
+
+  {% if messages %}
+  <div class="messages-wrap">
+    {% for message in messages %}
+    <div class="message message-{{ message.tags }}">
+      {{ message }}
+      <button class="message-close" onclick="this.parentElement.remove()">×</button>
+    </div>
+    {% endfor %}
   </div>
-</div>
-{% endblock %}
+  {% endif %}
+
+  <div class="auth-container">
+    <div class="auth-left">
+      <div class="auth-bg-slider">
+        <img src="{% static 'images/bengali_1.png' %}" alt="Bengali Thali" class="auth-bg-slide" style="opacity: 1;" />
+        <img src="{% static 'images/bengali_2.png' %}" alt="Prawn Malai Curry" class="auth-bg-slide" />
+        <img src="{% static 'images/bengali_3.png' %}" alt="Mishti Doi" class="auth-bg-slide" />
+      </div>
+      <div class="auth-overlay"></div>
+      
+      <div class="auth-left-content">
+        <a href="/" class="auth-logo">Ghar<span>Khana</span></a>
+      </div>
+
+      <div class="auth-quote">
+        <div class="auth-quote-text">"The comfort of home-cooked meals, right at your doorstep."</div>
+        <div class="auth-quote-author">— Delivered fresh daily</div>
+      </div>
+    </div>
+
+    <div class="auth-right">
+      <div class="auth-form-wrapper">
+        <h1 class="auth-title">Welcome back</h1>
+        <p class="auth-subtitle">Sign in to your GharKhana account</p>
+
+        <form method="post" action="{% url 'accounts:login' %}">
+          {% csrf_token %}
+
+          <div class="form-group gs-reveal">
+            <label class="form-label">Email address</label>
+            <input
+              type="email"
+              name="email"
+              class="form-input"
+              placeholder="name@example.com"
+              required
+              autofocus
+            />
+          </div>
+
+          <div class="form-group gs-reveal">
+            <label class="form-label">Password</label>
+            <input
+              type="password"
+              name="password"
+              class="form-input"
+              placeholder="••••••••"
+              required
+            />
+          </div>
+
+          <button type="submit" class="btn-primary gs-reveal">
+            Sign in
+          </button>
+        </form>
+
+        <div class="auth-divider gs-reveal"><span>or continue with</span></div>
+
+        <p class="auth-footer gs-reveal">
+          New to GharKhana?
+          <a href="{% url 'accounts:register' %}">Create account</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // GSAP Animations
+    document.addEventListener("DOMContentLoaded", (event) => {
+      // Animate the background slider
+      const slides = document.querySelectorAll(".auth-bg-slide");
+      let currentSlide = 0;
+      
+      // Continuous gentle zoom
+      gsap.to(slides, {
+        scale: 1.05,
+        duration: 20,
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut"
+      });
+
+      // Crossfade slider
+      setInterval(() => {
+        const nextSlide = (currentSlide + 1) % slides.length;
+        gsap.to(slides[currentSlide], { opacity: 0, duration: 1.5, ease: "power2.inOut" });
+        gsap.to(slides[nextSlide], { opacity: 1, duration: 1.5, ease: "power2.inOut" });
+        currentSlide = nextSlide;
+      }, 5000);
+
+      // Animate left content text
+      gsap.from(".auth-logo", {
+        opacity: 0, x: -30, duration: 1, ease: "power3.out"
+      });
+      gsap.from(".auth-quote-text", {
+        opacity: 0, y: 30, duration: 1, delay: 0.2, ease: "power3.out"
+      });
+      gsap.from(".auth-quote-author", {
+        opacity: 0, y: 20, duration: 1, delay: 0.4, ease: "power3.out"
+      });
+
+      // Animate form side
+      gsap.from(".auth-title", {
+        opacity: 0, y: 20, duration: 0.8, ease: "power3.out"
+      });
+      gsap.from(".auth-subtitle", {
+        opacity: 0, y: 20, duration: 0.8, delay: 0.1, ease: "power3.out"
+      });
+      gsap.from(".gs-reveal", {
+        opacity: 0, y: 20, duration: 0.8, stagger: 0.1, delay: 0.2, ease: "power3.out"
+      });
+
+      // Message auto-hide
+      const messages = document.querySelectorAll('.message');
+      if(messages.length > 0) {
+        gsap.from(messages, {
+          x: 50, opacity: 0, duration: 0.5, stagger: 0.1, ease: "back.out(1.7)"
+        });
+        setTimeout(() => {
+          gsap.to(messages, {
+            x: 50, opacity: 0, duration: 0.5, stagger: 0.1, ease: "power3.in",
+            onComplete: () => {
+              const wrap = document.querySelector('.messages-wrap');
+              if (wrap) wrap.remove();
+            }
+          });
+        }, 5000);
+      }
+    });
+  </script>
+</body>
+</html>
