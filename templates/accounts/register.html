@@ -3,32 +3,36 @@
 
 {% block content %}
 <div class="auth-page animate-fade">
-  <div class="card auth-card" style="max-width: 520px;">
+  <div class="card auth-card" style="max-width: 520px; border: none; box-shadow: var(--shadow-xl); position: relative;">
+    <a href="/" style="position: absolute; top: 32px; left: 32px; color: var(--p-gray-400); transition: color 0.2s;" onmouseover="this.style.color='var(--p-orange)'" onmouseout="this.style.color='var(--p-gray-400)'">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+      </svg>
+    </a>
 
-    <div class="auth-logo">🍲</div>
-    <h2 style="font-size: 2rem; margin-bottom: 8px;">Create Account</h2>
-    <p class="auth-tagline">Join your neighbourhood kitchen today</p>
+    <div style="font-size: 3.5rem; margin-bottom: 24px; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.05));">🍲</div>
+    <h1 style="font-size: 2.25rem; margin-bottom: 12px; font-weight: 800; letter-spacing: -1px;">Create <span class="text-orange">Account</span></h1>
+    <p class="auth-tagline" style="margin-bottom: 48px; font-weight: 500;">Join the movement of sustainable home cooking.</p>
 
     <form method="post" action="{% url 'accounts:register' %}">
       {% csrf_token %}
 
       <div class="form-group" style="text-align: left;">
-        <label class="form-label">I want to</label>
-        <div style="display: flex; gap: 12px;">
+        <label class="form-label" style="font-size: 0.75rem; color: var(--p-gray-500); margin-bottom: 16px;">Choose your journey</label>
+        <div style="display: flex; gap: 16px;">
           <label style="flex: 1; cursor: pointer;">
             <input type="radio" name="role" value="CUSTOMER" checked style="display: none;" class="role-radio"/>
             <div class="role-option" data-role="CUSTOMER">
-              <div style="font-size: 1.75rem; margin-bottom: 6px;">🍽️</div>
-              <div style="font-weight: 700; font-size: 1rem; color: var(--p-black);">Order</div>
-              <div style="font-size: 0.75rem; color: var(--p-gray-500);">I'm a diner</div>
+              <div style="font-size: 1.75rem; margin-bottom: 10px;">🍽️</div>
+              <div style="font-weight: 800; font-size: 0.9375rem; color: var(--p-black);">Diner</div>
             </div>
           </label>
           <label style="flex: 1; cursor: pointer;">
             <input type="radio" name="role" value="COOK" style="display: none;" class="role-radio"/>
             <div class="role-option" data-role="COOK">
-              <div style="font-size: 1.75rem; margin-bottom: 6px;">👩‍🍳</div>
-              <div style="font-weight: 700; font-size: 1rem; color: var(--p-black);">Cook</div>
-              <div style="font-size: 0.75rem; color: var(--p-gray-500);">I'm a chef</div>
+              <div style="font-size: 1.75rem; margin-bottom: 10px;">👨‍🍳</div>
+              <div style="font-weight: 800; font-size: 0.9375rem; color: var(--p-black);">Chef</div>
             </div>
           </label>
         </div>
@@ -36,72 +40,40 @@
 
       <div class="form-group" style="text-align: left;">
         <label class="form-label">Full Name</label>
-        <input
-          type="text"
-          name="name"
-          class="form-input"
-          placeholder="Rahul Sharma"
-          required
-        />
+        <input type="text" name="name" class="form-input" placeholder="e.g. Rahul Sharma" autocomplete="name" required />
       </div>
 
-      <div class="grid-2" style="gap: 16px;">
-        <div class="form-group" style="text-align: left; margin-bottom: 16px;">
+      <div class="grid-2" style="gap: 20px;">
+        <div class="form-group" style="text-align: left;">
           <label class="form-label">Email address</label>
-          <input
-            type="email"
-            name="email"
-            class="form-input"
-            placeholder="you@example.com"
-            required
-          />
+          <input type="email" name="email" class="form-input" placeholder="name@domain.com" autocomplete="email" required />
         </div>
-        <div class="form-group" style="text-align: left; margin-bottom: 16px;">
+        <div class="form-group" style="text-align: left;">
           <label class="form-label">Phone number</label>
-          <input
-            type="tel"
-            name="phone"
-            class="form-input"
-            placeholder="98765 43210"
-            required
-          />
+          <input type="tel" name="phone" class="form-input" placeholder="9876543210" autocomplete="tel" required />
         </div>
       </div>
 
-      <div class="grid-2" style="gap: 16px;">
-        <div class="form-group" style="text-align: left; margin-bottom: 0;">
+      <div class="grid-2" style="gap: 20px;">
+        <div class="form-group" style="text-align: left; margin:0">
           <label class="form-label">Password</label>
-          <input
-            type="password"
-            name="password"
-            class="form-input"
-            placeholder="Min. 8 chars"
-            required
-          />
+          <input type="password" name="password" class="form-input" placeholder="••••••••" autocomplete="new-password" required />
         </div>
-        <div class="form-group" style="text-align: left; margin-bottom: 0;">
-          <label class="form-label">Confirm Password</label>
-          <input
-            type="password"
-            name="confirm_password"
-            class="form-input"
-            placeholder="Repeat password"
-            required
-          />
+        <div class="form-group" style="text-align: left; margin:0">
+          <label class="form-label">Confirm</label>
+          <input type="password" name="confirm_password" class="form-input" placeholder="••••••••" autocomplete="new-password" required />
         </div>
       </div>
 
-      <button type="submit" class="btn-primary btn-full" style="margin-top: 32px; height: 52px; font-size: 1rem;">
-        Get Started
+      <button type="submit" class="btn-primary btn-full" style="margin-top: 48px; padding: 18px; font-size: 1rem; border: none; box-shadow: var(--shadow-orange);">
+        Create Free Account
       </button>
     </form>
 
-    <div class="auth-divider">or continue with</div>
-
-    <p style="text-align: center; font-size: 0.95rem; color: var(--p-gray-500);">
-      Already have an account?
-      <a href="{% url 'accounts:login' %}" style="color: var(--p-orange); font-weight: 700;">
-        Sign in
+    <p style="text-align: center; font-size: 0.9375rem; color: var(--p-gray-500); margin-top: 40px;">
+      Already a member?
+      <a href="{% url 'accounts:login' %}" style="color: var(--p-black); font-weight: 800; text-decoration: underline;">
+        Sign in here
       </a>
     </p>
 
@@ -110,14 +82,16 @@
 
 <style>
 .role-option {
-  border: 1.5px solid var(--gray-300);
-  border-radius: var(--radius-lg);
-  padding: 14px;
+  border: 1.5px solid var(--p-border);
+  border-radius: var(--radius-md);
+  padding: 20px;
   text-align: center;
-  transition: border-color .15s, background .15s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--p-white);
 }
-.role-option:hover { border-color: var(--orange-mid); background: var(--orange-light); }
-.role-option.selected { border-color: var(--orange); background: var(--orange-light); }
+.role-option:hover { border-color: var(--p-orange-mid); background: var(--p-orange-light); }
+.role-option.selected { border-color: var(--p-black); background: var(--p-black); }
+.role-option.selected * { color: var(--p-white) !important; }
 </style>
 
 <script>
@@ -129,6 +103,7 @@ document.querySelectorAll('.role-radio').forEach(function(radio) {
     document.querySelector('.role-option[data-role="' + radio.value + '"]').classList.add('selected');
   });
 });
+// Initial trigger
 document.querySelector('.role-radio[value="CUSTOMER"]').dispatchEvent(new Event('change'));
 </script>
 

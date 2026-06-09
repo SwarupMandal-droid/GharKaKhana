@@ -179,6 +179,36 @@ def all_orders(request):
 
 
 @admin_required
+def mark_refund_complete(request, pk):
+    order = get_object_or_404(Order, pk=pk)
+    if request.method == 'POST':
+        refund_ref = request.POST.get('refund_ref', '').strip()
+        if order.payment_status != Order.PaymentStatus.REFUND_PENDING:
+            messages.error(request, 'Only refund-pending orders can be marked refunded.')
+            return redirect('admin_panel:all_orders')
+
+        order.payment_status = Order.PaymentStatus.REFUNDED
+        order.refunded_at = timezone.now()
+        if refund_ref:
+            order.refund_ref = refund_ref
+        order.save(update_fields=['payment_status', 'refunded_at', 'refund_ref'])
+
+        from notifications.models import Notification
+        Notification.objects.create(
+            user=order.customer,
+            type='ORDER_CANCELLED',
+            title='Refund completed',
+            message=(
+                f'Your refund for order #{order.pk} from {order.cook.kitchen_name} '
+                f'has been completed.'
+            ),
+        )
+        messages.success(request, f'Refund marked completed for order #{order.pk}.')
+
+    return redirect('admin_panel:all_orders')
+
+
+@admin_required
 def platform_stats(request):
     today     = timezone.localdate()
     last_30   = today - datetime.timedelta(days=30)

@@ -796,8 +796,20 @@ footer{
   .numbers-grid{grid-template-columns:1fr 1fr}
   .footer-top{grid-template-columns:1fr}
   nav{padding:14px 20px}
-  .nav-links{display:none}
-  .nav-hamburger{display:block;background:none;border:none;font-size:1.5rem;cursor:none}
+  .nav-links{
+    display:none;
+    position:absolute;
+    top:100%;
+    left:0;right:0;
+    background:rgba(255,251,242,0.98);
+    backdrop-filter:blur(12px);
+    flex-direction:column;
+    padding:20px;
+    gap:20px;
+    box-shadow:0 10px 20px rgba(200,118,10,.05);
+  }
+  .nav-links.open{display:flex}
+  .nav-hamburger{display:block;background:none;border:none;font-size:1.5rem;cursor:none;color:var(--charcoal)}
 }
 </style>
 </head>
@@ -840,11 +852,11 @@ footer{
     </div>
     <div class="hero-stats gs-reveal">
       <div>
-        <div class="hero-stat-num" data-count="47">47</div>
-        <div class="hero-stat-label">Home cooks</div>
+        <div class="hero-stat-num" data-count="{{ landing_metrics.verified_kitchens }}">{{ landing_metrics.verified_kitchens }}</div>
+        <div class="hero-stat-label">Verified kitchens</div>
       </div>
       <div>
-        <div class="hero-stat-num" data-count="1200">1,200+</div>
+        <div class="hero-stat-num" data-count="{{ landing_metrics.meals_delivered }}">{{ landing_metrics.meals_delivered }}</div>
         <div class="hero-stat-label">Meals delivered</div>
       </div>
       <div>
@@ -960,9 +972,9 @@ footer{
         <div class="cook-card-rating">
           <div>
             <div class="rating-stars">★★★★★</div>
-            <div class="rating-count">Top Rated</div>
+            <div class="rating-count">{{ cook.review_count }} review{{ cook.review_count|pluralize }}</div>
           </div>
-          <div class="rating-num">4.9</div>
+          <div class="rating-num">{% if cook.avg_rating %}{{ cook.avg_rating|floatformat:1 }}{% else %}--{% endif %}</div>
         </div>
       </div>
       <a href="{% url 'customer:cook_detail' cook.id %}" class="cook-card-cta" data-magnetic>Order from {{ cook.user.name.split.0 }} →</a>
@@ -1021,12 +1033,12 @@ footer{
 <section id="numbers">
   <div class="numbers-grid">
     <div class="number-box gs-reveal">
-      <div class="number-val" data-count="47">47</div>
-      <div class="number-label">Home cooks</div>
+      <div class="number-val" data-count="{{ landing_metrics.verified_kitchens }}">{{ landing_metrics.verified_kitchens }}</div>
+      <div class="number-label">Verified kitchens</div>
       <div class="number-desc">Verified, passionate, cooking fresh every day</div>
     </div>
     <div class="number-box gs-reveal">
-      <div class="number-val" data-count="1200">1,200+</div>
+      <div class="number-val" data-count="{{ landing_metrics.meals_delivered }}">{{ landing_metrics.meals_delivered }}</div>
       <div class="number-label">Meals delivered</div>
       <div class="number-desc">And every single one made fresh that morning</div>
     </div>
@@ -1036,8 +1048,8 @@ footer{
       <div class="number-desc">Because home food doesn't need marketing</div>
     </div>
     <div class="number-box gs-reveal">
-      <div class="number-val" data-count="12">12</div>
-      <div class="number-label">Neighbourhoods</div>
+      <div class="number-val" data-count="{{ landing_metrics.active_dishes }}">{{ landing_metrics.active_dishes }}</div>
+      <div class="number-label">Active dishes</div>
       <div class="number-desc">And growing — one kitchen at a time</div>
     </div>
   </div>
@@ -1384,11 +1396,19 @@ gsap.to('#for-cooks-img', {
   ease: 'none'
 });
 
-/* ── Navbar Scroll Color ── */
+/* ── Navbar Scroll Color & Mobile Menu ── */
 const navbar = document.getElementById('navbar');
 window.addEventListener('scroll', () => {
   navbar.classList.toggle('scrolled', window.scrollY > 60);
 });
+
+const hamburger = document.querySelector('.nav-hamburger');
+const navLinks = document.querySelector('.nav-links');
+if(hamburger && navLinks) {
+  hamburger.addEventListener('click', () => {
+    navLinks.classList.toggle('open');
+  });
+}
 
 /* ── Count-up animation ── */
 function countUp(el, target, duration=1800) {

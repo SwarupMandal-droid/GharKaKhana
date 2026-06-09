@@ -1,7 +1,9 @@
 from django.db import models
+from django.conf import settings
 from accounts.models import User
 from cooks.models import CookProfile, DailyMenu, MenuItem, DeliverySlot
 import random
+from decimal import Decimal
 
 
 class SavedAddress(models.Model):
@@ -51,9 +53,11 @@ class Order(models.Model):
         COD    = 'COD',    'Cash on Delivery'
 
     class PaymentStatus(models.TextChoices):
+        INITIATED = 'INITIATED', 'Initiated'
         PENDING  = 'PENDING',  'Pending'
         PAID     = 'PAID',     'Paid'
         FAILED   = 'FAILED',   'Failed'
+        REFUND_PENDING = 'REFUND_PENDING', 'Refund Pending'
         REFUNDED = 'REFUNDED', 'Refunded'
 
     customer        = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
@@ -66,8 +70,11 @@ class Order(models.Model):
     status          = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
     delivery_type   = models.CharField(max_length=10, choices=DeliveryType.choices)
     payment_method  = models.CharField(max_length=10, choices=PaymentMethod.choices)
-    payment_status  = models.CharField(max_length=10, choices=PaymentStatus.choices, default=PaymentStatus.PENDING)
+    payment_status  = models.CharField(max_length=20, choices=PaymentStatus.choices, default=PaymentStatus.PENDING)
     payment_ref     = models.CharField(max_length=100, blank=True)
+    refund_ref      = models.CharField(max_length=100, blank=True)
+    refund_requested_at = models.DateTimeField(null=True, blank=True)
+    refunded_at     = models.DateTimeField(null=True, blank=True)
 
     subtotal        = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     platform_fee    = models.DecimalField(max_digits=8,  decimal_places=2, default=0)
@@ -77,6 +84,10 @@ class Order(models.Model):
     pin_code        = models.CharField(max_length=4, blank=True)
     placed_at       = models.DateTimeField(auto_now_add=True)
     updated_at      = models.DateTimeField(auto_now=True)
+
+    # UI visibility (Archive/Delete functionality)
+    visible_to_customer = models.BooleanField(default=True)
+    visible_to_cook     = models.BooleanField(default=True)
 
     class Meta:
         db_table = 'orders'
@@ -90,8 +101,17 @@ class Order(models.Model):
 
     def calculate_totals(self):
         self.subtotal     = sum(item.line_total() for item in self.items.all())
-        self.platform_fee = round(self.subtotal * 0.002, 2)
+        self.platform_fee = self.calculate_platform_fee(self.subtotal)
         self.total        = self.subtotal + self.platform_fee + self.delivery_charge
+
+    @staticmethod
+    def platform_fee_rate_percent():
+        return settings.PLATFORM_FEE_RATE
+
+    @classmethod
+    def calculate_platform_fee(cls, subtotal):
+        subtotal = Decimal(subtotal)
+        return (subtotal * cls.platform_fee_rate_percent() / Decimal('100')).quantize(Decimal('0.01'))
 
     def is_prepaid(self):
         return self.payment_method == self.PaymentMethod.ONLINE

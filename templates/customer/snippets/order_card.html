@@ -1,0 +1,30 @@
+<a href="/orders/{{ order.pk }}/">
+  <div class="card order-card-premium" style="padding: 24px;">
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+      <div style="display: flex; align-items: center; gap: 20px;">
+        <div style="width: 60px; height: 60px; background: var(--p-orange-light); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--p-orange);">
+           🏠
+        </div>
+        <div>
+          <div style="font-weight: 800; font-size: 1.125rem; color: var(--p-black); margin-bottom: 4px;">
+            {{ order.cook.kitchen_name }}
+          </div>
+          <div class="text-xs" style="color: var(--p-gray-500); font-weight: 600;">
+            Order #{{ order.pk }} · {{ order.placed_at|date:"d M Y" }} · {{ order.slot.label }}
+          </div>
+          <div class="text-xs" style="color: var(--p-orange); font-weight: 700; margin-top: 4px;">
+            {{ order.items.count }} item{{ order.items.count|pluralize }} ordered
+          </div>
+        </div>
+      </div>
+      <div style="text-align: right;">
+        <div style="font-family: 'Poppins', sans-serif; font-size: 1.25rem; font-weight: 800; color: var(--p-black); margin-bottom: 8px;">
+          ₹{{ order.total }}
+        </div>
+        <span class="badge badge-{{ order.status|lower }}" style="font-weight: 700; border: none; padding: 6px 16px;">
+          {{ order.get_status_display }}
+        </span>
+      </div>
+    </div>
+  </div>
+</a>

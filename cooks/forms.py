@@ -2,6 +2,16 @@ from django import forms
 from .models import CookProfile, Dish, DailyMenu, MenuItem, DeliverySlot
 
 class DishForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields:
+            if isinstance(self.fields[field].widget, forms.Textarea):
+                self.fields[field].widget.attrs.update({'class': 'form-textarea'})
+            elif isinstance(self.fields[field].widget, (forms.Select, forms.RadioSelect)):
+                self.fields[field].widget.attrs.update({'class': 'form-select'})
+            elif not isinstance(self.fields[field].widget, forms.CheckboxInput):
+                self.fields[field].widget.attrs.update({'class': 'form-input'})
+
     class Meta:
         model = Dish
         fields = ['name', 'description', 'base_price', 'food_type', 'spice_level', 'allergens', 'photo']
@@ -21,6 +31,14 @@ class DailyMenuForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.cook = kwargs.pop('cook', None)
         super().__init__(*args, **kwargs)
+        for field in self.fields:
+            if isinstance(self.fields[field].widget, forms.Textarea):
+                self.fields[field].widget.attrs.update({'class': 'form-textarea'})
+            elif isinstance(self.fields[field].widget, forms.Select):
+                self.fields[field].widget.attrs.update({'class': 'form-select'})
+            elif not isinstance(self.fields[field].widget, forms.CheckboxInput):
+                self.fields[field].widget.attrs.update({'class': 'form-input'})
+        
         if self.cook:
             self.fields['slot'].queryset = DeliverySlot.objects.filter(cook=self.cook, is_active=True)
 
@@ -49,11 +67,21 @@ class DailyMenuForm(forms.ModelForm):
         return cleaned_data
 
 class CookProfileForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields:
+            if isinstance(self.fields[field].widget, forms.Textarea):
+                self.fields[field].widget.attrs.update({'class': 'form-textarea'})
+            elif isinstance(self.fields[field].widget, forms.Select):
+                self.fields[field].widget.attrs.update({'class': 'form-select'})
+            elif not isinstance(self.fields[field].widget, forms.CheckboxInput):
+                self.fields[field].widget.attrs.update({'class': 'form-input'})
+
     class Meta:
         model = CookProfile
         fields = [
             'kitchen_name', 'bio', 'phone', 'address', 'latitude', 'longitude', 
-            'cuisine_tags', 'daily_capacity', 'order_cutoff', 'same_day_enabled'
+            'cuisine_tags', 'daily_capacity', 'order_cutoff', 'same_day_enabled', 'photo'
         ]
         widgets = {
             'bio': forms.Textarea(attrs={'rows': 3}),
@@ -62,6 +90,14 @@ class CookProfileForm(forms.ModelForm):
         }
 
 class DeliverySlotForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields:
+            if isinstance(self.fields[field].widget, forms.Select):
+                self.fields[field].widget.attrs.update({'class': 'form-select'})
+            elif not isinstance(self.fields[field].widget, forms.CheckboxInput):
+                self.fields[field].widget.attrs.update({'class': 'form-input'})
+
     class Meta:
         model = DeliverySlot
         fields = ['label', 'start_time', 'end_time']

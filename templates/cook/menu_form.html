@@ -4,118 +4,182 @@
 {% endblock %}
 
 {% block content %}
-<div class="container" style="max-width:800px">
+<div class="container animate-fade" style="max-width: 1200px; padding-bottom: 80px;">
+  
+  <!-- Back Link -->
+  <a href="{% url 'cook:menu_list' %}" style="display: inline-flex; align-items: center; gap: 8px; color: var(--p-gray-500); font-weight: 700; font-size: 0.875rem; margin-bottom: 32px; transition: color 0.2s;">
+    <span>←</span> Back to Planning
+  </a>
 
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
-        <div>
-            <h1 style="margin-bottom:4px">
-                {% if menu %}Edit Daily Menu{% else %}Create Daily Menu{% endif %}
-            </h1>
-            <p style="color:var(--gray-500)">
-                {% if menu %}Update menu details and manage dishes.{% else %}Set up a new menu for a specific date and slot.{% endif %}
-            </p>
+  <!-- Header -->
+  <div class="page-header" style="margin-bottom: 56px;">
+    <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 12px;">
+      <div style="background: var(--p-orange-light); color: var(--p-orange); padding: 12px; border-radius: 16px; font-size: 1.75rem; box-shadow: var(--shadow-sm);">🗓️</div>
+      <h1 style="margin:0; font-weight: 950; letter-spacing: -1.5px; font-size: 2.75rem;">{% if menu %}Refine Daily <span class="text-orange">Menu</span>{% else %}Plan Daily <span class="text-orange">Menu</span>{% endif %}</h1>
+    </div>
+    <p class="text-muted" style="font-size: 1.15rem; font-weight: 500;">{% if menu %}Updating schedule for {{ menu.menu_date|date:"l, F j" }}{% else %}Draft a new culinary schedule for your customers.{% endif %}</p>
+  </div>
+
+  <div class="grid-2" style="align-items: start; gap: 56px; grid-template-columns: 1fr 1.5fr;">
+    
+    <!-- Left Pane: Menu Settings -->
+    <div>
+      <div class="card" style="padding: 48px; border: none; box-shadow: var(--shadow-lg); border-radius: 32px; background: var(--p-white);">
+        <div style="margin-bottom: 40px;">
+          <h2 style="font-size: 1.5rem; margin-bottom: 12px; font-weight: 900; letter-spacing: -0.5px;">Schedule</h2>
+          <p class="text-sm text-muted" style="font-weight: 600;">When will this menu be live?</p>
         </div>
-        <a href="{% url 'cook:menu_list' %}" class="btn-ghost">Back to List</a>
+
+        <form method="post">
+          {% csrf_token %}
+
+          {% if form.non_field_errors %}
+            <div class="message message-error" style="margin-bottom: 32px; border-radius: 16px;">
+              {{ form.non_field_errors.0 }}
+            </div>
+          {% endif %}
+
+          <div style="display: flex; flex-direction: column; gap: 28px;">
+            {% for field in form %}
+              <div class="form-group">
+                <label class="form-label" style="font-weight: 800; font-size: 0.8125rem;">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                  <p class="text-xs" style="color: var(--p-error); margin-top: 8px; font-weight: 600;">{{ field.errors.0 }}</p>
+                {% endif %}
+              </div>
+            {% endfor %}
+
+            <div style="margin-top: 24px;">
+              <button type="submit" class="btn-primary btn-full" style="height: 64px; font-weight: 900; font-size: 1.1rem; border-radius: 20px; box-shadow: var(--shadow-orange);">
+                {% if menu %}Update Schedule{% else %}Save & Continue{% endif %}
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      {% if not menu %}
+        <div style="margin-top: 32px; padding: 32px; background: var(--p-blue-bg); border-radius: 24px; border: 2px dashed rgba(47, 128, 237, 0.2); display: flex; gap: 20px; align-items: flex-start;">
+          <div style="font-size: 1.5rem;">💡</div>
+          <p class="text-sm" style="color: var(--p-blue); margin: 0; line-height: 1.6; font-weight: 600;">
+            Plan your schedule first. Once saved, you can add specific dishes from your library to this date.
+          </p>
+        </div>
+      {% endif %}
     </div>
 
-    <div class="grid-2" style="align-items:start;gap:24px">
-        
-        <!-- Menu Form -->
-        <div class="card">
-            <div class="card-header">
-                <h3>Menu Details</h3>
-            </div>
-            <form method="post">
-                {% csrf_token %}
-
-                {% if form.non_field_errors %}
-                <div class="message message-error" style="margin-bottom:16px">
-                    {{ form.non_field_errors.0 }}
-                </div>
-                {% endif %}
-
-                {% for field in form %}
-                <div class="form-group">
-                    <label class="form-label">{{ field.label }}</label>
-                    {{ field }}
-                    {% if field.errors %}
-                    <div class="message message-error">{{ field.errors.0 }}</div>
-                    {% endif %}
-                </div>
-                {% endfor %}
-                <div style="margin-top:24px">
-                    <button type="submit" class="btn-primary btn-full">
-                        {% if menu %}Update Details{% else %}Create Menu{% endif %}
-                    </button>
-                </div>
-            </form>
+    <!-- Right Pane: Dish Management -->
+    {% if menu %}
+    <div>
+      <div class="card" style="padding: 48px; border: none; box-shadow: var(--shadow-lg); border-radius: 32px; background: var(--p-white); border-top: 8px solid var(--p-orange);">
+        <div style="margin-bottom: 40px; display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <h2 style="font-size: 1.5rem; margin-bottom: 12px; font-weight: 900; letter-spacing: -0.5px;">Active Dishes</h2>
+            <p class="text-sm text-muted" style="font-weight: 600;">Manage items for this menu.</p>
+          </div>
+          <span class="badge" style="background: var(--p-orange-light); color: var(--p-orange); border: none; font-weight: 800; padding: 8px 16px; border-radius: 12px;">{{ menu_items|length }} items</span>
         </div>
 
-        <!-- Menu Item Management (Only if menu exists) -->
-        {% if menu %}
-        <div class="card">
-            <div class="card-header">
-                <h3>Manage Dishes</h3>
-            </div>
-
-            <!-- Existing Items -->
-            <div style="margin-bottom:24px">
-                <h4 style="margin-bottom:12px;font-size:14px;color:var(--gray-500)">Current Dishes</h4>
-                {% if menu_items %}
-                    <div style="display:flex;flex-direction:column;gap:12px">
-                        {% for item in menu_items %}
-                        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--gray-100);border-radius:12px">
-                            <div>
-                                <div style="font-weight:600;font-size:14px">{{ item.dish.name }}</div>
-                                <div style="font-size:12px;color:var(--gray-500)">
-                                    Qty: {{ item.quantity_available }} · ₹{{ item.effective_price }}
-                                </div>
-                            </div>
-                            <form method="post" action="{% url 'cook:menu_item_remove' item.pk %}">
-                                {% csrf_token %}
-                                <button type="submit" class="btn-danger btn-sm" style="padding:4px 8px">Remove</button>
-                            </form>
-                        </div>
-                        {% endfor %}
+        <!-- Current Items List -->
+        <div style="margin-bottom: 56px;">
+          {% if menu_items %}
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+              {% for item in menu_items %}
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 24px; background: var(--p-gray-50); border-radius: 20px; border: 1.5px solid var(--p-border); transition: all 0.3s ease;">
+                  <div style="display: flex; align-items: center; gap: 20px;">
+                    <div style="width: 56px; height: 56px; background: var(--p-white); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; box-shadow: var(--shadow-sm);">🍲</div>
+                    <div>
+                      <div style="font-weight: 900; font-size: 1.1rem; color: var(--p-black);">{{ item.dish.name }}</div>
+                      <div style="font-size: 0.875rem; color: var(--p-gray-500); margin-top: 4px; font-weight: 600;">
+                        Supply: <span style="color: var(--p-black);">{{ item.quantity_available }}</span> · Price: <span style="color: var(--p-success); font-weight: 800;">₹{{ item.effective_price }}</span>
+                      </div>
                     </div>
-                {% else %}
-                    <p style="font-size:13px;color:var(--gray-400);font-style:italic">No dishes added yet.</p>
-                {% endif %}
-            </div>
-
-            <!-- Add New Item -->
-            {% if available_dishes %}
-            <div style="border-top:1px solid var(--gray-200);padding-top:20px">
-                <h4 style="margin-bottom:12px;font-size:14px;color:var(--gray-500)">Add a Dish</h4>
-                <form method="post" action="{% url 'cook:menu_item_add' menu.pk %}" style="display:flex;flex-direction:column;gap:12px">
+                  </div>
+                  <form method="post" action="{% url 'cook:menu_item_remove' item.pk %}">
                     {% csrf_token %}
-                    <div class="form-group">
-                        <select name="dish_id" class="form-select" required>
-                            <option value="">Select a dish...</option>
-                            {% for dish in available_dishes %}
-                            <option value="{{ dish.pk }}">{{ dish.name }} (₹{{ dish.base_price }})</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-                        <div class="form-group">
-                            <input type="number" name="quantity" placeholder="Quantity" class="form-input" required min="1">
-                        </div>
-                        <div class="form-group">
-                            <input type="number" name="price_override" placeholder="Price (optional)" class="form-input" step="0.01">
-                        </div>
-                    </div>
-                    <button type="submit" class="btn-primary">Add dish to menu</button>
-                </form>
-            </div>
-            {% else %}
-                <div class="message message-info" style="font-size:12px">
-                    All your active dishes are already in this menu, or you need to <a href="{% url 'cook:dish_add' %}" style="color:inherit;font-weight:700">create more dishes</a>.
+                    <button type="submit" class="btn-ghost btn-sm" style="color: var(--p-error); background: var(--p-error-bg); border: none; font-weight: 800; padding: 10px 20px; border-radius: 10px;">Remove</button>
+                  </form>
                 </div>
-            {% endif %}
+              {% endfor %}
+            </div>
+          {% else %}
+            <div style="padding: 64px 32px; text-align: center; background: var(--p-gray-50); border-radius: 24px; border: 3px dashed var(--p-border);">
+              <div style="font-size: 3.5rem; margin-bottom: 20px; opacity: 0.3;">🍳</div>
+              <p style="font-size: 1rem; color: var(--p-gray-500); font-weight: 600; line-height: 1.6;">Your menu is empty.<br>Select a dish below to get started.</p>
+            </div>
+          {% endif %}
         </div>
-        {% endif %}
 
+        <!-- Add Dish Form -->
+        {% if available_dishes %}
+          <div style="padding-top: 48px; border-top: 2px dashed var(--p-border);">
+            <h4 style="margin-bottom: 32px; font-size: 0.875rem; font-weight: 900; color: var(--p-gray-400); text-transform: uppercase; letter-spacing: 0.1em;">Add to Menu</h4>
+            
+            <form method="post" action="{% url 'cook:menu_item_add' menu.pk %}" style="display: flex; flex-direction: column; gap: 32px;">
+              {% csrf_token %}
+              
+              <div class="form-group">
+                <label class="form-label" style="font-weight: 800; font-size: 0.8125rem;">Select Dish Library Item</label>
+                <select name="dish_id" class="form-select-premium" required>
+                  <option value="">Choose a dish...</option>
+                  {% for dish in available_dishes %}
+                    <option value="{{ dish.pk }}">{{ dish.name }} (Base: ₹{{ dish.base_price }})</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="grid-2" style="gap: 32px;">
+                <div class="form-group">
+                  <label class="form-label" style="font-weight: 800; font-size: 0.8125rem;">Servings Available</label>
+                  <input type="number" name="quantity" placeholder="e.g. 20" class="form-input-premium" required min="1">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" style="font-weight: 800; font-size: 0.8125rem;">Price Override (₹)</label>
+                  <input type="number" name="price_override" placeholder="Optional" class="form-input-premium" step="0.01">
+                </div>
+              </div>
+
+              <button type="submit" class="btn-primary" style="background: var(--p-black); color: var(--p-white); border: none; height: 60px; border-radius: 18px; font-weight: 900; font-size: 1rem; box-shadow: var(--shadow-md);">
+                Add to Daily Menu
+              </button>
+            </form>
+          </div>
+        {% else %}
+          <div style="padding: 32px; background: var(--p-orange-light); border-radius: 20px; border: 2.5px solid var(--p-orange-mid); display: flex; align-items: center; gap: 20px;">
+            <div style="font-size: 1.5rem;">👨‍🍳</div>
+            <p class="text-sm" style="color: var(--p-orange-dark); margin: 0; font-weight: 800;">
+              Library empty? <a href="{% url 'cook:dish_add' %}" style="text-decoration: underline;">Create new dishes</a> to add them to your menu.
+            </p>
+          </div>
+        {% endif %}
+      </div>
     </div>
+    {% endif %}
+
+  </div>
 </div>
+
+<style>
+  #id_menu_date, #id_delivery_slots, .form-select-premium, .form-input-premium {
+    background: var(--p-gray-100);
+    border: 2.5px solid transparent;
+    border-radius: 18px;
+    padding: 16px 24px;
+    font-weight: 600;
+    font-size: 1rem;
+    width: 100%;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  #id_menu_date:focus, .form-select-premium:focus, .form-input-premium:focus {
+    background: white;
+    border-color: var(--p-orange);
+    box-shadow: 0 0 0 5px var(--p-orange-light);
+    outline: none;
+  }
+  #id_delivery_slots { height: 160px; }
+</style>
+
+
 {% endblock %}
+

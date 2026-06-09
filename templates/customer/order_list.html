@@ -9,39 +9,65 @@
     <p class="text-muted">Track and manage your culinary journeys</p>
   </div>
 
-  {% if orders %}
-  <div style="display: flex; flex-direction: column; gap: 20px;">
-    {% for order in orders %}
-    <a href="/orders/{{ order.pk }}/">
-      <div class="card order-card-premium" style="padding: 24px;">
-        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
-          <div style="display: flex; align-items: center; gap: 20px;">
-            <div style="width: 60px; height: 60px; background: var(--p-orange-light); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--p-orange);">
-               🏠
-            </div>
-            <div>
-              <div style="font-weight: 800; font-size: 1.125rem; color: var(--p-black); margin-bottom: 4px;">
-                {{ order.cook.kitchen_name }}
+  {% if customer_orders.count > 0 %}
+  <div id="order-list-container" style="display: flex; flex-direction: column; gap: 20px;">
+    {% for order in customer_orders %}
+      <div id="order-card-{{ order.pk }}" class="order-card-wrapper" style="transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);">
+        <div class="card order-card-premium" style="padding: 24px; position: relative; cursor: pointer;" onclick="if(!event.target.closest('button')) window.location.href='/orders/{{ order.pk }}/'">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+            
+            <div style="display: flex; align-items: center; gap: 20px; flex: 1;">
+              <div style="width: 60px; height: 60px; background: var(--p-orange-light); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--p-orange);">
+                 🏠
               </div>
-              <div class="text-xs" style="color: var(--p-gray-500); font-weight: 600;">
-                Order #{{ order.pk }} · {{ order.placed_at|date:"d M Y" }} · {{ order.slot.label }}
-              </div>
-              <div class="text-xs" style="color: var(--p-orange); font-weight: 700; margin-top: 4px;">
-                {{ order.items.count }} item{{ order.items.count|pluralize }} ordered
+              <div>
+                <div style="font-weight: 800; font-size: 1.125rem; color: var(--p-black); margin-bottom: 4px;">
+                  {{ order.cook.kitchen_name }}
+                </div>
+                <div class="text-xs" style="color: var(--p-gray-500); font-weight: 600;">
+                  Order #{{ order.pk }} · {{ order.placed_at|date:"d M Y" }} · {{ order.slot.label }}
+                </div>
+                <div class="text-xs" style="color: var(--p-orange); font-weight: 700; margin-top: 4px;">
+                  {{ order.items.count }} item{{ order.items.count|pluralize }} ordered
+                </div>
               </div>
             </div>
-          </div>
-          <div style="text-align: right;">
-            <div style="font-family: 'Poppins', sans-serif; font-size: 1.25rem; font-weight: 800; color: var(--p-black); margin-bottom: 8px;">
-              ₹{{ order.total }}
+
+            <div style="display: flex; align-items: center; gap: 24px; text-align: right;">
+              <div>
+                <div style="font-family: 'Poppins', sans-serif; font-size: 1.25rem; font-weight: 800; color: var(--p-black); margin-bottom: 8px;">
+                  ₹{{ order.total }}
+                </div>
+                <span class="badge badge-{{ order.status|lower }}" style="font-weight: 700; border: none; padding: 6px 16px;">
+                  {{ order.get_status_display }}
+                </span>
+                <div class="text-xs" style="color: var(--p-gray-500); font-weight: 700; margin-top: 8px;">
+                  Payment: {{ order.get_payment_status_display }}
+                </div>
+              </div>
+
+              {% if order.status == 'DELIVERED' %}
+              <a
+                href="{% url 'customer:cook_detail' order.cook.pk %}?repeat_order={{ order.pk }}"
+                onclick="event.stopPropagation()"
+                class="btn-secondary btn-sm"
+                style="white-space: nowrap;"
+              >
+                Order Again
+              </a>
+              {% endif %}
+
+              <!-- Delete Button -->
+              <button onclick="deleteOrder(event, {{ order.pk }})" class="delete-btn-premium" title="Archive Order">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+              </button>
             </div>
-            <span class="badge badge-{{ order.status|lower }}" style="font-weight: 700; border: none; padding: 6px 16px;">
-              {{ order.get_status_display }}
-            </span>
+
           </div>
         </div>
       </div>
-    </a>
     {% endfor %}
   </div>
 
@@ -56,6 +82,14 @@
   </div>
   {% endif %}
 
+  <!-- Undo Toast -->
+  <div id="undo-toast" class="undo-toast-premium">
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <span id="toast-message">Order archived</span>
+      <button id="undo-btn" class="undo-btn-pill">Undo</button>
+    </div>
+  </div>
+
 </div>
 
 <style>
@@ -68,5 +102,151 @@
   border-color: var(--p-orange-mid);
   box-shadow: var(--shadow-md);
 }
+
+.delete-btn-premium {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--p-error-bg);
+  color: var(--p-error);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.delete-btn-premium:hover {
+  background: var(--p-error);
+  color: white;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(235, 87, 87, 0.3);
+}
+
+.undo-toast-premium {
+  position: fixed;
+  bottom: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--p-black);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 100px;
+  box-shadow: var(--shadow-lg);
+  z-index: 2000;
+  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  font-weight: 600;
+}
+
+.undo-toast-premium.active {
+  bottom: 40px;
+}
+
+.undo-btn-pill {
+  background: var(--p-orange);
+  color: white;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 100px;
+  font-weight: 800;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.undo-btn-pill:hover {
+  background: white;
+  color: var(--p-orange);
+  transform: scale(1.05);
+}
+
+/* Animations */
+.card-removed {
+  opacity: 0;
+  transform: translateX(100px) scale(0.9);
+  pointer-events: none;
+  margin-top: -100px; /* Collapse space */
+}
 </style>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let deleteTimeout = null;
+let currentDeleteId = null;
+
+function deleteOrder(event, orderId) {
+    event.stopPropagation();
+    
+    const card = document.getElementById(`order-card-${orderId}`);
+    card.classList.add('card-removed');
+    
+    // Clear previous undo if any
+    if (deleteTimeout) {
+        commitDelete(currentDeleteId);
+    }
+    
+    currentDeleteId = orderId;
+    showUndoToast();
+    
+    deleteTimeout = setTimeout(() => {
+        commitDelete(orderId);
+    }, 5000);
+}
+
+function showUndoToast() {
+    const toast = document.getElementById('undo-toast');
+    toast.classList.add('active');
+    
+    document.getElementById('undo-btn').onclick = () => {
+        undoDelete(currentDeleteId);
+    };
+}
+
+function hideUndoToast() {
+    const toast = document.getElementById('undo-toast');
+    toast.classList.remove('active');
+}
+
+function undoDelete(orderId) {
+    clearTimeout(deleteTimeout);
+    deleteTimeout = null;
+    
+    const card = document.getElementById(`order-card-${orderId}`);
+    card.classList.remove('card-removed');
+    
+    hideUndoToast();
+    
+    // Notify server to undo (optional but good for consistency)
+    fetch(`/orders/${orderId}/archive/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: 'action=undo'
+    });
+}
+
+function commitDelete(orderId) {
+    deleteTimeout = null;
+    hideUndoToast();
+    
+    fetch(`/orders/${orderId}/archive/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: 'action=delete'
+    }).then(res => {
+        if (!res.ok) {
+            // Revert UI if server failed
+            document.getElementById(`order-card-${orderId}`).classList.remove('card-removed');
+        }
+    });
+}
+</script>
 {% endblock %}

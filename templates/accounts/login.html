@@ -165,20 +165,27 @@ body::before{
 
 .form-input {
   width: 100%;
-  padding: 14px 16px;
-  background: transparent;
-  border: 1px solid rgba(200,118,10,0.2);
-  border-radius: 12px;
+  padding: 14px 18px;
+  background: var(--white);
+  border: 1px solid rgba(200,118,10,0.15);
+  border-radius: 14px;
   font-family: var(--sans);
   font-size: 1rem;
   color: var(--charcoal);
-  transition: border-color 0.3s, box-shadow 0.3s;
+  transition: all 0.3s var(--ease-out);
 }
+.form-input::placeholder { color: #BBB; }
+
+.form-input:hover {
+  border-color: rgba(200,118,10,0.4);
+}
+
 .form-input:focus {
   outline: none;
   border-color: var(--turmeric);
-  box-shadow: 0 0 0 4px rgba(200,118,10,0.1);
+  box-shadow: 0 0 0 4px rgba(200,118,10,0.1), 0 12px 24px rgba(200,118,10,0.05);
 }
+
 
 .btn-primary {
   width: 100%;
@@ -269,6 +276,21 @@ body::before{
 }
 .message-close:hover { color: var(--white); }
 
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--warm-gray);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  margin-bottom: 32px;
+  transition: color 0.3s;
+}
+.back-link:hover { color: var(--turmeric); }
+.back-link svg { transition: transform 0.3s var(--ease-out); }
+.back-link:hover svg { transform: translateX(-4px); }
+
 /* Mobile Support */
 @media (max-width: 900px) {
   .auth-left { display: none; }
@@ -310,6 +332,14 @@ body::before{
 
     <div class="auth-right">
       <div class="auth-form-wrapper">
+        <a href="/" class="back-link gs-reveal">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          Back to Home
+        </a>
+
         <h1 class="auth-title">Welcome back</h1>
         <p class="auth-subtitle">Sign in to your GharKhana account</p>
 
@@ -323,6 +353,7 @@ body::before{
               name="email"
               class="form-input"
               placeholder="name@example.com"
+              autocomplete="email"
               required
               autofocus
             />
@@ -335,6 +366,7 @@ body::before{
               name="password"
               class="form-input"
               placeholder="••••••••"
+              autocomplete="current-password"
               required
             />
           </div>
@@ -342,6 +374,12 @@ body::before{
           <button type="submit" class="btn-primary gs-reveal">
             Sign in
           </button>
+
+          <div style="text-align:center; margin-top:16px;" class="gs-reveal">
+            <a href="{% url 'accounts:password_reset' %}" style="font-size: 0.9rem; color: var(--warm-gray); text-decoration: none; font-weight: 500;">
+              Forgot your password?
+            </a>
+          </div>
         </form>
 
         <div class="auth-divider gs-reveal"><span>or continue with</span></div>

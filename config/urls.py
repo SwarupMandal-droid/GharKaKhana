@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from django.views.generic import RedirectView, TemplateView
+from django.views.generic import RedirectView
 from accounts.views import landing_page
 
 urlpatterns = [
@@ -16,5 +16,10 @@ urlpatterns = [
     path('billing/',  include('billing.urls',        namespace='billing')),
     path('admin-panel/', include('admin_panel.urls', namespace='admin_panel')),
     path('',          landing_page, name='landing'),
-] + static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0]) \
-  + static(settings.MEDIA_URL,  document_root=settings.MEDIA_ROOT)
+]
+
+# In development: serve static and media files via Django
+# In production: whitenoise handles static; Cloudinary handles media
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

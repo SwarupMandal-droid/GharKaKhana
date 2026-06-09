@@ -69,11 +69,24 @@
       <div class="p-slot-header">
         <div class="p-slot-title-group">
           <h2 class="p-slot-label">{{ batch.slot.label }} Batch</h2>
-          <p class="p-slot-meta">
-            {{ batch.done }} of {{ batch.total }} orders completed 
-            {% if batch.total_km %}· {{ batch.total_km }} km route{% endif %}
-            {% if batch.est_time %}· ~{{ batch.est_time }} min{% endif %}
-          </p>
+          <div style="display: flex; gap: 16px; margin-top: 8px;">
+            <div style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--p-gray-600); font-weight: 600;">
+              <span style="font-size: 1.1rem;">🛵</span> {{ batch.done }} / {{ batch.total }} Delivered
+            </div>
+            {% if batch.total_km %}
+            <div style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--p-gray-600); font-weight: 600;">
+              <span style="font-size: 1.1rem;">📏</span> {{ batch.total_km }} km total
+            </div>
+            {% endif %}
+            {% if batch.est_time %}
+            <div style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--p-gray-600); font-weight: 600;">
+              <span style="font-size: 1.1rem;">⏱️</span> ~{{ batch.est_time }} mins
+            </div>
+            {% endif %}
+            <div style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--p-success); font-weight: 800;">
+              <span style="font-size: 1.1rem;">💰</span> ₹{{ batch.earnings }} earnings
+            </div>
+          </div>
         </div>
         <div style="display: flex; gap: 10px; align-items: center;">
           {% if not batch.cutoff_passed %}
@@ -82,7 +95,7 @@
           </span>
           {% endif %}
           {% if batch.maps_url %}
-          <a href="{{ batch.maps_url }}" target="_blank" class="p-btn p-btn-orange">
+          <a href="{{ batch.maps_url }}" target="_blank" class="p-btn p-btn-orange" style="box-shadow: var(--shadow-orange);">
             🗺️ Open Full Route
           </a>
           {% endif %}

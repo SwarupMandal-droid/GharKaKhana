@@ -1,17 +1,52 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.db.models import Avg, Count
 from .models import User
 from orders.models import SavedAddress
 from cooks.models import CookProfile, Dish
+from orders.models import Order
 
 def landing_page(request):
-    top_cooks = CookProfile.objects.filter(is_active=True, is_approved=True)[:3]
-    top_dishes = Dish.objects.filter(is_active=True)[:6]
+    if request.user.is_authenticated:
+        return redirect_by_role(request.user)
+
+    top_cooks = (
+        CookProfile.objects.filter(is_active=True, is_approved=True)
+        .annotate(
+            avg_rating=Avg('reviews__rating'),
+            review_count=Count('reviews'),
+        )
+        .order_by('-avg_rating', '-review_count', 'kitchen_name')[:3]
+    )
+    top_dishes = (
+        Dish.objects.filter(is_active=True, cook__is_active=True, cook__is_approved=True)
+        .annotate(order_count=Count('menu_items__order_items'))
+        .order_by('-order_count', 'name')[:6]
+    )
+    avg_rating = (
+        CookProfile.objects.filter(is_active=True, is_approved=True)
+        .aggregate(avg=Avg('reviews__rating'))['avg']
+    )
+    landing_metrics = {
+        'verified_kitchens': CookProfile.objects.filter(
+            is_active=True,
+            is_approved=True,
+        ).count(),
+        'meals_delivered': Order.objects.filter(status=Order.Status.DELIVERED).count(),
+        'avg_rating': round(avg_rating, 1) if avg_rating else None,
+        'active_dishes': Dish.objects.filter(
+            is_active=True,
+            cook__is_active=True,
+            cook__is_approved=True,
+        ).count(),
+    }
+
     return render(request, 'landing.html', {
         'top_cooks': top_cooks,
         'top_dishes': top_dishes,
+        'landing_metrics': landing_metrics,
     })
 
 def login_view(request):
@@ -36,7 +71,7 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     messages.success(request, 'You have been signed out.')
-    return redirect('landing')
+    return redirect('accounts:login')
 
 
 def register_view(request):
@@ -128,6 +163,22 @@ def add_address(request):
     return render(request, 'accounts/add_address.html')
 
 @login_required
+def edit_address(request, pk):
+    address = get_object_or_404(SavedAddress, pk=pk, customer=request.user)
+    if request.method == 'POST':
+        address.label      = request.POST.get('label', address.label)
+        address.address    = request.POST.get('address', address.address)
+        address.latitude   = request.POST.get('latitude', address.latitude)
+        address.longitude  = request.POST.get('longitude', address.longitude)
+        address.is_default = request.POST.get('is_default') == 'on'
+        
+        address.save()
+        messages.success(request, 'Address updated successfully.')
+        return redirect('accounts:profile')
+
+    return render(request, 'accounts/add_address.html', {'address': address, 'is_edit': True})
+
+@login_required
 def notifications_view(request):
     notifications = request.user.notifications.order_by('-created_at')[:30]
     # Mark all as read
@@ -139,7 +190,7 @@ def notifications_view(request):
 def redirect_by_role(user):
     role_redirects = {
         'CUSTOMER': '/cooks/',
-        'COOK':     '/cook/dashboard/',
+        'COOK':     '/cook/setup/',
         'DELIVERY': '/delivery/dashboard/',
         'ADMIN':    '/admin-panel/',
     }

@@ -2,104 +2,250 @@
 {% block title %}Kitchen Settings — GharKhana{% endblock %}
 
 {% block content %}
-<div class="container" style="max-width:700px">
-  <div style="margin-bottom:30px">
-    <h1 style="margin-bottom:4px">Kitchen Settings</h1>
-    <p style="color:var(--gray-500)">Update your kitchen details and preferences.</p>
+<div class="container animate-fade" style="max-width: 900px;">
+  
+  <!-- Header -->
+  <div class="page-header" style="margin-bottom: 48px;">
+    <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px;">
+      <div style="background: var(--p-orange-light); color: var(--p-orange); padding: 10px; border-radius: 12px; font-size: 1.5rem;">⚙️</div>
+      <h1 style="margin:0;">Kitchen <span class="text-orange">Settings</span></h1>
+    </div>
+    <p class="text-muted">Manage your kitchen's profile, operational hours, and service preferences.</p>
   </div>
 
-  <div class="card" style="padding:0;margin-bottom:24px">
-    <div style="padding:20px 28px;border-bottom:1px solid var(--gray-100)">
-      <h3 style="margin:0">Profile Information</h3>
-    </div>
-    <form method="post" enctype="multipart/form-data" style="padding:28px">
-      {% csrf_token %}
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
 
-      {% if form.non_field_errors %}
-        <div class="message message-error" style="margin-bottom:20px">
-          {% for err in form.non_field_errors %}{{ err }}{% endfor %}
+    {% if form.non_field_errors %}
+      <div class="message message-error" style="margin-bottom: 32px;">
+        {% for err in form.non_field_errors %}{{ err }}{% endfor %}
+      </div>
+    {% endif %}
+
+    <!-- Profile Section -->
+    <div class="card" style="margin-bottom: 32px; padding: 40px; border: none; box-shadow: var(--shadow-md);">
+      <div style="margin-bottom: 32px;">
+        <h2 style="font-size: 1.25rem; margin-bottom: 8px;">Public Profile</h2>
+        <p class="text-sm text-muted">This information will be visible to your customers.</p>
+      </div>
+
+      <div class="grid-2" style="gap: 32px;">
+        <!-- Food-Tech Hero Kitchen Photo Upload -->
+        <div class="form-group" style="grid-column: 1/-1;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 16px;">
+            <div>
+              <h3 style="font-size: 1.5rem; font-weight: 800; color: #1e293b; margin: 0; letter-spacing: -0.5px;">Kitchen Identity</h3>
+              <p style="font-size: 0.875rem; color: #64748b; margin: 4px 0 0 0;">Manage your kitchen's visual profile on GharKhana</p>
+            </div>
+          </div>
+          
+          <div class="food-tech-card animate-fade">
+            <div class="hero-preview-container" id="hero-preview-box">
+              <div class="upload-success-anim" id="upload-success-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                UPDATED
+              </div>
+
+              {% if cook.photo %}
+                <img src="{{ cook.photo.url }}" alt="{{ cook.kitchen_name }}" class="hero-preview-image" id="preview-img">
+              {% else %}
+                <div class="hero-empty-state" id="preview-placeholder">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                  <div style="text-align: center;">
+                    <div style="font-weight: 700; color: #475569;">No Cover Photo</div>
+                    <div style="font-size: 0.75rem;">Upload a beautiful photo of your kitchen</div>
+                  </div>
+                </div>
+                <img src="" alt="" class="hero-preview-image" id="preview-img" style="display: none;">
+              {% endif %}
+              
+              <div class="hero-overlay">
+                <div class="glass-action-group">
+                  <button type="button" class="btn-glass photo-upload-trigger" onclick="document.getElementById('photo-input').click()" title="Change Cover">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                  </button>
+                  <button type="button" class="btn-glass" onclick="document.getElementById('photo-input').click()" title="Edit Photo">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                  </button>
+                  {% if cook.photo %}
+                  <button type="button" class="btn-glass remove" title="Remove Photo" id="remove-photo-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                  </button>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <div class="food-tech-cta-area">
+              <input type="hidden" name="clear_photo" id="clear-photo-input" value="false">
+              <input type="file" name="photo" id="photo-input" class="photo-upload-input" 
+                     accept="image/*" style="display: none;">
+              
+              <button type="button" class="btn-cta-pill photo-upload-trigger" onclick="document.getElementById('photo-input').click()" >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                <span>Upload New Photo</span>
+              </button>
+              
+              <div id="photo-filename-label" style="font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em;">
+                {% if cook.photo %}COVER PHOTO ACTIVE{% else %}NO COVER SELECTED{% endif %}
+              </div>
+
+              <div class="food-tech-helper">
+                A high-quality kitchen photo builds trust and attracts more customers to your kitchen.
+              </div>
+
+              {% if form.photo.errors %}
+                <p class="text-xs" style="color: #ef4444; margin-top: 6px; font-weight: 600;">{{ form.photo.errors.0 }}</p>
+              {% endif %}
+            </div>
+          </div>
         </div>
-      {% endif %}
 
-      <div class="grid-2" style="gap:20px">
-        <div class="form-group" style="grid-column:1/-1">
+        <div class="form-group" style="grid-column: 1/-1;">
           <label class="form-label">Kitchen Name</label>
           {{ form.kitchen_name }}
-          {% if form.kitchen_name.errors %}<p style="color:#e74c3c;font-size:12px;margin-top:4px">{{ form.kitchen_name.errors.0 }}</p>{% endif %}
+          {% if form.kitchen_name.errors %}<p class="text-xs" style="color: var(--p-error); margin-top: 6px;">{{ form.kitchen_name.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div class="form-group" style="grid-column: 1/-1;">
+          <label class="form-label">About Your Kitchen (Bio)</label>
+          {{ form.bio }}
+          {% if form.bio.errors %}<p class="text-xs" style="color: var(--p-error); margin-top: 6px;">{{ form.bio.errors.0 }}</p>{% endif %}
         </div>
 
         <div class="form-group">
           <label class="form-label">Phone Number</label>
           {{ form.phone }}
-          {% if form.phone.errors %}<p style="color:#e74c3c;font-size:12px;margin-top:4px">{{ form.phone.errors.0 }}</p>{% endif %}
+          {% if form.phone.errors %}<p class="text-xs" style="color: var(--p-error); margin-top: 6px;">{{ form.phone.errors.0 }}</p>{% endif %}
         </div>
 
         <div class="form-group">
-          <label class="form-label">Daily Order Cutoff Time</label>
+          <label class="form-label">Cuisine Specialities</label>
+          {{ form.cuisine_tags }}
+          <p class="text-xs text-muted" style="margin-top: 6px;">e.g. Authentic Bengali, North Indian</p>
+          {% if form.cuisine_tags.errors %}<p class="text-xs" style="color: var(--p-error); margin-top: 6px;">{{ form.cuisine_tags.errors.0 }}</p>{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Operations Section -->
+    <div class="card" style="margin-bottom: 32px; padding: 40px; border: none; box-shadow: var(--shadow-md);">
+      <div style="margin-bottom: 32px;">
+        <h2 style="font-size: 1.25rem; margin-bottom: 8px;">Operations & Capacity</h2>
+        <p class="text-sm text-muted">Configure how your kitchen handles orders.</p>
+      </div>
+
+      <div class="grid-2" style="gap: 32px;">
+        <div class="form-group">
+          <label class="form-label">Daily Order Cutoff</label>
           {{ form.order_cutoff }}
-          {% if form.order_cutoff.errors %}<p style="color:#e74c3c;font-size:12px;margin-top:4px">{{ form.order_cutoff.errors.0 }}</p>{% endif %}
+          <p class="text-xs text-muted" style="margin-top: 6px;">Last time for next-day orders</p>
+          {% if form.order_cutoff.errors %}<p class="text-xs" style="color: var(--p-error); margin-top: 6px;">{{ form.order_cutoff.errors.0 }}</p>{% endif %}
         </div>
 
-        <div class="form-group" style="grid-column:1/-1">
-          <label class="form-label">Kitchen Address</label>
+        <div class="form-group">
+          <label class="form-label">Daily Serving Capacity</label>
+          {{ form.daily_capacity }}
+          <p class="text-xs text-muted" style="margin-top: 6px;">Max orders you can fulfill daily</p>
+          {% if form.daily_capacity.errors %}<p class="text-xs" style="color: var(--p-error); margin-top: 6px;">{{ form.daily_capacity.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div class="form-group" style="grid-column: 1/-1;">
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 24px; background: var(--p-blue-bg); border-radius: var(--radius-md); border: 1.5px dashed rgba(47, 128, 237, 0.2);">
+            <div>
+              <h4 style="margin:0; color: var(--p-blue); font-size: 1rem;">Same-Day Ordering</h4>
+              <p class="text-xs" style="color: var(--p-blue); opacity: 0.8; margin-top: 4px;">Allow customers to order for the current day if you have stock.</p>
+            </div>
+            <label class="switch">
+              {{ form.same_day_enabled }}
+              <span class="slider round"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Location Section -->
+    <div class="card" style="margin-bottom: 48px; padding: 40px; border: none; box-shadow: var(--shadow-md);">
+      <div style="margin-bottom: 32px;">
+        <h2 style="font-size: 1.25rem; margin-bottom: 8px;">Kitchen Location</h2>
+        <p class="text-sm text-muted">Used for distance calculation and deliveries.</p>
+      </div>
+
+      <div class="grid-2" style="gap: 32px;">
+        <div class="form-group" style="grid-column: 1/-1;">
+          <label class="form-label">Street Address</label>
           {{ form.address }}
-          {% if form.address.errors %}<p style="color:#e74c3c;font-size:12px;margin-top:4px">{{ form.address.errors.0 }}</p>{% endif %}
+          {% if form.address.errors %}<p class="text-xs" style="color: var(--p-error); margin-top: 6px;">{{ form.address.errors.0 }}</p>{% endif %}
         </div>
 
         <div class="form-group">
           <label class="form-label">Latitude</label>
           {{ form.latitude }}
-          {% if form.latitude.errors %}<p style="color:#e74c3c;font-size:12px;margin-top:4px">{{ form.latitude.errors.0 }}</p>{% endif %}
+          {% if form.latitude.errors %}<p class="text-xs" style="color: var(--p-error); margin-top: 6px;">{{ form.latitude.errors.0 }}</p>{% endif %}
         </div>
 
         <div class="form-group">
           <label class="form-label">Longitude</label>
           {{ form.longitude }}
-          {% if form.longitude.errors %}<p style="color:#e74c3c;font-size:12px;margin-top:4px">{{ form.longitude.errors.0 }}</p>{% endif %}
-        </div>
-
-        <div class="form-group" style="grid-column:1/-1">
-          <label class="form-label">Bio / About your kitchen</label>
-          {{ form.bio }}
-          {% if form.bio.errors %}<p style="color:#e74c3c;font-size:12px;margin-top:4px">{{ form.bio.errors.0 }}</p>{% endif %}
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Cuisine Tags</label>
-          {{ form.cuisine_tags }}
-          <p style="font-size:12px;color:var(--gray-500);margin-top:4px">e.g. Bengali, North Indian</p>
-          {% if form.cuisine_tags.errors %}<p style="color:#e74c3c;font-size:12px;margin-top:4px">{{ form.cuisine_tags.errors.0 }}</p>{% endif %}
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Daily Capacity</label>
-          {{ form.daily_capacity }}
-          {% if form.daily_capacity.errors %}<p style="color:#e74c3c;font-size:12px;margin-top:4px">{{ form.daily_capacity.errors.0 }}</p>{% endif %}
-        </div>
-
-        <div class="form-group" style="grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:16px;background:var(--gray-50);border-radius:var(--radius-md)">
-          {{ form.same_day_enabled }}
-          <div>
-            <label class="form-label" style="margin:0">Allow Same-Day Orders</label>
-            <p style="font-size:12px;color:var(--gray-500);margin:0">Allow customers to order for the same day.</p>
-          </div>
+          {% if form.longitude.errors %}<p class="text-xs" style="color: var(--p-error); margin-top: 6px;">{{ form.longitude.errors.0 }}</p>{% endif %}
         </div>
       </div>
-
-      <div style="margin-top:24px;display:flex;gap:12px">
-        <button type="submit" class="btn-primary">Save Changes</button>
-        <a href="{% url 'cook:dashboard' %}" class="btn-secondary">Cancel</a>
-      </div>
-    </form>
-  </div>
-
-  <!-- Delivery Slots shortcut -->
-  <div class="card" style="padding:20px 28px;display:flex;align-items:center;justify-content:space-between">
-    <div>
-      <h3 style="margin:0 0 4px">Delivery Slots</h3>
-      <p style="color:var(--gray-500);margin:0;font-size:13px">Manage the time windows when you deliver orders.</p>
     </div>
-    <a href="{% url 'cook:slot_list' %}" class="btn-secondary">Manage Slots →</a>
-  </div>
+
+    <!-- Action Buttons -->
+    <div style="display: flex; gap: 16px; margin-bottom: 60px;">
+      <button type="submit" class="btn-primary" style="padding: 16px 48px; font-size: 1rem; flex: 1;">Save All Changes</button>
+      <a href="{% url 'cook:dashboard' %}" class="btn-outline" style="padding: 16px 32px; font-size: 1rem;">Discard</a>
+    </div>
+  </form>
+
+  <!-- Delivery Slots Card -->
+  <a href="{% url 'cook:slot_list' %}" class="card" style="display: flex; align-items: center; justify-content: space-between; padding: 32px 40px; border: none; box-shadow: var(--shadow-sm); border-left: 6px solid var(--p-orange); text-decoration: none; transition: all 0.3s ease;">
+    <div style="display: flex; align-items: center; gap: 24px;">
+      <div style="font-size: 2rem;">🕒</div>
+      <div>
+        <h3 style="font-size: 1.1rem; margin-bottom: 4px; color: var(--p-black);">Delivery Time Slots</h3>
+        <p class="text-sm text-muted" style="margin:0;">Manage the precise hours you are open for deliveries.</p>
+      </div>
+    </div>
+    <div style="color: var(--p-orange); font-weight: 700; font-size: 1.25rem;">→</div>
+  </a>
+
 </div>
+
+<style>
+/* Custom Toggle Switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  height: 28px;
+}
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #D1D1D1;
+  transition: .4s;
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px; width: 20px;
+  left: 4px; bottom: 4px;
+  background-color: white;
+  transition: .4s;
+}
+input:checked + .slider { background-color: var(--p-blue); }
+input:focus + .slider { box-shadow: 0 0 1px var(--p-blue); }
+input:checked + .slider:before { transform: translateX(24px); }
+.slider.round { border-radius: 34px; }
+.slider.round:before { border-radius: 50%; }
+
+.card:hover { transform: translateY(-4px); }
+</style>
+
 {% endblock %}
+

@@ -1,10 +1,112 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.utils import timezone
 from .models import CookProfile, Dish, DailyMenu, MenuItem, DeliverySlot
 from .forms import DishForm, DailyMenuForm, CookProfileForm, DeliverySlotForm
 from orders.models import Order
 from accounts.decorators import role_required
+
+
+@login_required
+def kitchen_setup(request):
+    """Guided first-time setup for new cooks"""
+    if request.user.role != 'COOK':
+        return redirect('/')
+
+    # If already has a profile, go to dashboard
+    try:
+        cook = request.user.cook_profile
+        if cook.kitchen_name:
+            return redirect('cook:dashboard')
+    except CookProfile.DoesNotExist:
+        cook = None
+
+    if request.method == 'POST':
+        step = request.POST.get('step')
+
+        if step == '1':
+            # Kitchen basics
+            kitchen_name = request.POST.get('kitchen_name','').strip()
+            bio          = request.POST.get('bio','').strip()
+            phone        = request.POST.get('phone','').strip()
+            cuisine_tags = request.POST.get('cuisine_tags','').strip()
+            address      = request.POST.get('address','').strip()
+            latitude     = request.POST.get('latitude','').strip()
+            longitude    = request.POST.get('longitude','').strip()
+
+            if not all([kitchen_name, phone, address, latitude, longitude]):
+                messages.error(request, 'Please fill all required fields and pin your location.')
+                return render(request, 'cook/setup.html', {'step': 1})
+
+            cook, created = CookProfile.objects.get_or_create(
+                user=request.user,
+                defaults={
+                    'kitchen_name': kitchen_name,
+                    'bio':          bio,
+                    'phone':        phone,
+                    'cuisine_tags': cuisine_tags,
+                    'address':      address,
+                    'latitude':     latitude,
+                    'longitude':    longitude,
+                    'daily_capacity': 20,
+                    'order_cutoff': '22:00:00',
+                    'same_day_enabled': False,
+                    'same_day_limit': 5,
+                    'is_approved': False,
+                    'is_active':   True,
+                }
+            )
+            if not created:
+                cook.kitchen_name = kitchen_name
+                cook.bio          = bio
+                cook.phone        = phone
+                cook.cuisine_tags = cuisine_tags
+                cook.address      = address
+                cook.latitude     = latitude
+                cook.longitude    = longitude
+                cook.save()
+
+            return render(request, 'cook/setup.html', {
+                'step': 2, 'cook': cook
+            })
+
+        elif step == '2':
+            # Capacity and cutoff
+            cook = request.user.cook_profile
+            cook.daily_capacity = int(request.POST.get('daily_capacity', 20))
+            cook.order_cutoff   = request.POST.get('order_cutoff', '22:00:00')
+            if request.FILES.get('photo'):
+                cook.photo = request.FILES['photo']
+            cook.save()
+
+            # Create default delivery slots
+            slots = request.POST.getlist('slot_label')
+            starts = request.POST.getlist('slot_start')
+            ends   = request.POST.getlist('slot_end')
+            for label, start, end in zip(slots, starts, ends):
+                if label and start and end:
+                    DeliverySlot.objects.get_or_create(
+                        cook=cook, start_time=start, end_time=end,
+                        defaults={'label': label, 'is_active': True}
+                    )
+
+            return render(request, 'cook/setup.html', {
+                'step': 3, 'cook': cook
+            })
+
+        elif step == '3':
+            # Done — go to pending approval page
+            messages.success(
+                request,
+                'Your kitchen profile is submitted! '
+                'We will review and approve it within 24 hours.'
+            )
+            return render(request, 'cook/setup.html', {
+                'step': 'done'
+            })
+
+    return render(request, 'cook/setup.html', {'step': 1})
 
 
 @role_required(['COOK'])
@@ -22,9 +124,57 @@ def dashboard(request):
     
     # Revenue (Delivered only)
     from django.db.models import Sum
-    total_revenue = Order.objects.filter(cook=cook, status='DELIVERED').aggregate(Sum('total'))['total__sum'] or 0
+    total_revenue = Order.objects.filter(cook=cook, status='DELIVERED').aggregate(s=Sum('total'))['s'] or 0
+    recent_orders = Order.objects.filter(cook=cook, visible_to_cook=True).order_by('-placed_at')[:5]
+
+    # Earnings last 7 days (Actual vs Projected)
+    import json as json_module
+    import datetime
+    from django.utils import timezone
+
+    today = timezone.localdate()
+    earnings_7days = []
+    projected_7days = []
+    labels_7days   = []
     
-    recent_orders = Order.objects.filter(cook=cook).order_by('-placed_at')[:5]
+    seven_days_ago = today - datetime.timedelta(days=7)
+    revenue_7days = Order.objects.filter(
+        cook=cook, 
+        status='DELIVERED', 
+        placed_at__date__gte=seven_days_ago
+    ).aggregate(t=Sum('subtotal'))['t'] or 0
+
+    # More KPIs
+    total_delivered = Order.objects.filter(cook=cook, status='DELIVERED').count()
+    total_cancelled = Order.objects.filter(cook=cook, status='CANCELLED').count()
+    completion_rate = 0
+    if (total_delivered + total_cancelled) > 0:
+        completion_rate = round((total_delivered / (total_delivered + total_cancelled)) * 100)
+    
+    avg_order_val = 0
+    if total_delivered > 0:
+        avg_order_val = total_revenue / total_delivered
+
+    for i in range(6, -1, -1):
+        day = today - datetime.timedelta(days=i)
+        
+        # Actual (Delivered)
+        amt = Order.objects.filter(
+            cook=cook,
+            status='DELIVERED',
+            placed_at__date=day,
+        ).aggregate(t=Sum('subtotal'))['t'] or 0
+        earnings_7days.append(float(amt))
+        
+        # Projected (Confirmed/Preparing)
+        proj = Order.objects.filter(
+            cook=cook,
+            status__in=['CONFIRMED', 'PREPARING', 'OUT_FOR_DELIVERY'],
+            placed_at__date=day,
+        ).aggregate(t=Sum('subtotal'))['t'] or 0
+        projected_7days.append(float(proj))
+        
+        labels_7days.append(day.strftime('%d %b'))
     
     context = {
         'cook': cook,
@@ -32,8 +182,14 @@ def dashboard(request):
         'active_menus': active_menus,
         'pending_orders': pending_orders,
         'confirmed_orders': confirmed_orders,
-        'total_revenue': total_revenue,
+        'total_revenue': total_revenue, # All time
+        'revenue_7days': revenue_7days, # This week
+        'completion_rate': completion_rate,
+        'avg_order_val': avg_order_val,
         'recent_orders': recent_orders,
+        'earnings_7days': json_module.dumps(earnings_7days),
+        'projected_7days': json_module.dumps(projected_7days),
+        'labels_7days':   json_module.dumps(labels_7days),
     }
     return render(request, 'cook/dashboard.html', context)
 
@@ -222,7 +378,7 @@ def order_list(request):
     except CookProfile.DoesNotExist:
         return redirect('cook:onboarding')
     
-    orders = Order.objects.filter(cook=cook).order_by('-placed_at')
+    orders = Order.objects.filter(cook=cook, visible_to_cook=True).order_by('-placed_at')
     
     context = {
         'cook': cook,
@@ -267,7 +423,17 @@ def order_status_update(request, pk):
         if new_status in dict(Order.Status.choices):
             old_status = order.status
             order.status = new_status
-            order.save()
+            update_fields = ['status']
+            if (
+                order.payment_method == Order.PaymentMethod.ONLINE
+                and order.payment_status == Order.PaymentStatus.PAID
+                and new_status in ['CANCELLED', 'FAILED']
+            ):
+                order.payment_status = Order.PaymentStatus.REFUND_PENDING
+                order.refund_requested_at = timezone.now()
+                order.refund_ref = f'COOK_{new_status}'
+                update_fields.extend(['payment_status', 'refund_requested_at', 'refund_ref'])
+            order.save(update_fields=update_fields)
             
             # Restock inventory on failure/cancellation
             if old_status not in ['CANCELLED', 'FAILED'] and new_status in ['CANCELLED', 'FAILED']:
@@ -406,9 +572,13 @@ def settings_view(request):
     if request.method == 'POST':
         form = CookProfileForm(request.POST, request.FILES, instance=cook)
         if form.is_valid():
+            if request.POST.get('clear_photo') == 'true':
+                cook.photo = None
             form.save()
             messages.success(request, 'Settings updated.')
             return redirect('cook:settings')
+        else:
+            messages.error(request, 'Please correct the errors below.')
     else:
         form = CookProfileForm(instance=cook)
         
@@ -417,4 +587,3 @@ def settings_view(request):
         'form': form,
     }
     return render(request, 'cook/settings.html', context)
-

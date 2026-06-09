@@ -1,4 +1,6 @@
 from django.core.management.base import BaseCommand
+from django.db.models import Sum
+from django.conf import settings
 from django.utils import timezone
 from billing.models import CommissionInvoice, CookBankDetail
 from cooks.models import CookProfile
@@ -66,15 +68,13 @@ class Command(BaseCommand):
                 skipped_count += 1
                 continue
 
-            # Sum all delivered orders for this period
-            gross = Order.objects.filter(
+            # Sum all delivered orders for this period (Rule: Aggregation for performance)
+            gross_earnings = Order.objects.filter(
                 cook        = cook,
                 status      = 'DELIVERED',
                 placed_at__date__gte = period_start,
                 placed_at__date__lte = period_end,
-            ).values_list('subtotal', flat=True)
-
-            gross_earnings = sum(float(s) for s in gross)
+            ).aggregate(total=Sum('subtotal'))['total'] or 0
 
             if gross_earnings == 0:
                 self.stdout.write(
@@ -83,7 +83,7 @@ class Command(BaseCommand):
                 skipped_count += 1
                 continue
 
-            commission_rate   = 5.00
+            commission_rate   = settings.COOK_COMMISSION_RATE
             commission_amount = round(gross_earnings * commission_rate / 100, 2)
 
             if existing and options['force']:
@@ -110,7 +110,7 @@ class Command(BaseCommand):
                 title   = 'Monthly commission invoice generated',
                 message = (
                     f'Your commission invoice for {period_start.strftime("%B %Y")} '
-                    f'is ₹{commission_amount:.2f} (5% of ₹{gross_earnings:.2f}). '
+                    f'is ₹{commission_amount:.2f} ({commission_rate}% of ₹{gross_earnings:.2f}). '
                     f'Due by {due_date.strftime("%d %B %Y")}.'
                 ),
             )

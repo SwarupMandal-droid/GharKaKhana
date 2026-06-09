@@ -2,44 +2,59 @@
 {% block nav_menu %}active{% endblock %}
 
 {% block content %}
-<div class="container">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:30px">
+<div class="container animate-fade" style="max-width: 1100px;">
+  
+  <!-- Header -->
+  <div class="page-header" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:56px; flex-wrap: wrap; gap: 24px;">
     <div>
-      <h1 style="margin-bottom:4px">Daily Menus</h1>
-      <p style="color:var(--gray-500)">Plan and manage your daily offerings for customers.</p>
+      <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px;">
+        <div style="background: var(--p-orange-light); color: var(--p-orange); padding: 10px; border-radius: 12px; font-size: 1.5rem;">🗓️</div>
+        <h1 style="margin:0;">Daily <span class="text-orange">Menus</span></h1>
+      </div>
+      <p class="text-muted">Plan your daily offerings and schedule your kitchen's availability.</p>
     </div>
-    <a href="{% url 'cook:menu_create' %}" class="btn-primary">+ Create New Menu</a>
+    <a href="{% url 'cook:menu_create' %}" class="btn-primary" style="padding: 14px 32px; font-weight: 800; box-shadow: var(--shadow-orange);">
+      + Create New Menu
+    </a>
   </div>
 
   {% if menus %}
-    <div style="display:flex;flex-direction:column;gap:20px">
+    <div style="display:flex; flex-direction:column; gap:24px">
       {% for menu in menus %}
-        <div class="card" style="padding:20px;display:flex;align-items:center;justify-content:space-between;gap:24px">
-          <div style="display:flex;align-items:center;gap:20px;flex:1">
-            <div style="width:56px;height:56px;background:var(--orange-light);color:var(--orange-dark);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Syne',sans-serif">
-              <span style="font-size:12px;font-weight:800;line-height:1">{{ menu.menu_date|date:"D"|upper }}</span>
-              <span style="font-size:20px;font-weight:800;line-height:1">{{ menu.menu_date|date:"d" }}</span>
+        <div class="card menu-card-premium" style="padding:32px 40px; display:flex; align-items:center; justify-content:space-between; gap:40px; border: none; box-shadow: var(--shadow-md); background: var(--p-white);">
+          <!-- Date & Type Info -->
+          <div style="display:flex; align-items:center; gap:40px; flex:1">
+            <div style="width:80px; height:80px; background: var(--p-gray-100); color: var(--p-black); border-radius: 20px; display:flex; flex-direction:column; align-items:center; justify-content:center; border: 1.5px solid var(--p-border);">
+              <span style="font-size: 0.75rem; font-weight:800; text-transform: uppercase; color: var(--p-gray-400);">{{ menu.menu_date|date:"D" }}</span>
+              <span style="font-size: 1.75rem; font-weight:900; line-height:1; font-family: 'Poppins', sans-serif;">{{ menu.menu_date|date:"d" }}</span>
             </div>
+            
             <div>
-              <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-                <h3 style="margin:0">{{ menu.get_meal_type_display }}</h3>
-                <span class="badge badge-{{ menu.status|lower }}" style="font-size:11px">{{ menu.get_status_display }}</span>
+              <div style="display:flex; align-items:center; gap:16px; margin-bottom:12px">
+                <h3 style="margin:0; font-size: 1.4rem; font-weight: 800; letter-spacing: -0.5px;">{{ menu.get_meal_type_display }}</h3>
+                <span class="badge" style="background: {% if menu.status == 'PUBLISHED' %}var(--p-success-bg){% else %}var(--p-gray-100){% endif %}; color: {% if menu.status == 'PUBLISHED' %}var(--p-success){% else %}var(--p-gray-500){% endif %}; padding: 6px 14px; font-size: 0.65rem; font-weight: 800;">
+                  {{ menu.get_status_display }}
+                </span>
               </div>
-              <div style="font-size:14px;color:var(--gray-500)">
-                {{ menu.slot.label|default:"No slot assigned" }} · {{ menu.items.count }} dishes
+              <div style="font-size: 0.9375rem; color:var(--p-gray-500); display: flex; align-items: center; gap: 16px; font-weight: 500;">
+                <span style="display: flex; align-items: center; gap: 6px;">🕒 {{ menu.slot.label|default:"No slot" }}</span>
+                <span style="color: var(--p-border); opacity: 0.5;">•</span>
+                <span style="display: flex; align-items: center; gap: 6px;">🍱 {{ menu.items.count }} dishes selected</span>
               </div>
             </div>
           </div>
           
-          <div style="display:flex;align-items:center;gap:40px">
+          <!-- Actions & Meta -->
+          <div style="display:flex; align-items:center; gap:56px;">
             <div style="text-align:right">
-              <div style="font-size:12px;font-weight:600;color:var(--gray-400);margin-bottom:4px;text-transform:uppercase">Order Cutoff</div>
-              <div style="font-weight:600;font-size:14px">{{ menu.order_cutoff }}</div>
+              <div style="font-size: 0.65rem; font-weight:800; color:var(--p-gray-400); margin-bottom:6px; text-transform:uppercase; letter-spacing: 0.08em;">Cutoff</div>
+              <div style="font-weight:700; font-size: 1rem; color: var(--p-black);">{{ menu.order_cutoff }}</div>
             </div>
-            <div style="display:flex;gap:12px">
-              <a href="{% url 'cook:menu_edit' menu.pk %}" class="btn-outline btn-sm">Edit</a>
+            
+            <div style="display:flex; gap:12px">
+              <a href="{% url 'cook:menu_edit' menu.pk %}" class="btn-ghost" style="padding: 12px 24px; font-size: 0.875rem; font-weight: 800; background: var(--p-gray-100); border-radius: 12px;">Manage</a>
               {% if menu.status == 'DRAFT' %}
-                <button class="btn-primary btn-sm">Publish</button>
+                <button class="btn-primary" style="padding: 12px 24px; font-size: 0.875rem; font-weight: 800; border-radius: 12px; box-shadow: var(--shadow-orange);">Publish</button>
               {% endif %}
             </div>
           </div>
@@ -47,14 +62,25 @@
       {% endfor %}
     </div>
   {% else %}
-    <div class="card" style="padding:60px 20px;text-align:center">
-      <div style="font-size:4rem;margin-bottom:20px">🗓️</div>
-      <h2>No menus planned</h2>
-      <p style="color:var(--gray-500);max-width:400px;margin:0 auto 24px">
-        Create a menu for tomorrow or future dates. You can select your prepared dishes and set a custom price and quantity.
+    <div class="card" style="padding: 100px 40px; text-align: center; border: 2px dashed var(--p-border); background: var(--p-gray-100);">
+      <div style="font-size: 5rem; margin-bottom: 32px; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.05));">📅</div>
+      <h2 style="font-size: 1.75rem; margin-bottom: 16px; font-weight: 800;">Your schedule is clear</h2>
+      <p class="text-muted" style="max-width: 480px; margin: 0 auto 40px; line-height: 1.8;">
+        Plan your kitchen's journey. Create a menu for an upcoming date to start receiving orders from your neighborhood.
       </p>
-      <a href="{% url 'cook:menu_create' %}" class="btn-primary">Create Your First Menu</a>
+      <a href="{% url 'cook:menu_create' %}" class="btn-primary" style="padding: 16px 48px; font-size: 1rem; font-weight: 800;">Plan Your First Menu</a>
     </div>
   {% endif %}
 </div>
+
+<style>
+.menu-card-premium:hover {
+  transform: translateX(12px) !important;
+  box-shadow: var(--shadow-lg) !important;
+  border-left: 6px solid var(--p-orange);
+}
+.menu-card-premium { transition: all 0.4s cubic-bezier(0.2, 0, 0, 1) !important; border-left: 6px solid transparent; }
+</style>
+
 {% endblock %}
+

@@ -110,7 +110,7 @@
           <span id="bill-subtotal" style="font-weight:600">₹0</span>
         </div>
         <div style="display:flex;justify-content:space-between;font-size:13px">
-          <span style="color:var(--gray-500)">Platform fee (0.2%)</span>
+          <span style="color:var(--gray-500)">Platform fee ({{ platform_fee_rate }}%)</span>
           <span id="bill-fee">₹0</span>
         </div>
         <div style="display:flex;justify-content:space-between;font-size:13px">
@@ -221,7 +221,8 @@ function loadCart() {
 function updateBill(subtotal) {
   var deliveryType = document.querySelector('.delivery-radio:checked')?.value || 'DELIVERY';
   var charge       = deliveryType === 'PICKUP' ? 0 : (parseFloat(localStorage.getItem('gk_delivery_charge')) || 0);
-  var fee          = subtotal * 0.002;
+  var feeRate      = {{ platform_fee_rate|default:0 }};
+  var fee          = subtotal * feeRate / 100;
   var total        = subtotal + fee + charge;
 
   document.getElementById('bill-subtotal').textContent  = '₹' + subtotal.toFixed(0);

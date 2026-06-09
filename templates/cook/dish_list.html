@@ -2,65 +2,85 @@
 {% block nav_dishes %}active{% endblock %}
 
 {% block content %}
-<div class="container">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:30px">
+<div class="container animate-fade" style="max-width: 1200px;">
+  
+  <!-- Header -->
+  <div class="page-header" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:56px; flex-wrap: wrap; gap: 24px;">
     <div>
-      <h1 style="margin-bottom:4px">My Dishes</h1>
-      <p style="color:var(--gray-500)">Manage the dishes available in your kitchen.</p>
+      <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px;">
+        <div style="background: var(--p-orange-light); color: var(--p-orange); padding: 10px; border-radius: 12px; font-size: 1.5rem;">🍲</div>
+        <h1 style="margin:0;">My <span class="text-orange">Dishes</span></h1>
+      </div>
+      <p class="text-muted">Manage your signature recipes and culinary offerings.</p>
     </div>
-    <a href="{% url 'cook:dish_add' %}" class="btn-primary">+ Add New Dish</a>
+    <a href="{% url 'cook:dish_add' %}" class="btn-primary" style="padding: 14px 32px; font-weight: 800; box-shadow: var(--shadow-orange);">
+      + Add New Dish
+    </a>
   </div>
 
   {% if dishes %}
-    <div class="grid-3" style="gap:24px">
+    <div class="grid-3" style="gap:40px">
       {% for dish in dishes %}
-        <div class="card" style="padding:0;overflow:hidden;display:flex;flex-direction:column">
-          <div style="height:160px;background:var(--gray-100);position:relative">
+        <div class="card dish-card-premium" style="padding:0; overflow:hidden; border: none; box-shadow: var(--shadow-md); position: relative; background: var(--p-white);">
+          <!-- Dish Image -->
+          <div style="height:240px; background:var(--p-gray-100); position:relative; overflow: hidden;">
             {% if dish.photo %}
-              <img src="{{ dish.photo.url }}" style="width:100%;height:100%;object-fit:cover"/>
+              <img src="{{ dish.photo.url }}" style="width:100%; height:100%; object-fit:cover; transition: transform 0.6s ease;" class="dish-img"/>
             {% else %}
-              <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--gray-300);font-size:3rem">
-                🍲
+              <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:var(--p-gray-300); font-size:5rem; filter: grayscale(1);">
+                🥘
               </div>
             {% endif %}
-            <div style="position:absolute;top:12px;right:12px">
-              <span class="badge {% if dish.food_type == 'VEG' %}badge-confirmed{% else %}badge-cancelled{% endif %}" style="background:white;color:var(--black);border:1px solid var(--gray-200)">
-                {{ dish.get_food_type_display }}
+            
+            <!-- Floating Badge -->
+            <div style="position:absolute; top:20px; right:20px; z-index: 2;">
+              <span class="badge" style="background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); color: var(--p-black); box-shadow: var(--shadow-sm); border: none; font-weight: 800; padding: 6px 14px; font-size: 0.7rem;">
+                {% if dish.food_type == 'VEG' %}🟢 Veg{% else %}🔴 Non-Veg{% endif %}
               </span>
             </div>
           </div>
-          <div style="padding:16px;flex:1;display:flex;flex-direction:column">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
-              <h3 style="font-size:1.1rem;margin:0">{{ dish.name }}</h3>
-              <div style="font-weight:700;color:var(--orange)">₹{{ dish.base_price }}</div>
+
+          <!-- Dish Info -->
+          <div style="padding:32px; display:flex; flex-direction:column; gap: 16px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <h3 style="font-size:1.4rem; margin:0; font-weight: 800; letter-spacing: -0.5px;">{{ dish.name }}</h3>
+              <div style="font-weight:900; color:var(--p-orange); font-size: 1.25rem; font-family: 'Poppins', sans-serif;">₹{{ dish.base_price|floatformat:0 }}</div>
             </div>
-            <p style="font-size:13px;color:var(--gray-500);margin-bottom:12px;flex:1">
+            
+            <p style="font-size:0.9375rem; color:var(--p-gray-500); line-height: 1.6; margin: 0;">
               {{ dish.description|truncatechars:80 }}
             </p>
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:auto">
-              <div style="display:flex;align-items:center;gap:8px">
-                <span style="font-size:12px;padding:4px 8px;background:var(--gray-50);border-radius:4px;color:var(--gray-600)">
-                  Spice: {{ dish.get_spice_level_display }}
+
+            <div style="display:flex; align-items:center; justify-content:space-between; padding-top: 16px; border-top: 1px solid var(--p-gray-100); margin-top: 8px;">
+              <div style="display:flex; align-items:center; gap:8px">
+                <span class="text-xs" style="font-weight: 800; color: var(--p-gray-400); text-transform: uppercase; letter-spacing: 0.05em;">
+                  🔥 {{ dish.get_spice_level_display }}
                 </span>
                 {% if not dish.is_active %}
-                  <span class="badge badge-failed" style="font-size:10px">Inactive</span>
+                  <span class="badge" style="background: var(--p-gray-100); color: var(--p-gray-400); font-size: 0.6rem;">Inactive</span>
                 {% endif %}
               </div>
-              <a href="{% url 'cook:dish_edit' dish.pk %}" class="btn-secondary" style="padding:4px 12px;font-size:12px;height:auto">Edit</a>
+              <a href="{% url 'cook:dish_edit' dish.pk %}" class="btn-ghost" style="padding: 8px 16px; font-size: 0.8125rem; font-weight: 800; background: var(--p-gray-100); border-radius: 8px;">Edit</a>
             </div>
           </div>
         </div>
       {% endfor %}
     </div>
   {% else %}
-    <div class="card" style="padding:60px 20px;text-align:center">
-      <div style="font-size:4rem;margin-bottom:20px">🥘</div>
-      <h2>No dishes added yet</h2>
-      <p style="color:var(--gray-500);max-width:400px;margin:0 auto 24px">
-        Start by adding your first dish. Once added, you can include them in your daily menus for customers to order.
+    <div class="card" style="padding: 100px 40px; text-align: center; border: 2px dashed var(--p-border); background: var(--p-gray-100);">
+      <div style="font-size: 6rem; margin-bottom: 32px; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.05));">👨‍🍳</div>
+      <h2 style="font-size: 1.75rem; margin-bottom: 16px; font-weight: 800;">Your kitchen is empty!</h2>
+      <p class="text-muted" style="max-width: 480px; margin: 0 auto 40px; line-height: 1.8;">
+        Share your culinary passion with the world. Add your first signature dish to start building your kitchen's reputation.
       </p>
-      <a href="{% url 'cook:dish_add' %}" class="btn-primary">Add Your First Dish</a>
+      <a href="{% url 'cook:dish_add' %}" class="btn-primary" style="padding: 16px 48px; font-size: 1rem; font-weight: 800;">Create Your First Dish</a>
     </div>
   {% endif %}
 </div>
+
+<style>
+.dish-card-premium:hover .dish-img { transform: scale(1.08); }
+.dish-card-premium { transition: all 0.4s cubic-bezier(0.2, 0, 0, 1) !important; }
+</style>
+
 {% endblock %}

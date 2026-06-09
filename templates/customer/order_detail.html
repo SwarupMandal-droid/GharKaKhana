@@ -23,6 +23,11 @@
         {{ order.get_status_display }}
       </span>
     </div>
+    {% if order.status == 'DELIVERED' %}
+    <a href="{% url 'customer:cook_detail' order.cook.pk %}?repeat_order={{ order.pk }}" class="btn-secondary btn-sm" style="margin-bottom:16px;display:inline-flex;">
+      Order Again
+    </a>
+    {% endif %}
 
     <!-- Status tracker -->
     <div class="status-track">
@@ -56,6 +61,40 @@
     </div>
     {% endif %}
   </div>
+  
+  {% if order.status == 'PENDING' or order.status == 'CONFIRMED' %}
+  {% load tz %}
+  <div style="margin-top:-8px; margin-bottom:20px; padding:16px; background:#FDECEC; 
+              border:1px solid #EF9A9A; border-radius:var(--radius-md)">
+    <div style="font-size:13px; color:#E74C3C; margin-bottom:12px; font-weight:500;">
+      You can cancel this order within 30 minutes of placing it.
+      Placed {{ order.placed_at|timesince }} ago.
+    </div>
+    <form method="post" action="/orders/{{ order.pk }}/cancel/" onsubmit="return confirm('Are you sure you want to cancel this order?')">
+      {% csrf_token %}
+      <button type="submit" class="btn-outline btn-sm" style="color:#E74C3C; border-color:#EF9A9A;">
+        Cancel order
+      </button>
+    </form>
+  </div>
+  {% endif %}
+
+  {% if order.payment_status == 'REFUND_PENDING' %}
+  <div class="card" style="margin-bottom:20px;background:var(--orange-light);border-color:var(--orange-mid)">
+    <div style="font-weight:600;color:var(--orange);margin-bottom:4px">Refund in progress</div>
+    <p style="font-size:14px;color:var(--gray-700)">
+      Your online payment has been marked for refund processing.
+      {% if order.refund_requested_at %}Requested {{ order.refund_requested_at|date:"d M Y, h:i A" }}.{% endif %}
+    </p>
+  </div>
+  {% elif order.payment_status == 'REFUNDED' %}
+  <div class="card" style="margin-bottom:20px;background:var(--p-success-bg);border-color:#A5D6A7">
+    <div style="font-weight:600;color:var(--green);margin-bottom:4px">Refund completed</div>
+    <p style="font-size:14px;color:var(--gray-700)">
+      Your refund has been completed{% if order.refunded_at %} on {{ order.refunded_at|date:"d M Y, h:i A" }}{% endif %}.
+    </p>
+  </div>
+  {% endif %}
 
   <!-- Order items -->
   <div class="card" style="margin-bottom:20px">
@@ -81,7 +120,7 @@
           <span>₹{{ order.subtotal }}</span>
         </div>
         <div style="display:flex;justify-content:space-between">
-          <span style="color:var(--gray-500)">Platform fee</span>
+          <span style="color:var(--gray-500)">Platform fee ({{ platform_fee_rate }}%)</span>
           <span>₹{{ order.platform_fee }}</span>
         </div>
         <div style="display:flex;justify-content:space-between">
@@ -95,7 +134,7 @@
         </div>
         <div style="font-size:12px;color:var(--gray-500);margin-top:4px">
           {{ order.get_payment_method_display }} ·
-          <span style="color:{% if order.payment_status == 'PAID' %}var(--green){% else %}var(--egg){% endif %}">
+          <span style="color:{% if order.payment_status == 'PAID' or order.payment_status == 'REFUNDED' %}var(--green){% elif order.payment_status == 'REFUND_PENDING' %}var(--orange){% else %}var(--gray-500){% endif %}">
             {{ order.get_payment_status_display }}
           </span>
         </div>
@@ -160,7 +199,7 @@
       </form>
     </div>
     {% else %}
-    <div class="card" style="margin-bottom:20px;background:var(--green-light);border-color:#A5D6A7">
+  <div class="card" style="margin-bottom:20px;background:var(--p-success-bg);border-color:#A5D6A7">
       <div style="font-weight:600;color:var(--green);margin-bottom:4px">You reviewed this order</div>
       <div style="color:#F5A623">
         {% for i in "12345" %}

@@ -28,36 +28,151 @@
     {% endif %}
   </div>
 
-  <!-- Filters -->
-  <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 40px; align-items: center;">
-    <a href="?{% if meal_type %}meal_type={{ meal_type }}{% endif %}"
-       class="btn-filter {% if not food_type %}active{% endif %}">
-      All Cuisines
-    </a>
-    <a href="?food_type=VEG{% if meal_type %}&meal_type={{ meal_type }}{% endif %}"
-       class="btn-filter {% if food_type == 'VEG' %}active{% endif %}">
-      🥦 Veg
-    </a>
-    <a href="?food_type=NONVEG{% if meal_type %}&meal_type={{ meal_type }}{% endif %}"
-       class="btn-filter {% if food_type == 'NONVEG' %}active{% endif %}">
-      🍗 Non-veg
-    </a>
-    
-    <div style="width: 1px; height: 24px; background: var(--p-border); margin: 0 8px;"></div>
+  <!-- Premium Search Hero Section -->
+  <div class="search-hero-container">
+    <div class="search-hero-card">
+      <form method="get" id="search-form">
+        
+        <!-- Primary Search Row -->
+        <div class="search-main-row">
+          <div class="search-input-group">
+            <div class="search-icon-inner">
+              <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+            </div>
+            <input type="text" name="search" id="search-input" value="{{ search }}" 
+                   placeholder="Search homemade biryani, thali, dosa..." 
+                   class="premium-search-input">
+            
+            {% if search %}
+            <button type="button" onclick="clearSearch()" class="search-clear-btn" title="Clear search">
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+            {% endif %}
+          </div>
 
-    <a href="?meal_type=LUNCH{% if food_type %}&food_type={{ food_type }}{% endif %}"
-       class="btn-filter {% if meal_type == 'LUNCH' %}active{% endif %}">
-      🌞 Lunch
-    </a>
-    <a href="?meal_type=DINNER{% if food_type %}&food_type={{ food_type }}{% endif %}"
-       class="btn-filter {% if meal_type == 'DINNER' %}active{% endif %}">
-      🌙 Dinner
-    </a>
+          <button type="submit" class="btn-pill-gradient search-submit-btn">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            <span>Find Food</span>
+          </button>
+        </div>
 
-    {% if food_type or meal_type %}
-      <a href="?" class="text-xs" style="color: var(--p-gray-500); font-weight: 600; text-transform: uppercase; margin-left: 12px;">Reset Filters</a>
-    {% endif %}
+        <div class="search-divider"></div>
+
+        <!-- Location & Filters Row -->
+        <div class="search-secondary-row">
+          
+          <!-- Location Picker -->
+          <div class="location-group">
+            <div class="location-pill">
+              <div class="location-icon">📍</div>
+              <div class="location-info">
+                <span class="location-label">Deliver to</span>
+                <span class="location-current">{% if default_address %}{{ default_address.label }}{% else %}Set Location{% endif %}</span>
+              </div>
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3" class="dropdown-chevron">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </div>
+
+            <button type="button" id="locate-me-btn" class="locate-btn-pill" title="Use current location">
+              <div class="locate-btn-inner">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+                <span>Use Current Location</span>
+              </div>
+            </button>
+          </div>
+
+          <!-- Vertical Separator (Desktop only) -->
+          <div class="v-sep"></div>
+
+          <!-- Modern Filter Chips -->
+          <div class="filters-scroll-wrapper">
+            <div class="filter-chips-group">
+              
+              <div class="filter-chip-wrapper">
+                <select name="food_type" class="hidden-select" onchange="this.form.submit()">
+                  <option value="">Diet Type</option>
+                  <option value="VEG" {% if food_type == 'VEG' %}selected{% endif %}>Veg</option>
+                  <option value="NONVEG" {% if food_type == 'NONVEG' %}selected{% endif %}>Non-Veg</option>
+                </select>
+                <div class="premium-chip {% if food_type %}active{% endif %}" onclick="this.previousElementSibling.click()">
+                  <span class="chip-icon">🥗</span>
+                  <span>Diet Type</span>
+                  {% if food_type %}<span class="chip-dot"></span>{% endif %}
+                </div>
+              </div>
+
+              <div class="filter-chip-wrapper">
+                <select name="meal_type" class="hidden-select" onchange="this.form.submit()">
+                  <option value="">All Meals</option>
+                  <option value="LUNCH" {% if meal_type == 'LUNCH' %}selected{% endif %}>Lunch</option>
+                  <option value="DINNER" {% if meal_type == 'DINNER' %}selected{% endif %}>Dinner</option>
+                </select>
+                <div class="premium-chip {% if meal_type %}active{% endif %}" onclick="this.previousElementSibling.click()">
+                  <span class="chip-icon">🍱</span>
+                  <span>Meals</span>
+                  {% if meal_type %}<span class="chip-dot"></span>{% endif %}
+                </div>
+              </div>
+
+              <div class="filter-chip-wrapper">
+                <select name="max_dist" class="hidden-select" onchange="this.form.submit()">
+                  <option value="">Distance</option>
+                  <option value="1" {% if max_dist == '1' %}selected{% endif %}>Under 1 km</option>
+                  <option value="2" {% if max_dist == '2' %}selected{% endif %}>Under 2 km</option>
+                  <option value="5" {% if max_dist == '5' %}selected{% endif %}>Under 5 km</option>
+                </select>
+                <div class="premium-chip {% if max_dist %}active{% endif %}" onclick="this.previousElementSibling.click()">
+                  <span class="chip-icon">📍</span>
+                  <span>Distance</span>
+                  {% if max_dist %}<span class="chip-dot"></span>{% endif %}
+                </div>
+              </div>
+
+              <div class="filter-chip-wrapper">
+                <select name="sort" class="hidden-select" onchange="this.form.submit()">
+                  <option value="distance" {% if sort_by == 'distance' %}selected{% endif %}>Nearest</option>
+                  <option value="rating" {% if sort_by == 'rating' %}selected{% endif %}>Top Rated</option>
+                </select>
+                <div class="premium-chip {% if sort_by != 'distance' %}active{% endif %}" onclick="this.previousElementSibling.click()">
+                  <span class="chip-icon">↕</span>
+                  <span>Sort By</span>
+                </div>
+              </div>
+
+              {% if search or food_type or meal_type or max_dist or sort_by != 'distance' %}
+                <button type="button" onclick="clearAllFilters()" class="clear-filters-btn">
+                  Clear All
+                </button>
+              {% endif %}
+
+            </div>
+          </div>
+
+        </div>
+      </form>
+    </div>
   </div>
+
+
+  <!-- Result count -->
+  {% if search or food_type or meal_type %}
+  <div style="font-size:13px;color:var(--gray-500);margin-bottom:16px">
+    {{ cook_data|length }} result{{ cook_data|length|pluralize }}
+    {% if search %}for "{{ search }}"{% endif %}
+    {% if food_type %}· {{ food_type|lower }}{% endif %}
+    {% if meal_type %}· {{ meal_type|lower }}{% endif %}
+  </div>
+  {% endif %}
 
   <!-- Cook grid -->
   {% if cook_data %}
@@ -67,18 +182,21 @@
       <div class="card cook-card-premium">
 
         <!-- Image / banner -->
-        <div class="cook-card-img" style="height: 180px; position: relative; border-radius: var(--radius-md); overflow: hidden; margin-bottom: 20px;">
+        <div class="cook-card-img" style="height: 180px; position: relative; border-radius: var(--radius-md) var(--radius-md) 0 0; overflow: hidden; margin-bottom: 20px; width: 100%;">
           {% if item.cook.photo %}
             <img src="{{ item.cook.photo.url }}" style="width: 100%; height: 100%; object-fit: cover;" alt="{{ item.cook.kitchen_name }}"/>
           {% else %}
-            <div style="width: 100%; height: 100%; background: var(--p-orange-light); color: var(--p-orange); display: flex; align-items: center; justify-content: center; font-size: 3rem; font-family: 'Poppins', sans-serif; font-weight: 800;">
+            <div style="width: 100%; height: 100%; background: linear-gradient(135deg, var(--p-orange) 0%, var(--p-orange-dark) 100%); color: white; display: flex; align-items: center; justify-content: center; font-size: 3rem; font-family: 'Syne', sans-serif; font-weight: 800;">
               {{ item.cook.kitchen_name|first|upper }}
             </div>
           {% endif %}
 
-          {% if item.same_day %}
-          <div style="position: absolute; top: 12px; left: 12px; background: var(--p-success); color: white; font-size: 0.7rem; font-weight: 800; padding: 4px 10px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.05em;">
-            Same Day
+          <!-- Subtle dark gradient overlay -->
+          <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 60%; background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 100%); pointer-events: none;"></div>
+
+          {% if item.cook.same_day_enabled and item.same_day %}
+          <div style="position: absolute; top: 12px; left: 12px; background: var(--p-orange); color: white; font-size: 0.7rem; font-weight: 800; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.05em; z-index: 2; box-shadow: var(--shadow-sm);">
+            Today
           </div>
           {% endif %}
         </div>
@@ -132,31 +250,364 @@
 </div>
 
 <style>
-.btn-filter {
-  padding: 10px 20px;
-  border-radius: 100px;
+/* ─── Premium Search Hero ─────────────────────────────────────── */
+.search-hero-container {
+  margin-bottom: 60px;
+  animation: fadeIn 0.6s cubic-bezier(0.2, 0, 0, 1) forwards;
+}
+
+.search-hero-card {
   background: var(--p-white);
-  border: 1px solid var(--p-border);
+  border-radius: 32px;
+  padding: 40px;
+  box-shadow: 0 20px 60px rgba(15, 15, 15, 0.06), 
+              0 0 0 1px rgba(15, 15, 15, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  position: relative;
+  overflow: hidden;
+}
+
+.search-hero-card::before {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, var(--p-orange-light) 0%, transparent 70%);
+  opacity: 0.5;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Main Row */
+.search-main-row {
+  display: flex;
+  gap: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.search-input-group {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--p-gray-50);
+  border: 2px solid var(--p-gray-100);
+  border-radius: 20px;
+  height: 64px;
+  padding: 0 20px;
+  transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.search-input-group:focus-within {
+  background: var(--p-white);
+  border-color: var(--p-orange);
+  box-shadow: 0 0 0 6px var(--p-orange-light);
+}
+
+.search-icon-inner {
+  color: var(--p-gray-400);
+  margin-right: 16px;
+}
+
+.premium-search-input {
+  flex: 1;
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--p-black);
+  outline: none;
+}
+
+.premium-search-input::placeholder {
+  color: var(--p-gray-400);
+  font-weight: 500;
+}
+
+.search-clear-btn {
+  color: var(--p-gray-300);
+  transition: color 0.2s ease;
+  padding: 8px;
+}
+
+.search-clear-btn:hover {
+  color: var(--p-orange);
+}
+
+.search-submit-btn {
+  height: 64px;
+  padding: 0 36px;
+  font-family: 'Poppins', sans-serif;
+  letter-spacing: 0.02em;
+}
+
+/* Divider */
+.search-divider {
+  height: 1px;
+  background: linear-gradient(to right, var(--p-gray-100), transparent);
+  margin: 32px 0;
+}
+
+/* Secondary Row */
+.search-secondary-row {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.location-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.location-pill {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 24px 10px 18px;
+  background: var(--p-white);
+  border: 2px solid var(--p-gray-100);
+  border-radius: 100px;
+  height: 52px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.location-pill:hover {
+  border-color: var(--p-orange-mid);
+  background: var(--p-orange-light);
+}
+
+.location-icon { font-size: 1.2rem; }
+
+.location-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.location-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--p-gray-400);
+  letter-spacing: 0.05em;
+}
+
+.location-current {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--p-black);
+  max-width: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dropdown-chevron { color: var(--p-gray-300); margin-left: 4px; }
+
+.locate-btn-pill {
+  background: var(--p-orange-light);
+  color: var(--p-orange);
+  height: 52px;
+  padding: 0 24px;
+  border-radius: 100px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+}
+
+.locate-btn-pill:hover {
+  background: var(--p-orange);
+  color: var(--p-white);
+  box-shadow: var(--shadow-orange);
+  transform: translateY(-2px);
+}
+
+.locate-btn-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.v-sep {
+  width: 1px;
+  height: 32px;
+  background: var(--p-gray-100);
+}
+
+/* Filters */
+.filters-scroll-wrapper {
+  flex: 1;
+  overflow-x: auto;
+  scrollbar-width: none; /* Firefox */
+}
+
+.filters-scroll-wrapper::-webkit-scrollbar { display: none; }
+
+.filter-chips-group {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.filter-chip-wrapper { position: relative; }
+
+.hidden-select {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.premium-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  background: var(--p-white);
+  border: 1.5px solid var(--p-gray-100);
+  border-radius: 100px;
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--p-gray-700);
-  transition: var(--transition);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  position: relative;
 }
-.btn-filter:hover {
-  border-color: var(--p-orange-mid);
-  background: var(--p-gray-100);
+
+.premium-chip:hover {
+  border-color: var(--p-gray-300);
+  background: var(--p-gray-50);
 }
-.btn-filter.active {
-  background: var(--p-orange);
-  color: var(--p-white);
+
+.premium-chip.active {
+  background: var(--p-orange-light);
   border-color: var(--p-orange);
-  box-shadow: var(--shadow-orange);
+  color: var(--p-orange);
 }
+
+.chip-icon { font-size: 1rem; }
+
+.chip-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--p-orange);
+  border-radius: 50%;
+  position: absolute;
+  top: 4px; right: 8px;
+}
+
+.clear-filters-btn {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--p-gray-400);
+  padding: 8px 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: color 0.2s ease;
+}
+
+.clear-filters-btn:hover { color: var(--p-error); }
+
+/* Responsive */
+@media (max-width: 992px) {
+  .search-secondary-row { flex-wrap: wrap; }
+  .v-sep { display: none; }
+}
+
+@media (max-width: 640px) {
+  .search-hero-card { padding: 24px; border-radius: 24px; }
+  .search-main-row { flex-direction: column; }
+  .search-submit-btn { width: 100%; }
+  .location-group { width: 100%; flex-direction: column; align-items: stretch; }
+  .location-pill { width: 100%; }
+}
+
+/* Cook Card Enhancements */
 .cook-card-premium {
-  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  border-radius: 24px !important;
+  overflow: hidden;
+  padding: 12px !important;
 }
-.cook-card-premium:hover {
-  transform: translateY(-8px) scale(1.02);
+
+.cook-card-img {
+  border-radius: 18px !important;
 }
+
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('locate-me-btn').addEventListener('click', function() {
+    const btn = this;
+    const displayText = document.getElementById('current-location-text');
+    const originalBtnInner = btn.innerHTML;
+    
+    if (!navigator.geolocation) {
+        alert('Geolocation is not supported by your browser');
+        return;
+    }
+    
+    btn.innerHTML = '<svg class="animate-spin" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>';
+    btn.style.boxShadow = '0 0 20px var(--p-orange)';
+    if (displayText) displayText.innerText = 'Locating...';
+    
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            
+            if (displayText) displayText.innerText = 'Identifying...';
+            
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+                .then(r => r.json())
+                .then(data => {
+                    const address = data.display_name || 'Current Location';
+                    if (displayText) displayText.innerText = address.split(',')[0];
+                    
+                    return fetch('{% url "orders:update_location" %}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify({
+                            lat: lat,
+                            lng: lng,
+                            address: address
+                        })
+                    });
+                })
+                .then(response => {
+                    if (response.redirected) window.location.href = response.url;
+                    else window.location.reload();
+                })
+                .catch(err => {
+                    console.error(err);
+                    btn.innerHTML = originalBtnInner;
+                    btn.style.boxShadow = '';
+                    if (displayText) displayText.innerText = 'Error';
+                });
+        },
+        (error) => {
+            console.error(error);
+            btn.innerHTML = originalBtnInner;
+            btn.style.boxShadow = '';
+            if (displayText) displayText.innerText = 'Denied';
+            alert('Please enable location permissions.');
+        },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+    );
+});
+</script>
+<style>
+  .animate-spin { animation: spin 1.2s linear infinite; }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 </style>
 {% endblock %}

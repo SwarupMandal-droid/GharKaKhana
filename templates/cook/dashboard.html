@@ -2,111 +2,288 @@
 {% block nav_dash %}active{% endblock %}
 
 {% block content %}
-<div class="container animate-fade">
-  <div class="page-header" style="margin-bottom: 40px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+<div class="container animate-fade" style="max-width: 1300px;">
+  
+  <!-- Header -->
+  <div class="page-header" style="margin-bottom: 56px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 24px;">
     <div>
-      <h1 style="font-size: 2.25rem;">Bonjour, Chef <span class="text-orange">{{ cook.kitchen_name }}</span>! 👨‍🍳</h1>
-      <p class="text-muted">Manage your culinary empire and track today's performance</p>
+      <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px;">
+        <div style="background: var(--p-orange-light); color: var(--p-orange); padding: 10px; border-radius: 12px; font-size: 1.5rem;">👨‍🍳</div>
+        <h1 style="margin:0;">Bonjour, <span class="text-orange">{{ cook.kitchen_name }}</span>!</h1>
+      </div>
+      <p class="text-muted">Welcome to your culinary command center. Here's your kitchen's performance today.</p>
     </div>
     <div style="display: flex; gap: 16px;">
-      <a href="{% url 'cook:dish_list' %}" class="btn-outline" style="padding: 12px 24px;">Manage Dishes</a>
-      <a href="{% url 'cook:menu_create' %}" class="btn-primary" style="padding: 12px 24px;">+ Create Menu</a>
+      <a href="{% url 'cook:dish_list' %}" class="btn-ghost" style="padding: 14px 28px; font-weight: 800; background: var(--p-gray-100); border-radius: 12px;">Manage Dishes</a>
+      <a href="{% url 'cook:menu_create' %}" class="btn-primary" style="padding: 14px 28px; font-weight: 800; box-shadow: var(--shadow-orange);">+ Create Menu</a>
     </div>
   </div>
 
   <!-- Stats Grid -->
-  <div class="grid-3" style="margin-bottom: 48px; gap: 24px;">
-    <div class="card stat-card-premium" style="border-bottom: 4px solid var(--p-blue);">
-      <div class="text-xs text-muted" style="text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin-bottom: 8px;">Pending Orders</div>
-      <div style="font-size: 2.5rem; font-weight: 800; color: var(--p-black); font-family: 'Poppins', sans-serif;">{{ pending_orders }}</div>
+  <div class="grid-3" style="margin-bottom: 56px; gap: 32px;">
+    <div class="card stat-card-premium" style="border-left: 6px solid var(--p-blue);">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+        <div class="text-xs" style="text-transform: uppercase; letter-spacing: 0.1em; font-weight: 800; color: var(--p-gray-400);">Pending Orders</div>
+        <div style="font-size: 1.25rem;">⏳</div>
+      </div>
+      <div style="font-size: 3.5rem; font-weight: 900; color: var(--p-black); font-family: 'Poppins', sans-serif; line-height: 1;">{{ pending_orders }}</div>
+      <p style="margin-top: 12px; font-size: 0.8125rem; color: var(--p-gray-400); font-weight: 600;">Needs your attention</p>
     </div>
-    <div class="card stat-card-premium" style="border-bottom: 4px solid var(--p-success);">
-      <div class="text-xs text-muted" style="text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin-bottom: 8px;">Confirmed Orders</div>
-      <div style="font-size: 2.5rem; font-weight: 800; color: var(--p-black); font-family: 'Poppins', sans-serif;">{{ confirmed_orders }}</div>
+    
+    <div class="card stat-card-premium" style="border-left: 6px solid var(--p-success);">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+        <div class="text-xs" style="text-transform: uppercase; letter-spacing: 0.1em; font-weight: 800; color: var(--p-gray-400);">Confirmed Orders</div>
+        <div style="font-size: 1.25rem;">✅</div>
+      </div>
+      <div style="font-size: 3.5rem; font-weight: 900; color: var(--p-black); font-family: 'Poppins', sans-serif; line-height: 1;">{{ confirmed_orders }}</div>
+      <p style="margin-top: 12px; font-size: 0.8125rem; color: var(--p-gray-400); font-weight: 600;">Processing smoothly</p>
     </div>
-    <div class="card stat-card-premium" style="border-bottom: 4px solid #8B5CF6;">
-      <div class="text-xs text-muted" style="text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin-bottom: 8px;">Total Revenue</div>
-      <div style="font-size: 2.5rem; font-weight: 800; color: var(--p-black); font-family: 'Poppins', sans-serif;">₹{{ total_revenue|floatformat:0 }}</div>
+
+    <div class="card stat-card-premium" style="border-left: 6px solid var(--p-orange);">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+        <div class="text-xs" style="text-transform: uppercase; letter-spacing: 0.1em; font-weight: 800; color: var(--p-gray-400);">Revenue (7d)</div>
+        <div style="font-size: 1.25rem;">💰</div>
+      </div>
+      <div style="font-size: 3.5rem; font-weight: 900; color: var(--p-black); font-family: 'Poppins', sans-serif; line-height: 1;"><span style="font-size: 1.5rem; vertical-align: middle; margin-right: 4px;">₹</span>{{ revenue_7days|floatformat:0 }}</div>
+      <p style="margin-top: 12px; font-size: 0.8125rem; color: var(--p-gray-400); font-weight: 600;">₹{{ total_revenue|floatformat:0 }} all-time</p>
     </div>
   </div>
 
-  <div class="grid-2" style="gap: 32px; align-items: start;">
-    <!-- Recent Orders -->
-    <div class="card" style="padding: 0;">
-      <div class="card-header" style="padding: 24px 32px; border-bottom: 1px solid var(--p-border);">
-        <h3 style="font-size: 1.25rem;">Recent Orders</h3>
-        <a href="{% url 'cook:order_list' %}" class="text-xs" style="color: var(--p-orange); font-weight: 700; text-transform: uppercase;">View All</a>
+  <!-- Sub-Stats KPIs -->
+  <div class="grid-3" style="margin-bottom: 56px; gap: 32px;">
+    <div style="display: flex; align-items: center; gap: 16px; padding: 24px; background: var(--p-white); border-radius: 20px; box-shadow: var(--shadow-sm);">
+      <div style="font-size: 1.5rem;">⭐</div>
+      <div>
+        <div style="font-size: 0.75rem; font-weight: 800; color: var(--p-gray-400); text-transform: uppercase;">Avg Rating</div>
+        <div style="font-weight: 900; font-size: 1.25rem;">{{ cook.avg_rating|default:"5.0" }} / 5</div>
       </div>
-      
-      <div style="padding: 8px 32px 32px;">
-        {% if recent_orders %}
-          <div style="display: flex; flex-direction: column;">
+    </div>
+    <div style="display: flex; align-items: center; gap: 16px; padding: 24px; background: var(--p-white); border-radius: 20px; box-shadow: var(--shadow-sm);">
+      <div style="font-size: 1.5rem;">📈</div>
+      <div>
+        <div style="font-size: 0.75rem; font-weight: 800; color: var(--p-gray-400); text-transform: uppercase;">Order Value</div>
+        <div style="font-weight: 900; font-size: 1.25rem;">₹{{ avg_order_val|floatformat:0 }} avg.</div>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 16px; padding: 24px; background: var(--p-white); border-radius: 20px; box-shadow: var(--shadow-sm);">
+      <div style="font-size: 1.5rem;">✅</div>
+      <div>
+        <div style="font-size: 0.75rem; font-weight: 800; color: var(--p-gray-400); text-transform: uppercase;">Completion</div>
+        <div style="font-weight: 900; font-size: 1.25rem;">{{ completion_rate }}% rate</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Area -->
+  <div class="grid-2" style="gap: 40px; align-items: start; grid-template-columns: 1.4fr 1fr;">
+    
+    <div style="display: flex; flex-direction: column; gap: 40px;">
+      <!-- Earnings chart -->
+      <div class="card" style="padding: 40px; border: none; box-shadow: var(--shadow-md); background: var(--p-white);">
+        <div style="margin-bottom:40px; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <h3 style="font-size: 1.25rem; font-weight: 900; margin-bottom: 4px;">Earnings Overview</h3>
+            <p style="font-size: 0.8125rem; color: var(--p-gray-400); font-weight: 600;">Daily payout trends for the last 7 days</p>
+          </div>
+          <a href="/billing/cook/" class="btn-ghost" style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; background: var(--p-gray-100); padding: 10px 20px; border-radius: 10px;">Full Report →</a>
+        </div>
+        <div style="height: 320px; position: relative;">
+          <canvas id="earningsChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Recent Orders Card -->
+      <div class="card" style="padding: 0; overflow: hidden; border: none; box-shadow: var(--shadow-md); background: var(--p-white);">
+        <div style="padding: 32px 40px; border-bottom: 1px solid var(--p-gray-100); display: flex; justify-content: space-between; align-items: center;">
+          <h3 style="font-size: 1.25rem; font-weight: 900; margin: 0;">Recent Orders</h3>
+          <a href="{% url 'cook:order_list' %}" class="btn-ghost" style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--p-orange); padding: 8px 16px;">View All</a>
+        </div>
+        
+        <div style="padding: 0 40px;">
+          {% if recent_orders %}
             {% for order in recent_orders %}
-              <div style="display: flex; align-items: center; justify-content: space-between; padding: 20px 0; border-bottom: 1px solid var(--p-border);">
-                <div>
-                  <div style="font-weight: 700; font-size: 1rem; color: var(--p-gray-900);">Order #{{ order.id }} <span style="font-weight: normal; color: var(--p-gray-500); font-size: 0.85rem;">by {{ order.customer.name }}</span></div>
-                  <div style="font-size: 0.75rem; color: var(--p-gray-500); margin-top: 4px;">{{ order.placed_at|date:"d M" }} at {{ order.placed_at|date:"h:i A" }} · {{ order.items.count }} items</div>
+              <div class="dashboard-order-item" style="display: flex; align-items: center; justify-content: space-between; padding: 24px 0; border-bottom: 1px solid var(--p-gray-50); transition: all 0.2s ease;">
+                <div style="display: flex; align-items: center; gap: 24px;">
+                  <div style="width: 48px; height: 48px; border-radius: 12px; background: var(--p-gray-100); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.875rem; color: var(--p-black);">
+                    #{{ order.id }}
+                  </div>
+                  <div>
+                    <div style="font-weight: 800; font-size: 1.05rem; color: var(--p-black);">{{ order.customer.name }}</div>
+                    <div style="font-size: 0.8125rem; color: var(--p-gray-400); margin-top: 4px; font-weight: 600;">
+                      📅 {{ order.placed_at|date:"d M" }} • 🕒 {{ order.placed_at|date:"h:i A" }} • 🍱 {{ order.items.count }} items
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <span class="badge badge-{{ order.status|lower }}" style="font-weight: 700;">{{ order.get_status_display }}</span>
+                <div style="display: flex; align-items: center; gap: 24px;">
+                  <div style="text-align: right;">
+                    <div style="font-weight: 800; color: var(--p-black);">₹{{ order.total|floatformat:0 }}</div>
+                  </div>
+                  <span class="badge badge-{{ order.status|lower }}" style="font-weight: 800; padding: 6px 12px; font-size: 0.65rem;">{{ order.get_status_display }}</span>
                 </div>
               </div>
             {% endfor %}
-          </div>
-        {% else %}
-          <div class="empty-state" style="padding: 60px 0;">
-            <div style="font-size: 2.5rem; margin-bottom: 16px; opacity: 0.3;">📦</div>
-            <p class="text-muted">No orders yet. Start by sharing your menu!</p>
-          </div>
-        {% endif %}
+          {% else %}
+            <div style="padding: 100px 0; text-align: center; background: var(--p-gray-100); margin: 20px 0; border-radius: 20px; border: 2px dashed var(--p-border);">
+              <div style="font-size: 4rem; margin-bottom: 20px; filter: grayscale(1); opacity: 0.3;">📦</div>
+              <p class="text-muted" style="font-weight: 700;">No recent orders. Your journey starts now!</p>
+            </div>
+          {% endif %}
+        </div>
       </div>
     </div>
 
-    <!-- Kitchen Status & Control -->
-    <div class="card" style="padding: 32px;">
-      <div class="card-header" style="margin-bottom: 24px;">
-        <h3 style="font-size: 1.25rem;">Kitchen Operations</h3>
-        <div class="badge {% if cook.is_active %}badge-confirmed{% else %}badge-failed{% endif %}" style="border: none;">
-          {% if cook.is_active %}LIVE NOW{% else %}OFFLINE{% endif %}
-        </div>
-      </div>
+    <!-- Right Column: Operations -->
+    <div style="display: flex; flex-direction: column; gap: 40px;">
       
-      <div style="background: var(--p-orange-light); border-radius: var(--radius-md); padding: 20px; border: 1px solid var(--p-orange-mid); margin-bottom: 24px;">
-        <div style="display: flex; align-items: flex-start; gap: 12px;">
-          <div style="font-size: 1.25rem;">💡</div>
-          <div>
-            <div style="font-weight: 700; color: var(--p-orange-dark); font-size: 0.9375rem;">Visibility Status</div>
-            <p style="font-size: 0.8125rem; color: var(--p-orange-dark); margin-top: 2px; opacity: 0.8;">
-              Your kitchen is currently <strong>{% if cook.is_active %}Open{% else %}Closed{% endif %}</strong> to new orders.
-            </p>
+      <!-- Kitchen Status Card -->
+      <div class="card" style="padding: 40px; border: none; box-shadow: var(--shadow-md); background: var(--p-white);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
+          <h3 style="font-size: 1.25rem; font-weight: 900; margin: 0;">Kitchen Operations</h3>
+          <span class="badge" style="background: {% if cook.is_active %}var(--p-success-bg){% else %}var(--p-gray-100){% endif %}; color: {% if cook.is_active %}var(--p-success){% else %}var(--p-gray-500){% endif %}; font-weight: 900; padding: 8px 16px; font-size: 0.7rem; border-radius: 100px; box-shadow: var(--shadow-sm);">
+            ● {% if cook.is_active %}LIVE{% else %}OFFLINE{% endif %}
+          </span>
+        </div>
+        
+        <div style="background: var(--p-cream); border-radius: 20px; padding: 32px; border: 1.5px solid var(--p-orange-mid); margin-bottom: 32px;">
+          <div style="display: flex; align-items: flex-start; gap: 20px;">
+            <div style="font-size: 2rem;">✨</div>
+            <div>
+              <div style="font-weight: 900; color: var(--p-orange-dark); font-size: 1.1rem; margin-bottom: 4px;">Status Update</div>
+              <p style="font-size: 0.875rem; color: var(--p-orange-dark); opacity: 0.85; line-height: 1.6; font-weight: 600;">
+                Your kitchen is currently <strong>{% if cook.is_active %}Open{% else %}Closed{% endif %}</strong> to new orders. You can adjust your daily capacity and cutoff times in settings.
+              </p>
+            </div>
           </div>
         </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 40px;">
+          <div style="padding: 24px; background: var(--p-gray-100); border-radius: 20px; text-align: center; border: 1.5px solid var(--p-border);">
+            <div style="font-size: 0.65rem; color: var(--p-gray-400); margin-bottom: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em;">Daily Capacity</div>
+            <div style="font-weight: 900; font-size: 1.5rem; color: var(--p-black);">{{ cook.daily_capacity }} <span style="font-size: 0.875rem; color: var(--p-gray-400); font-weight: 700;">Units</span></div>
+          </div>
+          <div style="padding: 24px; background: var(--p-gray-100); border-radius: 20px; text-align: center; border: 1.5px solid var(--p-border);">
+            <div style="font-size: 0.65rem; color: var(--p-gray-400); margin-bottom: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em;">Order Cutoff</div>
+            <div style="font-weight: 900; font-size: 1.5rem; color: var(--p-black);">{{ cook.order_cutoff }}</div>
+          </div>
+        </div>
+
+        <a href="{% url 'cook:settings' %}" class="btn-primary btn-full" style="padding: 16px; font-weight: 800; border-radius: 16px;">Edit Kitchen Settings</a>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px;">
-        <div style="padding: 16px; background: var(--p-gray-100); border-radius: var(--radius-md); text-align: center;">
-          <div class="text-xs text-muted" style="margin-bottom: 4px; font-weight: 600;">Daily Capacity</div>
-          <div style="font-weight: 800; font-size: 1.125rem; color: var(--p-black);">{{ cook.daily_capacity }} <span style="font-weight: 500; font-size: 0.75rem;">Meals</span></div>
-        </div>
-        <div style="padding: 16px; background: var(--p-gray-100); border-radius: var(--radius-md); text-align: center;">
-          <div class="text-xs text-muted" style="margin-bottom: 4px; font-weight: 600;">Order Cutoff</div>
-          <div style="font-weight: 800; font-size: 1.125rem; color: var(--p-black);">{{ cook.order_cutoff }}</div>
-        </div>
+      <!-- Quick Tips Card -->
+      <div class="card" style="padding: 40px; border: none; box-shadow: var(--shadow-md); background: var(--p-black); color: var(--p-white);">
+        <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 24px; color: var(--p-gray-300);">Chef Tips 💡</h3>
+        <ul style="list-style: none; display: flex; flex-direction: column; gap: 20px; padding: 0;">
+          <li style="display: flex; gap: 16px; font-size: 0.9375rem; line-height: 1.5; color: var(--p-gray-400); font-weight: 500;">
+            <span style="color: var(--p-orange);">•</span>
+            Keep your dish photos high-quality to attract more diners.
+          </li>
+          <li style="display: flex; gap: 16px; font-size: 0.9375rem; line-height: 1.5; color: var(--p-gray-400); font-weight: 500;">
+            <span style="color: var(--p-orange);">•</span>
+            Ensure your order status is updated in real-time for customer trust.
+          </li>
+          <li style="display: flex; gap: 16px; font-size: 0.9375rem; line-height: 1.5; color: var(--p-gray-400); font-weight: 500;">
+            <span style="color: var(--p-orange);">•</span>
+            Plan your menus at least 2 days in advance for maximum visibility.
+          </li>
+        </ul>
       </div>
 
-      <a href="{% url 'cook:settings' %}" class="btn-outline" style="width: 100%; text-align: center; justify-content: center;">Kitchen Settings</a>
     </div>
   </div>
 </div>
 
 <style>
 .stat-card-premium {
-  padding: 32px !important;
-  transition: transform 0.3s ease;
-}
-.stat-card-premium:hover {
-  transform: translateY(-4px);
+  padding: 40px !important;
+  transition: all 0.4s cubic-bezier(0.2, 0, 0, 1) !important;
+  background: var(--p-white);
+  border: none;
   box-shadow: var(--shadow-md);
 }
+.stat-card-premium:hover {
+  transform: translateY(-12px) !important;
+  box-shadow: var(--shadow-xl) !important;
+}
+.dashboard-order-item:hover {
+  background: var(--p-gray-100) !important;
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+  border-radius: 12px;
+}
 </style>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+var ctx = document.getElementById('earningsChart');
+if (ctx) {
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: {{ labels_7days|safe }},
+      datasets: [{
+        label: 'Actual Earnings (₹)',
+        data: {{ earnings_7days|safe }},
+        backgroundColor: '#FF6B00',
+        borderRadius: 6,
+        borderSkipped: false,
+      }, {
+        label: 'Projected (₹)',
+        data: {{ projected_7days|safe }},
+        backgroundColor: 'rgba(255, 107, 0, 0.2)',
+        borderRadius: 6,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { 
+          display: true,
+          position: 'top',
+          align: 'end',
+          labels: { font: { family: 'Inter', size: 11, weight: '700' }, boxWidth: 10, usePointStyle: true }
+        },
+        tooltip: {
+          backgroundColor: '#1F1F1F',
+          padding: 16,
+          titleFont: { family: 'Poppins', size: 14, weight: '700' },
+          bodyFont: { family: 'Inter', size: 15 },
+          cornerRadius: 8,
+          displayColors: false,
+          callbacks: {
+            label: ctx => '₹' + ctx.raw.toLocaleString('en-IN')
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: { color: 'rgba(0,0,0,0.04)', drawTicks: false },
+          border: { display: false },
+          ticks: {
+            callback: val => '₹' + val.toLocaleString('en-IN'),
+            font: { family: 'Inter', size: 12, weight: '600' },
+            color: '#94A3B8',
+            padding: 12
+          }
+        },
+        x: {
+          grid: { display: false },
+          border: { display: false },
+          ticks: { 
+            font: { family: 'Inter', size: 12, weight: '700' },
+            color: '#64748B',
+            padding: 12
+          }
+        }
+      }
+    }
+  });
+}
+</script>
 {% endblock %}

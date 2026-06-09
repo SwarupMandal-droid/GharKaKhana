@@ -24,7 +24,7 @@
     <div class="stat-card">
       <div class="stat-label">Platform fees collected</div>
       <div class="stat-value">₹{{ total_platform_fee|floatformat:0 }}</div>
-      <div class="stat-sub up">0.2% per order</div>
+      <div class="stat-sub up">{{ platform_fee_rate }}% per order</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">Total invoices</div>
@@ -92,7 +92,7 @@
             <th>Cook</th>
             <th>Period</th>
             <th>Gross earnings</th>
-            <th>Commission (5%)</th>
+            <th>Commission ({{ commission_rate }}%)</th>
             <th>Due date</th>
             <th>Status</th>
             <th>Action</th>

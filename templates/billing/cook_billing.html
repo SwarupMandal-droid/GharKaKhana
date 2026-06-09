@@ -20,7 +20,7 @@
           ₹{{ current_month_gross|floatformat:0 }}
         </div>
         <div style="font-size:13px;color:rgba(255,255,255,.8);margin-top:4px">
-          5% commission = ₹{{ current_month_commission|floatformat:2 }}
+          {{ commission_rate }}% commission = ₹{{ current_month_commission|floatformat:2 }}
           (billed on 1st of next month)
         </div>
       </div>
@@ -43,7 +43,7 @@
       <div class="card">
         <div class="card-header">
           <h3>Commission invoices</h3>
-          <span class="text-sm text-muted">5% of monthly gross earnings</span>
+          <span class="text-sm text-muted">{{ commission_rate }}% of monthly gross earnings</span>
         </div>
 
         {% if invoices %}
@@ -53,7 +53,7 @@
               <tr>
                 <th>Period</th>
                 <th>Gross earnings</th>
-                <th>Commission (5%)</th>
+                <th>Commission ({{ commission_rate }}%)</th>
                 <th>Due date</th>
                 <th>Status</th>
                 <th>Action</th>
@@ -99,7 +99,7 @@
                 <td>
                   {% if invoice.status == 'UNPAID' %}
                     {% if bank_detail and bank_detail.upi_id %}
-                    <a href="upi://pay?pa={{ bank_detail.upi_id }}&pn=GharKhana+Commission&am={{ invoice.commission_amount }}&tn=GharKhana+Commission+{{ invoice.period_start|date:'M+Y' }}&cu=INR"
+                    <a href="upi://pay?pa={{ PLATFORM_UPI_ID }}&pn=GharKhana+Commission&am={{ invoice.commission_amount }}&tn=GharKhana+Commission+{{ invoice.period_start|date:'M+Y' }}&cu=INR"
                        class="btn-primary btn-sm"
                        style="display:inline-flex;align-items:center;gap:4px;white-space:nowrap">
                       Pay ₹{{ invoice.commission_amount|floatformat:0 }} via UPI
@@ -195,7 +195,7 @@
           </div>
           <div style="display:flex;gap:10px">
             <span style="color:var(--orange);font-weight:700;flex-shrink:0">2.</span>
-            <span>On the 1st of every month, GharKhana calculates 5% of your total delivered order earnings.</span>
+            <span>On the 1st of every month, GharKhana calculates {{ commission_rate }}% of your total delivered order earnings.</span>
           </div>
           <div style="display:flex;gap:10px">
             <span style="color:var(--orange);font-weight:700;flex-shrink:0">3.</span>

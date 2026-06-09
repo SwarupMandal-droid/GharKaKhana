@@ -112,3 +112,100 @@ window.setMapCoords = function (lat, lng, address) {
   if (lngField)  lngField.value  = lng;
   if (addrField && address) addrField.value = address;
 };
+
+// Food-Tech Hero Photo Upload Logic
+document.querySelectorAll('.photo-upload-input').forEach(function(input) {
+  input.addEventListener('change', function() {
+    if (this.files && this.files[0]) {
+      const file = this.files[0];
+      const clearInput = document.getElementById('clear-photo-input');
+      if (clearInput) clearInput.value = 'false';
+
+      // Read target IDs from dataset or use defaults for settings.html
+      const previewId = this.dataset.preview || 'preview-img';
+      const labelId = this.dataset.label || 'photo-filename-label';
+
+      // Simulate upload and show preview
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const previewImg = document.getElementById(previewId);
+        const placeholder = document.getElementById('preview-placeholder');
+        const successBadge = document.getElementById('upload-success-badge');
+        const label = document.getElementById(labelId);
+        
+        if (previewImg) {
+          if (previewImg.tagName.toLowerCase() === 'img') {
+            previewImg.src = e.target.result;
+            previewImg.style.display = 'block';
+            previewImg.style.opacity = '0';
+            previewImg.style.transform = 'scale(1.1)';
+          } else {
+            previewImg.style.backgroundImage = 'url(' + e.target.result + ')';
+            previewImg.style.backgroundSize = 'cover';
+            previewImg.style.backgroundPosition = 'center';
+            previewImg.innerHTML = '';
+          }
+          
+          if (placeholder) placeholder.style.display = 'none';
+
+          // Animate in
+          setTimeout(() => {
+            previewImg.style.transition = 'all 0.8s cubic-bezier(0.2, 0, 0, 1)';
+            previewImg.style.opacity = '1';
+            previewImg.style.transform = 'scale(1)';
+            
+            // Show success badge
+            if (successBadge) {
+              successBadge.classList.add('show');
+              setTimeout(() => successBadge.classList.remove('show'), 3000);
+            }
+          }, 50);
+        }
+        
+        if (label) {
+          label.textContent = 'READY: ' + file.name.substring(0, 20) + '...';
+          label.style.color = '#FF6B00';
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+});
+
+// Remove Photo Functionality (Hero Style)
+const removeBtn = document.getElementById('remove-photo-btn');
+if (removeBtn) {
+  removeBtn.addEventListener('click', function() {
+    const input = document.getElementById('photo-input');
+    const previewImg = document.getElementById('preview-img');
+    const placeholder = document.getElementById('preview-placeholder');
+    const label = document.getElementById('photo-filename-label');
+    const clearInput = document.getElementById('clear-photo-input');
+
+    if (input) input.value = '';
+    if (clearInput) clearInput.value = 'true';
+    
+    if (previewImg) {
+      previewImg.style.opacity = '0';
+      previewImg.style.transform = 'scale(0.95)';
+      setTimeout(() => {
+        previewImg.src = '';
+        previewImg.style.display = 'none';
+        if (placeholder) placeholder.style.display = 'flex';
+      }, 400);
+    }
+    
+    if (label) {
+      label.textContent = 'PHOTO REMOVED';
+      label.style.color = '#64748b';
+    }
+  });
+}
+
+// Global upload trigger
+document.querySelectorAll('.photo-upload-trigger').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    const target = document.getElementById(btn.dataset.target);
+    if (target) target.click();
+  });
+});

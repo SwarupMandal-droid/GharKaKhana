@@ -9,5 +9,6 @@ urlpatterns = [
     path('cooks/<int:pk>/approve/',   views.approve_cook,    name='approve_cook'),
     path('cooks/<int:pk>/reject/',    views.reject_cook,     name='reject_cook'),
     path('orders/',                   views.all_orders,      name='all_orders'),
+    path('orders/<int:pk>/refund-complete/', views.mark_refund_complete, name='mark_refund_complete'),
     path('stats/',                    views.platform_stats,  name='stats'),
 ]

@@ -2,176 +2,245 @@
 {% block title %}Complete Your Kitchen Profile — GharKhana{% endblock %}
 
 {% block content %}
-<div class="container" style="max-width:700px;padding:40px 20px">
+<div class="container animate-fade" style="max-width:850px; padding: 64px 20px;">
 
-  <div style="text-align:center;margin-bottom:40px">
-    <div style="font-size:3.5rem;margin-bottom:12px">👩‍🍳</div>
-    <h1 style="font-size:2rem;margin-bottom:8px">Set Up Your Kitchen</h1>
-    <p style="color:var(--gray-500);max-width:480px;margin:0 auto">
-      Welcome to GharKhana! Complete your kitchen profile so customers can find and order from you.
+  <div style="text-align: center; margin-bottom: 56px;">
+    <div style="font-size: 4.5rem; margin-bottom: 24px; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.1));">👩‍🍳</div>
+    <h1 style="font-size: 3rem; margin-bottom: 16px; font-weight: 950; letter-spacing: -2px;">Launch Your <span class="text-orange">Kitchen</span></h1>
+    <p class="text-muted" style="max-width: 560px; margin: 0 auto; font-size: 1.25rem; font-weight: 500; line-height: 1.6;">
+      Join our elite community of home chefs. Share your culinary heritage and start earning from your passion.
     </p>
   </div>
 
-  <div class="card" style="padding:0">
-    <div style="background:linear-gradient(135deg,var(--orange),#e67e22);padding:20px 28px;border-radius:var(--radius-lg) var(--radius-lg) 0 0">
-      <h2 style="color:#fff;font-size:1.2rem;margin:0">Kitchen Details</h2>
-      <p style="color:rgba(255,255,255,0.8);font-size:0.875rem;margin:4px 0 0">Step 1 of 1 — Fill in your kitchen information</p>
+  <div class="card" style="padding: 0; overflow: hidden; border: none; box-shadow: var(--shadow-xl); background: var(--p-white);">
+    <div style="background: var(--p-black); padding: 48px 56px; color: white; position: relative; overflow: hidden;">
+      <div style="position: relative; z-index: 2;">
+        <h2 style="color: white; font-size: 1.75rem; margin: 0; font-weight: 900; letter-spacing: -0.5px;">Kitchen Identity</h2>
+        <p style="color: var(--p-gray-400); font-size: 1rem; margin: 12px 0 0; font-weight: 600;">Complete your profile to join the GharKhana network.</p>
+      </div>
+      <div style="position: absolute; right: -20px; bottom: -20px; font-size: 8rem; opacity: 0.1; transform: rotate(-15deg);">🥘</div>
     </div>
 
-    <form method="post" enctype="multipart/form-data" style="padding:28px">
+    <form method="post" enctype="multipart/form-data" style="padding: 56px;">
       {% csrf_token %}
 
       {% if form.non_field_errors %}
-        <div class="message message-error" style="margin-bottom:20px">
+        <div class="message message-error" style="margin-bottom: 32px; border-radius: 16px;">
           {% for err in form.non_field_errors %}{{ err }}{% endfor %}
         </div>
       {% endif %}
 
-      <div class="grid-2" style="gap:20px">
-        <div class="form-group" style="grid-column:1/-1">
-          <label class="form-label">Kitchen Name <span style="color:var(--orange)">*</span></label>
-          {{ form.kitchen_name }}
-          {% if form.kitchen_name.errors %}<p style="color:#e74c3c;font-size:12px;margin-top:4px">{{ form.kitchen_name.errors.0 }}</p>{% endif %}
-        </div>
+      <div style="display: flex; flex-direction: column; gap: 40px;">
+        
+        <!-- Basic Info Section -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px;">
+          <div class="form-group" style="grid-column: 1/-1;">
+            <label class="form-label" style="font-weight: 800; font-size: 0.8125rem;">Kitchen Name <span style="color: var(--p-orange);">*</span></label>
+            {{ form.kitchen_name }}
+            {% if form.kitchen_name.errors %}<p class="text-xs" style="color: var(--p-error); margin-top: 8px; font-weight: 600;">{{ form.kitchen_name.errors.0 }}</p>{% endif %}
+          </div>
 
-        <div class="form-group">
-          <label class="form-label">Phone Number <span style="color:var(--orange)">*</span></label>
-          {{ form.phone }}
-          {% if form.phone.errors %}<p style="color:#e74c3c;font-size:12px;margin-top:4px">{{ form.phone.errors.0 }}</p>{% endif %}
-        </div>
+          <div class="form-group">
+            <label class="form-label" style="font-weight: 800; font-size: 0.8125rem;">Mobile Number <span style="color: var(--p-orange);">*</span></label>
+            {{ form.phone }}
+            {% if form.phone.errors %}<p class="text-xs" style="color: var(--p-error); margin-top: 8px; font-weight: 600;">{{ form.phone.errors.0 }}</p>{% endif %}
+          </div>
 
-        <div class="form-group">
-          <label class="form-label">Daily Order Cutoff Time <span style="color:var(--orange)">*</span></label>
-          {{ form.order_cutoff }}
-          <p style="font-size:12px;color:var(--gray-500);margin-top:4px">Orders after this time will not be accepted.</p>
-          {% if form.order_cutoff.errors %}<p style="color:#e74c3c;font-size:12px;margin-top:4px">{{ form.order_cutoff.errors.0 }}</p>{% endif %}
-        </div>
-
-        <div class="form-group" style="grid-column:1/-1">
-          <label class="form-label">Kitchen Address <span style="color:var(--orange)">*</span></label>
-          {{ form.address }}
-          {% if form.address.errors %}<p style="color:#e74c3c;font-size:12px;margin-top:4px">{{ form.address.errors.0 }}</p>{% endif %}
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Latitude <span style="color:var(--orange)">*</span></label>
-          {{ form.latitude }}
-          <p style="font-size:12px;color:var(--gray-500);margin-top:4px">e.g. 22.5726</p>
-          {% if form.latitude.errors %}<p style="color:#e74c3c;font-size:12px;margin-top:4px">{{ form.latitude.errors.0 }}</p>{% endif %}
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Longitude <span style="color:var(--orange)">*</span></label>
-          {{ form.longitude }}
-          <p style="font-size:12px;color:var(--gray-500);margin-top:4px">e.g. 88.3639</p>
-          {% if form.longitude.errors %}<p style="color:#e74c3c;font-size:12px;margin-top:4px">{{ form.longitude.errors.0 }}</p>{% endif %}
-        </div>
-
-        <!-- Adding Map Feature -->
-        <div class="form-group" style="grid-column:1/-1; margin-bottom: 20px;">
-          <label class="form-label">Choose on Map</label>
-          <div id="map" style="height: 300px; border-radius: var(--radius-md); border: 1px solid var(--gray-200); overflow: hidden;"></div>
-          <p style="font-size:12px;color:var(--gray-500);margin-top:8px">
-            📍 Click anywhere on the map to set your kitchen location. Address, latitude and longitude will be auto-filled.
-          </p>
-        </div>
-
-        <div class="form-group" style="grid-column:1/-1">
-          <label class="form-label">Bio / About your kitchen</label>
-          {{ form.bio }}
-          {% if form.bio.errors %}<p style="color:#e74c3c;font-size:12px;margin-top:4px">{{ form.bio.errors.0 }}</p>{% endif %}
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Cuisine Tags</label>
-          {{ form.cuisine_tags }}
-          <p style="font-size:12px;color:var(--gray-500);margin-top:4px">e.g. Bengali, North Indian, Chinese</p>
-          {% if form.cuisine_tags.errors %}<p style="color:#e74c3c;font-size:12px;margin-top:4px">{{ form.cuisine_tags.errors.0 }}</p>{% endif %}
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Daily Capacity (max orders)</label>
-          {{ form.daily_capacity }}
-          {% if form.daily_capacity.errors %}<p style="color:#e74c3c;font-size:12px;margin-top:4px">{{ form.daily_capacity.errors.0 }}</p>{% endif %}
-        </div>
-
-        <div class="form-group" style="grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:16px;background:var(--gray-50);border-radius:var(--radius-md)">
-          {{ form.same_day_enabled }}
-          <div>
-            <label class="form-label" style="margin:0">Allow Same-Day Orders</label>
-            <p style="font-size:12px;color:var(--gray-500);margin:0">Let customers order for the same day (up to 35% of capacity).</p>
+          <div class="form-group">
+            <label class="form-label" style="font-weight: 800; font-size: 0.8125rem;">Order Cutoff Time <span style="color: var(--p-orange);">*</span></label>
+            {{ form.order_cutoff }}
+            <p class="text-xs text-muted" style="margin-top: 8px; font-weight: 600;">Last call for next-day orders.</p>
+            {% if form.order_cutoff.errors %}<p class="text-xs" style="color: var(--p-error); margin-top: 8px; font-weight: 600;">{{ form.order_cutoff.errors.0 }}</p>{% endif %}
           </div>
         </div>
+
+        <!-- Bio Section -->
+        <div class="form-group">
+          <label class="form-label" style="font-weight: 800; font-size: 0.8125rem;">Kitchen Story / Bio</label>
+          {{ form.bio }}
+          <p class="text-xs text-muted" style="margin-top: 8px; font-weight: 600;">Tell customers what makes your cooking special.</p>
+          {% if form.bio.errors %}<p class="text-xs" style="color: var(--p-error); margin-top: 8px; font-weight: 600;">{{ form.bio.errors.0 }}</p>{% endif %}
+        </div>
+
+        <!-- Location Section -->
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 16px;">
+            <label class="form-label" style="margin: 0; font-weight: 800; font-size: 0.8125rem;">Kitchen Location <span style="color: var(--p-orange);">*</span></label>
+            <button type="button" onclick="getLocation()" class="btn-ghost" style="font-size: 0.75rem; font-weight: 800; color: var(--p-orange); display: flex; align-items: center; gap: 6px; background: var(--p-orange-light); padding: 8px 16px; border-radius: 10px;">
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+              Use My Current Location
+            </button>
+          </div>
+          
+          <div id="map" style="height: 380px; border-radius: 20px; border: 2.5px solid var(--p-border); overflow: hidden; box-shadow: var(--shadow-sm); position: relative;"></div>
+          
+          <div style="margin-top: 24px;">
+            <label class="form-label" style="font-weight: 800; font-size: 0.8125rem; color: var(--p-gray-400);">Detected Address</label>
+            {{ form.address }}
+            {% if form.address.errors %}<p class="text-xs" style="color: var(--p-error); margin-top: 8px; font-weight: 600;">{{ form.address.errors.0 }}</p>{% endif %}
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px;">
+            <div class="form-group">
+              <label class="form-label" style="font-weight: 800; font-size: 0.8125rem; color: var(--p-gray-400);">Latitude</label>
+              {{ form.latitude }}
+            </div>
+            <div class="form-group">
+              <label class="form-label" style="font-weight: 800; font-size: 0.8125rem; color: var(--p-gray-400);">Longitude</label>
+              {{ form.longitude }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Additional Settings -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px;">
+          <div class="form-group">
+            <label class="form-label" style="font-weight: 800; font-size: 0.8125rem;">Cuisine Specialities</label>
+            {{ form.cuisine_tags }}
+            <p class="text-xs text-muted" style="margin-top: 8px; font-weight: 600;">e.g. Traditional, Fusion, Desserts</p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" style="font-weight: 800; font-size: 0.8125rem;">Daily Capacity</label>
+            {{ form.daily_capacity }}
+            <p class="text-xs text-muted" style="margin-top: 8px; font-weight: 600;">Max orders per day.</p>
+          </div>
+        </div>
+
+        <!-- Same Day Delivery -->
+        <div style="padding: 32px; background: var(--p-orange-light); border-radius: 20px; border: 2px solid var(--p-orange-mid); display: flex; align-items: center; gap: 24px;">
+          <div class="checkbox-modern">
+            {{ form.same_day_enabled }}
+            <span class="checkmark"></span>
+          </div>
+          <div>
+            <label class="form-label" style="margin:0; color: var(--p-orange-dark); font-size: 1.1rem; font-weight: 900;">Accept Same-Day Orders</label>
+            <p style="color: var(--p-orange-dark); opacity: 0.75; margin: 4px 0 0; font-size: 0.875rem; font-weight: 600;">Boost visibility by offering last-minute meals to local customers.</p>
+          </div>
+        </div>
+
       </div>
 
-      <div style="margin-top:28px;display:flex;gap:12px">
-        <button type="submit" class="btn-primary" style="flex:1;height:48px;font-size:1rem">
-          Complete Profile & Go to Dashboard →
+      <div style="margin-top: 64px;">
+        <button type="submit" class="btn-primary btn-full" style="height: 64px; font-size: 1.25rem; font-weight: 900; border-radius: 20px; box-shadow: var(--shadow-orange);">
+          Open My Kitchen →
         </button>
       </div>
     </form>
   </div>
 </div>
+
+<style>
+  #id_kitchen_name, #id_phone, #id_order_cutoff, #id_bio, #id_address, #id_latitude, #id_longitude, #id_cuisine_tags, #id_daily_capacity {
+    background: var(--p-gray-100);
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+  }
+  #id_kitchen_name:focus, #id_phone:focus, #id_order_cutoff:focus, #id_bio:focus, #id_address:focus, #id_cuisine_tags:focus, #id_daily_capacity:focus {
+    background: var(--p-white);
+    border-color: var(--p-orange);
+    box-shadow: 0 0 0 4px var(--p-orange-light);
+  }
+</style>
+
 {% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+  .leaflet-container { font-family: 'Inter', sans-serif; }
+</style>
 {% endblock %}
 
 {% block extra_js %}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-var map = L.map('map').setView([22.5726, 88.3639], 12);
+var map = L.map('map', { zoomControl: false, scrollWheelZoom: false }).setView([22.5726, 88.3639], 13);
+L.control.zoom({ position: 'bottomright' }).addTo(map);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '© OpenStreetMap contributors'
+  attribution: '© OpenStreetMap'
 }).addTo(map);
 
 var marker = null;
 
 var orangeIcon = L.divIcon({
   className: '',
-  html: '<div style="width:24px;height:24px;background:#FF6B00;border-radius:50%;border:4px solid white;box-shadow:0 4px 12px rgba(255,107,0,0.4)"></div>',
-  iconSize: [24, 24],
-  iconAnchor: [12, 12],
-});
-
-map.on('click', function(e) {
-  var lat = e.latlng.lat.toFixed(6);
-  var lng = e.latlng.lng.toFixed(6);
-
-  if (marker) {
-    marker.setLatLng(e.latlng);
-  } else {
-    marker = L.marker(e.latlng, { icon: orangeIcon, draggable: true }).addTo(map);
-    marker.on('dragend', function(ev) {
-      var pos = ev.target.getLatLng();
-      updateCoords(pos.lat.toFixed(6), pos.lng.toFixed(6));
-      reverseGeocode(pos.lat, pos.lng);
-    });
-  }
-
-  updateCoords(lat, lng);
-  reverseGeocode(lat, lng);
+  html: '<div style="width:32px;height:32px;background:var(--p-orange);border-radius:50%;border:4px solid white;box-shadow:0 8px 24px rgba(255,107,0,0.4);display:flex;align-items:center;justify-content:center;"><div style="width:10px;height:10px;background:white;border-radius:50%"></div></div>',
+  iconSize: [32, 32],
+  iconAnchor: [16, 16],
 });
 
 function updateCoords(lat, lng) {
-  var latInput = document.getElementById('id_latitude');
-  var lngInput = document.getElementById('id_longitude');
+  const latInput = document.getElementById('id_latitude');
+  const lngInput = document.getElementById('id_longitude');
   if (latInput) latInput.value = lat;
   if (lngInput) lngInput.value = lng;
 }
 
 function reverseGeocode(lat, lng) {
+  const addrInput = document.getElementById('id_address');
+  if (addrInput) addrInput.placeholder = "Detecting address...";
+  
   fetch('https://nominatim.openstreetmap.org/reverse?lat=' + lat + '&lon=' + lng + '&format=json')
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      if (data && data.display_name) {
-        var addrInput = document.getElementById('id_address');
-        if (addrInput) addrInput.value = data.display_name;
+    .then(r => r.json())
+    .then(data => {
+      if (data && data.display_name && addrInput) {
+        addrInput.value = data.display_name;
       }
     })
-    .catch(function() {});
+    .catch(() => {
+       if (addrInput) addrInput.placeholder = "Address detection failed. Please enter manually.";
+    });
 }
+
+function setMarker(latlng) {
+  if (marker) {
+    marker.setLatLng(latlng);
+  } else {
+    marker = L.marker(latlng, { icon: orangeIcon, draggable: true }).addTo(map);
+    marker.on('dragend', function(ev) {
+      const pos = ev.target.getLatLng();
+      updateCoords(pos.lat.toFixed(6), pos.lng.toFixed(6));
+      reverseGeocode(pos.lat, pos.lng);
+    });
+  }
+  map.setView(latlng, 16);
+}
+
+map.on('click', function(e) {
+  const lat = e.latlng.lat.toFixed(6);
+  const lng = e.latlng.lng.toFixed(6);
+  setMarker(e.latlng);
+  updateCoords(lat, lng);
+  reverseGeocode(lat, lng);
+});
+
+function getLocation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function(position) {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+      const latlng = [lat, lng];
+      setMarker(latlng);
+      updateCoords(lat.toFixed(6), lng.toFixed(6));
+      reverseGeocode(lat, lng);
+    }, function(error) {
+      alert("Error getting location: " + error.message);
+    });
+  } else {
+    alert("Geolocation is not supported by this browser.");
+  }
+}
+
+// Initialize with existing coords if available
+window.onload = function() {
+  const latVal = document.getElementById('id_latitude').value;
+  const lngVal = document.getElementById('id_longitude').value;
+  if (latVal && lngVal) {
+    setMarker([parseFloat(latVal), parseFloat(lngVal)]);
+  }
+};
 </script>
 {% endblock %}
+

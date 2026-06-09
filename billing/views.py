@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
@@ -49,7 +50,10 @@ def cook_billing(request):
         placed_at__date__gte = month_start,
     ).values_list('subtotal', flat=True)
     current_month_gross      = sum(float(s) for s in month_earnings)
-    current_month_commission = round(current_month_gross * 0.05, 2)
+    current_month_commission = round(
+        current_month_gross * float(settings.COOK_COMMISSION_RATE) / 100,
+        2,
+    )
 
     context = {
         'cook':                    cook,
@@ -59,7 +63,9 @@ def cook_billing(request):
         'total_unpaid':            total_unpaid,
         'current_month_gross':     current_month_gross,
         'current_month_commission':current_month_commission,
+        'commission_rate':         settings.COOK_COMMISSION_RATE,
         'today':                   today,
+        'PLATFORM_UPI_ID':         settings.PLATFORM_UPI_ID,
     }
     return render(request, 'billing/cook_billing.html', context)
 
@@ -125,6 +131,8 @@ def admin_billing(request):
         'total_commission_collected':  total_commission_collected,
         'total_commission_pending':    total_commission_pending,
         'total_platform_fee':          total_platform_fee,
+        'platform_fee_rate':           settings.PLATFORM_FEE_RATE,
+        'commission_rate':             settings.COOK_COMMISSION_RATE,
     }
     return render(request, 'billing/admin_billing.html', context)
 

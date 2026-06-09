@@ -58,6 +58,7 @@
             <th>Payment</th>
             <th>Status</th>
             <th>Date</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
@@ -81,6 +82,9 @@
               <span class="badge {% if order.payment_method == 'ONLINE' %}badge-confirmed{% else %}badge-ofd{% endif %}">
                 {{ order.get_payment_method_display }}
               </span>
+              <div style="font-size:11px;color:var(--gray-500);margin-top:4px">
+                {{ order.get_payment_status_display }}
+              </div>
             </td>
             <td>
               <span class="badge badge-{{ order.status|lower }}">
@@ -89,6 +93,17 @@
             </td>
             <td style="font-size:11px;color:var(--gray-500)">
               {{ order.placed_at|date:"d M, h:i A" }}
+            </td>
+            <td>
+              {% if order.payment_status == 'REFUND_PENDING' %}
+              <form method="post" action="{% url 'admin_panel:mark_refund_complete' order.pk %}">
+                {% csrf_token %}
+                <input type="text" name="refund_ref" class="form-input" placeholder="Refund ref" style="width:120px;margin-bottom:6px;font-size:11px;padding:8px 10px">
+                <button type="submit" class="btn-primary btn-sm">Mark refunded</button>
+              </form>
+              {% else %}
+              <span style="font-size:12px;color:var(--gray-500)">—</span>
+              {% endif %}
             </td>
           </tr>
           {% endfor %}

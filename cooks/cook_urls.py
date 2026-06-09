@@ -4,6 +4,7 @@ from . import cook_views
 app_name = 'cook'
 
 urlpatterns = [
+    path('setup/',      cook_views.kitchen_setup, name='setup'),
     path('dashboard/',  cook_views.dashboard,    name='dashboard'),
     path('dishes/',     cook_views.dish_list,    name='dish_list'),
     path('dishes/add/', cook_views.dish_add,     name='dish_add'),

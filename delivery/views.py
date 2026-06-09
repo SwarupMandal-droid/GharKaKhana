@@ -132,6 +132,7 @@ def dashboard(request):
     grand_total    = 0
     grand_done     = 0
     grand_km       = 0
+    grand_earnings = 0
 
     for slot in slots:
         # Orders for this slot that are active today or preordered for tomorrow
@@ -148,21 +149,31 @@ def dashboard(request):
         if not slot_orders.exists():
             continue
 
-        # Get or create Delivery records for these orders
+        # Optimize Delivery fetching/creation (Rule: Performance)
+        order_ids = [o.id for o in slot_orders]
+        existing_deliveries = {d.order_id: d for d in Delivery.objects.filter(order_id__in=order_ids)}
+        
         deliveries = []
+        to_create = []
         for order in slot_orders:
-            delivery, created = Delivery.objects.get_or_create(
-                order           = order,
-                defaults={
-                    'delivery_person': delivery_person,
-                    'delivery_address': order.address.address if order.address else '',
-                    'status': 'ASSIGNED',
-                }
-            )
-            if not delivery.delivery_person:
-                delivery.delivery_person = delivery_person
-                delivery.save()
-            deliveries.append(delivery)
+            if order.id in existing_deliveries:
+                delivery = existing_deliveries[order.id]
+                if not delivery.delivery_person:
+                    delivery.delivery_person = delivery_person
+                    delivery.save(update_fields=['delivery_person'])
+                deliveries.append(delivery)
+            else:
+                to_create.append(Delivery(
+                    order           = order,
+                    delivery_person = delivery_person,
+                    delivery_address= order.address.address if order.address else '',
+                    status          = 'ASSIGNED',
+                ))
+        
+        if to_create:
+            Delivery.objects.bulk_create(to_create)
+            # Re-fetch to get IDs
+            deliveries.extend(list(Delivery.objects.filter(order_id__in=[o.order_id for o in to_create])))
 
         pending_deliveries = [
             d for d in deliveries if d.status == 'ASSIGNED'
@@ -207,11 +218,14 @@ def dashboard(request):
             est_time = 0
             total_km = 0
 
+        batch_earnings = sum(d.order.delivery_charge for d in deliveries)
+
         batch_total = len(deliveries)
         batch_done  = len(completed_deliveries)
         grand_total += batch_total
         grand_done  += batch_done
         grand_km    += total_km
+        grand_earnings += batch_earnings
 
         slot_batches.append({
             'slot':       slot,
@@ -220,6 +234,7 @@ def dashboard(request):
             'maps_url':   maps_url,
             'est_time':   est_time,
             'total_km':   total_km,
+            'earnings':   batch_earnings,
             'cutoff_passed': cutoff_passed,
             'total':      batch_total,
             'done':       batch_done,
@@ -233,6 +248,7 @@ def dashboard(request):
         'grand_total':     grand_total,
         'grand_done':      grand_done,
         'grand_km':        round(grand_km, 2),
+        'grand_earnings':  grand_earnings,
     }
     return render(request, 'delivery/dashboard.html', context)
 
@@ -303,7 +319,13 @@ def report_failed(request, order_id):
         delivery.status = 'FAILED'
         delivery.save()
         order.status    = 'FAILED'
-        order.save()
+        if order.payment_method == Order.PaymentMethod.ONLINE and order.payment_status == Order.PaymentStatus.PAID:
+            order.payment_status = Order.PaymentStatus.REFUND_PENDING
+            order.refund_requested_at = timezone.now()
+            order.refund_ref = f'DELIVERY_FAILED_{reason}'
+            order.save(update_fields=['status', 'payment_status', 'refund_requested_at', 'refund_ref'])
+        else:
+            order.save(update_fields=['status'])
 
         # Notify customer if prepaid
         if order.payment_method == 'ONLINE' and photo:
@@ -315,7 +337,7 @@ def report_failed(request, order_id):
                 message = (
                     f'We could not deliver your order from {order.cook.kitchen_name}. '
                     f'Reason: {reason}. Your food has been donated to someone in need. '
-                    f'Please contact us for a refund.'
+                    f'Your refund has been marked for processing.'
                 ),
                 photo   = photo,
             )
