@@ -4,9 +4,11 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import RedirectView
 from accounts.views import landing_page
+from django.http import HttpResponse
 
 urlpatterns = [
     path('favicon.ico', RedirectView.as_view(url='/static/images/favicon.ico', permanent=True)),
+    path("health/", lambda request: HttpResponse("OK")),
     path('django-admin/', admin.site.urls),
     path('accounts/', include('accounts.urls', namespace='accounts')),
     path('cooks/',    include('cooks.customer_urls', namespace='customer')),
