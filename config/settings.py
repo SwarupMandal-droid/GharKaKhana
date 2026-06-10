@@ -181,7 +181,12 @@ COOK_COMMISSION_RATE  = Decimal(config('COOK_COMMISSION_RATE',  default='5.00'))
 # ─── Security (production only) ───────────────────────────────────────────────
 if not DEBUG:
     # HTTPS enforcement
-    SECURE_SSL_REDIRECT          = True
+    # SECURE_SSL_REDIRECT is intentionally False on Railway:
+    # Railway terminates TLS at its load balancer and forwards requests
+    # internally over plain HTTP, so enabling the redirect causes an
+    # infinite redirect loop.  SECURE_PROXY_SSL_HEADER tells Django the
+    # original connection was HTTPS, which is all we need.
+    SECURE_SSL_REDIRECT          = False
     SECURE_PROXY_SSL_HEADER      = ('HTTP_X_FORWARDED_PROTO', 'https')
 
     # HSTS — tell browsers to always use HTTPS
