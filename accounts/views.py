@@ -8,6 +8,7 @@ from orders.models import SavedAddress
 from cooks.models import CookProfile, Dish
 from orders.models import Order
 
+
 def landing_page(request):
     if request.user.is_authenticated:
         return redirect_by_role(request.user)
