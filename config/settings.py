@@ -31,6 +31,10 @@ _railway_private_domain = config('RAILWAY_PRIVATE_DOMAIN', default='')
 if _railway_private_domain and _railway_private_domain not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(_railway_private_domain)
 
+# Railway healthcheck probes use this hostname — must be explicitly allowed
+if 'healthcheck.railway.app' not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append('healthcheck.railway.app')
+
 # ─── Applications ─────────────────────────────────────────────────────────────
 INSTALLED_APPS = [
     'django.contrib.admin',
