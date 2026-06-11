@@ -3,7 +3,7 @@
 {% block nav_home %}active{% endblock %}
 
 {% block content %}
-<div class="container animate-fade">
+<div class="container animate-fade" id="cook-list-page">
 
   <!-- Header -->
   <div class="page-header" style="margin-bottom: 40px;">
@@ -41,9 +41,11 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
               </svg>
             </div>
-            <input type="text" name="search" id="search-input" value="{{ search }}" 
-                   placeholder="Search homemade biryani, thali, dosa..." 
-                   class="premium-search-input">
+            <input type="text" name="search" id="search-input" value="{{ search }}"
+                   placeholder="Search homemade biryani, thali, dosa..."
+                   class="premium-search-input"
+                   aria-label="Search for home cooks or dishes"
+                   autocomplete="off">
             
             {% if search %}
             <button type="button" onclick="clearSearch()" class="search-clear-btn" title="Clear search">
@@ -176,7 +178,7 @@
 
   <!-- Cook grid -->
   {% if cook_data %}
-  <div class="grid-3" style="gap: 32px;">
+  <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 28px;">
     {% for item in cook_data %}
     <a href="/cooks/{{ item.cook.pk }}/">
       <div class="card cook-card-premium">
@@ -184,7 +186,7 @@
         <!-- Image / banner -->
         <div class="cook-card-img" style="height: 180px; position: relative; border-radius: var(--radius-md) var(--radius-md) 0 0; overflow: hidden; margin-bottom: 20px; width: 100%;">
           {% if item.cook.photo %}
-            <img src="{{ item.cook.photo.url }}" style="width: 100%; height: 100%; object-fit: cover;" alt="{{ item.cook.kitchen_name }}"/>
+            <img src="{{ item.cook.photo.url }}" style="width: 100%; height: 100%; object-fit: cover;" alt="{{ item.cook.kitchen_name }}" loading="lazy"/>
           {% else %}
             <div style="width: 100%; height: 100%; background: linear-gradient(135deg, var(--p-orange) 0%, var(--p-orange-dark) 100%); color: white; display: flex; align-items: center; justify-content: center; font-size: 3rem; font-family: 'Syne', sans-serif; font-weight: 800;">
               {{ item.cook.kitchen_name|first|upper }}
@@ -240,10 +242,15 @@
   </div>
 
   {% else %}
-  <div class="empty-state" style="padding: 120px 20px;">
-    <div class="empty-state-icon" style="font-size: 4rem; opacity: 0.5;">🍳</div>
-    <h2 style="margin-bottom: 12px;">No cooks found yet</h2>
-    <p class="text-muted">We're expanding rapidly. Check back soon for home kitchens in your area!</p>
+  <div class="empty-state" style="padding: 80px 20px;">
+    <div class="empty-state-icon" style="font-size: 4rem;">🍳</div>
+    <h2 style="margin-bottom: 12px;">No cooks found</h2>
+    {% if search or food_type or meal_type or max_dist %}
+      <p class="text-muted" style="margin-bottom: 28px;">No results matched your filters. Try adjusting your search or clearing filters.</p>
+      <button type="button" onclick="clearAllFilters()" class="btn-primary" style="border-radius: 100px; padding: 14px 32px;">Clear Filters</button>
+    {% else %}
+      <p class="text-muted">We're expanding rapidly. Check back soon for home kitchens in your area!</p>
+    {% endif %}
   </div>
   {% endif %}
 
@@ -550,7 +557,7 @@ document.getElementById('locate-me-btn').addEventListener('click', function() {
     const originalBtnInner = btn.innerHTML;
     
     if (!navigator.geolocation) {
-        alert('Geolocation is not supported by your browser');
+        showToast('Geolocation is not supported by your browser.', 'error');
         return;
     }
     
@@ -600,7 +607,7 @@ document.getElementById('locate-me-btn').addEventListener('click', function() {
             btn.innerHTML = originalBtnInner;
             btn.style.boxShadow = '';
             if (displayText) displayText.innerText = 'Denied';
-            alert('Please enable location permissions.');
+            showToast('Location access denied. Please enable location permissions in your browser.', 'error');
         },
         { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
     );

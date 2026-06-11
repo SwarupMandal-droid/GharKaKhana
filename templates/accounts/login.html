@@ -32,7 +32,7 @@ html, body {
   font-family: var(--sans);
   background: var(--cream);
   color: var(--charcoal);
-  overflow: hidden; /* Prevent scrolling on auth page */
+  /* Removed overflow:hidden — breaks scrolling on small/landscape screens */
 }
 
 /* ── Grain Overlay ─────────────────────────────────────────── */
@@ -127,6 +127,8 @@ body::before{
   justify-content: center;
   padding: 48px;
   box-shadow: -20px 0 60px rgba(30,26,20,0.1);
+  overflow-y: auto; /* Allow scroll on short screens */
+  max-height: 100vh;
 }
 
 .auth-form-wrapper {
@@ -294,7 +296,8 @@ body::before{
 /* Mobile Support */
 @media (max-width: 900px) {
   .auth-left { display: none; }
-  .auth-right { width: 100%; padding: 32px; }
+  .auth-right { width: 100%; padding: 32px; max-height: none; overflow-y: auto; }
+  html, body { height: auto; min-height: 100%; }
 }
 </style>
 </head>
@@ -348,12 +351,15 @@ body::before{
 
           <div class="form-group gs-reveal">
             <label class="form-label">Email address</label>
-            <input
+          <input
               type="email"
               name="email"
+              id="login-email"
               class="form-input"
               placeholder="name@example.com"
               autocomplete="email"
+              aria-label="Email address"
+              aria-required="true"
               required
               autofocus
             />
@@ -364,9 +370,12 @@ body::before{
             <input
               type="password"
               name="password"
+              id="login-password"
               class="form-input"
               placeholder="••••••••"
               autocomplete="current-password"
+              aria-label="Password"
+              aria-required="true"
               required
             />
           </div>
@@ -393,20 +402,24 @@ body::before{
   </div>
 
   <script>
-    // GSAP Animations
     document.addEventListener("DOMContentLoaded", (event) => {
+      // Respect prefers-reduced-motion
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
       // Animate the background slider
       const slides = document.querySelectorAll(".auth-bg-slide");
       let currentSlide = 0;
       
-      // Continuous gentle zoom
-      gsap.to(slides, {
-        scale: 1.05,
-        duration: 20,
-        repeat: -1,
-        yoyo: true,
-        ease: "sine.inOut"
-      });
+      // Continuous gentle zoom (skip if reduced motion)
+      if (!prefersReducedMotion) {
+        gsap.to(slides, {
+          scale: 1.05,
+          duration: 20,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut"
+        });
+      }
 
       // Crossfade slider
       setInterval(() => {

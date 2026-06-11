@@ -18,6 +18,28 @@
   --p-border: #F0E6DD;
 }
 
+/* ─── Status Dots ─────────────────────────────────────────────── */
+.dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--p-gray-400);
+  flex-shrink: 0;
+}
+
+.dot-green {
+  background: var(--p-success);
+  box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.2);
+  animation: pulse-green 2s ease-in-out infinite;
+}
+
+@keyframes pulse-green {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.2); }
+  50%       { box-shadow: 0 0 0 6px rgba(39, 174, 96, 0.1); }
+}
+
+
 /* ─── Base Overrides ────────────────────────────────────────── */
 .delivery-premium-body {
   background: var(--p-cream);

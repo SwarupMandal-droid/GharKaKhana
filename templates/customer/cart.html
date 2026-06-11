@@ -4,9 +4,9 @@
 {% block content %}
 <div class="container" style="max-width:780px">
 
-  <div class="page-header">
-    <h2>Checkout</h2>
-    <p>Review your order before placing</p>
+  <div class="page-header" style="margin-bottom: 32px;">
+    <h1 style="font-size: 1.85rem;">Checkout</h1>
+    <p class="text-muted">Review your order before placing</p>
   </div>
 
   <div id="no-cart" style="display:none">
@@ -35,9 +35,9 @@
       <div class="card-header"><h3>Delivery details</h3></div>
 
       <div class="form-group">
-        <label class="form-label">Delivery address</label>
+        <label class="form-label" for="address_id">Delivery address</label>
         {% if addresses %}
-        <select name="address_id" id="address_id" class="form-select">
+        <select name="address_id" id="address_id" class="form-select" aria-label="Select delivery address" aria-required="true">
           {% for addr in addresses %}
           <option value="{{ addr.pk }}" {% if addr.is_default %}selected{% endif %}>
             {{ addr.label }} — {{ addr.address|truncatechars:60 }}
@@ -57,7 +57,7 @@
       <div class="form-group">
         <label class="form-label">Delivery type</label>
         <div style="display:flex;gap:10px">
-          <label style="flex:1;cursor:pointer">
+          <label style="flex:1;cursor:pointer" aria-label="Delivery to your address">
             <input type="radio" name="delivery_type" value="DELIVERY"
                    id="type_delivery" checked style="display:none" class="delivery-radio"/>
             <div class="delivery-type-card selected" id="card_delivery">
@@ -136,8 +136,8 @@
       <input type="hidden" name="delivery_type"   id="f_delivery_type"   value="DELIVERY"/>
       <input type="hidden" name="payment_method"  id="f_payment_method"  value="ONLINE"/>
 
-      <button type="submit" class="btn-primary btn-full btn-lg" id="place-btn">
-        Place order
+      <button type="submit" class="btn-primary btn-full btn-lg" id="place-btn" aria-live="polite">
+        Place Order
       </button>
     </form>
 
@@ -268,16 +268,31 @@ if (addrSelect) {
   document.getElementById('f_address_id').value = addrSelect.value;
 }
 
-// Form submit — sync slot id from cart
+// Form submit — sync slot id from cart and show loading state
 document.getElementById('checkout-form').addEventListener('submit', function(e) {
   var items    = cart.items;
   var firstKey = Object.keys(items)[0];
-  // slot_id stored in cart if available
-  document.getElementById('f_slot_id').value = cart.slotId || '';
+  document.getElementById('f_slot_id').value    = cart.slotId || '';
   document.getElementById('f_address_id').value = addrSelect ? addrSelect.value : '';
+
   if (!document.getElementById('f_slot_id').value) {
     e.preventDefault();
-    alert('Slot information missing. Please go back and re-add items.');
+    showToast('Slot information missing. Please go back and re-add items to your cart.', 'error');
+    return;
+  }
+
+  if (!document.getElementById('f_address_id').value) {
+    e.preventDefault();
+    showToast('Please select a delivery address to continue.', 'error');
+    return;
+  }
+
+  // Show loading state
+  var btn = document.getElementById('place-btn');
+  if (btn) {
+    btn.disabled = true;
+    btn.classList.add('btn-loading');
+    btn.innerHTML = '<svg class="animate-spin" style="width:18px;height:18px;margin-right:8px" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>Placing Order...';
   }
 });
 </script>

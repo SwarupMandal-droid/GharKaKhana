@@ -3,71 +3,174 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#FF6B00" />
+  <meta name="description" content="{% block meta_description %}GharKhana — Fresh, home-cooked meals delivered from local kitchens near you.{% endblock %}" />
   <title>{% block title %}GharKhana{% endblock %}</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&family=Syne:wght@800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/main.css' %}">
 
   {% block extra_css %}{% endblock %}
 </head>
 <body>
 
+  <!-- Skip to content (keyboard / screen reader) -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
   {% if user.is_authenticated %}
-  <nav class="navbar">
+  <!-- ─── Main Navigation ─────────────────────────────────────── -->
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
     <div class="nav-inner">
-      <a href="/" class="nav-logo">GharKhana</a>
-      <div class="nav-links">
+
+      <!-- Logo -->
+      <a href="/" class="nav-logo" aria-label="GharKhana home">GharKhana</a>
+
+      <!-- Desktop nav links -->
+      <div class="nav-links" role="list">
         {% if user.role == 'CUSTOMER' %}
-          <a href="/cooks/" class="nav-link {% block nav_home %}{% endblock %}">Home</a>
-          <a href="/orders/" class="nav-link {% block nav_orders %}{% endblock %}">My Orders</a>
-          <a href="/accounts/profile/" class="nav-link {% block nav_profile %}{% endblock %}">Profile</a>
+          <a href="/cooks/"             class="nav-link {% block nav_home %}{% endblock %}"    role="listitem">Home</a>
+          <a href="/orders/"            class="nav-link {% block nav_orders %}{% endblock %}"  role="listitem">My Orders</a>
+          <a href="/accounts/profile/"  class="nav-link {% block nav_profile %}{% endblock %}" role="listitem">Profile</a>
         {% elif user.role == 'COOK' %}
-          <a href="/cook/dashboard/" class="nav-link {% block nav_dash %}{% endblock %}">Dashboard</a>
-          <a href="/cook/menu/" class="nav-link {% block nav_menu %}{% endblock %}">Menu</a>
-          <a href="/cook/orders/" class="nav-link {% block nav_cordrs %}{% endblock %}">Orders</a>
-          <a href="/cook/dishes/" class="nav-link {% block nav_dishes %}{% endblock %}">Dishes</a>
-          <a href="/billing/cook/" class="nav-link {% block nav_billing %}{% endblock %}">Billing</a>
-          <a href="/cook/settings/" class="nav-link {% block nav_settings %}{% endblock %}">Settings</a>
+          <a href="/cook/dashboard/"    class="nav-link {% block nav_dash %}{% endblock %}"     role="listitem">Dashboard</a>
+          <a href="/cook/menu/"         class="nav-link {% block nav_menu %}{% endblock %}"     role="listitem">Menu</a>
+          <a href="/cook/orders/"       class="nav-link {% block nav_cordrs %}{% endblock %}"   role="listitem">Orders</a>
+          <a href="/cook/dishes/"       class="nav-link {% block nav_dishes %}{% endblock %}"   role="listitem">Dishes</a>
+          <a href="/billing/cook/"      class="nav-link {% block nav_billing %}{% endblock %}"  role="listitem">Billing</a>
+          <a href="/cook/settings/"     class="nav-link {% block nav_settings %}{% endblock %}" role="listitem">Settings</a>
         {% elif user.role == 'DELIVERY' %}
-          <a href="/delivery/dashboard/" class="nav-link {% block nav_del %}{% endblock %}">Dashboard</a>
+          <a href="/delivery/dashboard/" class="nav-link {% block nav_del %}{% endblock %}"    role="listitem">Dashboard</a>
         {% elif user.role == 'ADMIN' %}
-          <a href="/admin-panel/"         class="nav-link">Dashboard</a>
-          <a href="/admin-panel/cooks/"   class="nav-link">Cook approvals</a>
-          <a href="/admin-panel/orders/"  class="nav-link">All orders</a>
-          <a href="/billing/admin/"       class="nav-link">Billing</a>
+          <a href="/admin-panel/"        class="nav-link" role="listitem">Dashboard</a>
+          <a href="/admin-panel/cooks/"  class="nav-link" role="listitem">Cook Approvals</a>
+          <a href="/admin-panel/orders/" class="nav-link" role="listitem">All Orders</a>
+          <a href="/billing/admin/"      class="nav-link" role="listitem">Billing</a>
         {% endif %}
       </div>
+
+      <!-- Right actions -->
       <div class="nav-right">
-        <a href="/accounts/notifications/" class="nav-link" style="font-size: 1.2rem; padding: 8px 12px;" title="Notifications">
-          🔔
+        <!-- Notifications bell -->
+        <a href="/accounts/notifications/"
+           class="nav-bell"
+           aria-label="Notifications"
+           title="Notifications">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
         </a>
 
         {% if user.role == 'CUSTOMER' %}
-          <a href="/orders/cart/" class="btn-ghost btn-sm">Cart</a>
+          <!-- Cart link with item count badge -->
+          <a href="/orders/cart/" class="nav-cart-badge btn-ghost btn-sm" aria-label="Your cart" id="nav-cart-link">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+            </svg>
+            Cart
+            <span id="nav-cart-count" class="nav-cart-count" style="display:none;" aria-live="polite" aria-label="items in cart">0</span>
+          </a>
         {% endif %}
-        <a href="/accounts/logout/" class="btn-outline btn-sm">Sign out</a>
+
+        <!-- Sign Out -->
+        <a href="/accounts/logout/"
+           class="btn-outline btn-sm"
+           aria-label="Sign out of your account">Sign out</a>
       </div>
+
+      <!-- Hamburger (mobile) -->
+      <button class="hamburger"
+              id="hamburger-btn"
+              aria-label="Open navigation menu"
+              aria-expanded="false"
+              aria-controls="mobile-nav-drawer">
+        <span class="hamburger-line" aria-hidden="true"></span>
+        <span class="hamburger-line" aria-hidden="true"></span>
+        <span class="hamburger-line" aria-hidden="true"></span>
+      </button>
+
     </div>
   </nav>
+
+  <!-- ─── Mobile Nav Overlay & Drawer ──────────────────────────── -->
+  <div class="mobile-nav-overlay" id="mobile-nav-overlay" role="presentation" aria-hidden="true"></div>
+
+  <div class="mobile-nav-drawer"
+       id="mobile-nav-drawer"
+       role="dialog"
+       aria-modal="true"
+       aria-label="Navigation menu">
+
+    <div class="mobile-nav-header">
+      <span class="mobile-nav-logo" aria-hidden="true">GharKhana</span>
+      <button class="mobile-nav-close"
+              id="mobile-nav-close"
+              aria-label="Close navigation menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <nav class="mobile-nav-links" aria-label="Mobile navigation">
+      {% if user.role == 'CUSTOMER' %}
+        <a href="/cooks/"             class="mobile-nav-link {% block mnav_home %}{% endblock %}">🏠 Home</a>
+        <a href="/orders/"            class="mobile-nav-link {% block mnav_orders %}{% endblock %}">🍱 My Orders</a>
+        <a href="/accounts/profile/"  class="mobile-nav-link">👤 Profile</a>
+        <a href="/orders/cart/"       class="mobile-nav-link">🛒 Cart</a>
+      {% elif user.role == 'COOK' %}
+        <a href="/cook/dashboard/"    class="mobile-nav-link {% block mnav_dash %}{% endblock %}">📊 Dashboard</a>
+        <a href="/cook/menu/"         class="mobile-nav-link">📋 Menu</a>
+        <a href="/cook/orders/"       class="mobile-nav-link">📦 Orders</a>
+        <a href="/cook/dishes/"       class="mobile-nav-link">🍛 Dishes</a>
+        <a href="/billing/cook/"      class="mobile-nav-link">💰 Billing</a>
+        <a href="/cook/settings/"     class="mobile-nav-link">⚙️ Settings</a>
+      {% elif user.role == 'DELIVERY' %}
+        <a href="/delivery/dashboard/" class="mobile-nav-link">🛵 Dashboard</a>
+      {% elif user.role == 'ADMIN' %}
+        <a href="/admin-panel/"        class="mobile-nav-link">📊 Dashboard</a>
+        <a href="/admin-panel/cooks/"  class="mobile-nav-link">👨‍🍳 Cook Approvals</a>
+        <a href="/admin-panel/orders/" class="mobile-nav-link">📦 All Orders</a>
+        <a href="/billing/admin/"      class="mobile-nav-link">💰 Billing</a>
+      {% endif %}
+
+      <a href="/accounts/notifications/" class="mobile-nav-link">🔔 Notifications</a>
+    </nav>
+
+    <div class="mobile-nav-footer">
+      <span style="font-size:0.8rem; color:var(--p-gray-400); font-weight:600; padding: 0 4px;">
+        Signed in as <strong style="color:var(--p-black);">{{ user.name }}</strong>
+      </span>
+      <a href="/accounts/logout/" class="btn-outline btn-full" style="margin-top:4px;">Sign out</a>
+    </div>
+  </div>
+  <!-- ─── End Mobile Nav ────────────────────────────────────────── -->
   {% endif %}
 
+  <!-- ─── Django Messages ───────────────────────────────────────── -->
   {% if messages %}
-  <div class="messages-wrap">
+  <div class="messages-wrap" role="alert" aria-live="polite" aria-atomic="false">
     {% for message in messages %}
-    <div class="message message-{{ message.tags }}">
-      {{ message }}
-      <button class="message-close" onclick="this.parentElement.remove()">×</button>
+    <div class="message message-{{ message.tags }}" role="status">
+      <span>{{ message }}</span>
+      <button class="message-close"
+              onclick="this.parentElement.remove()"
+              aria-label="Dismiss message">×</button>
     </div>
     {% endfor %}
   </div>
   {% endif %}
 
-  <main class="main-content">
+  <!-- ─── Main Content ─────────────────────────────────────────── -->
+  <main class="main-content" id="main-content" tabindex="-1">
     {% block content %}{% endblock %}
   </main>
 
+  <!-- ─── Scripts ──────────────────────────────────────────────── -->
   <script src="{% static 'js/main.js' %}"></script>
   {% block extra_js %}{% endblock %}
 </body>

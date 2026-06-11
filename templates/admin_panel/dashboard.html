@@ -149,13 +149,13 @@
           <table style="width: 100%; border-collapse: separate; border-spacing: 0;">
             <thead style="background: var(--p-gray-100);">
               <tr>
-                <th style="padding: 16px 32px; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--p-gray-500);">Ref</th>
-                <th style="padding: 16px; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--p-gray-500);">Customer Info</th>
-                <th style="padding: 16px; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--p-gray-500);">Kitchen</th>
-                <th style="padding: 16px; text-align: right; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--p-gray-500);">Total Value</th>
-                <th style="padding: 16px; text-align: center; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--p-gray-500);">Payment</th>
-                <th style="padding: 16px; text-align: center; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--p-gray-500);">Fulfillment</th>
-                <th style="padding: 16px 32px; text-align: right; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--p-gray-500);">Datetime</th>
+                <th scope="col" style="padding: 16px 32px; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--p-gray-500);">Ref</th>
+                <th scope="col" style="padding: 16px; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--p-gray-500);">Customer Info</th>
+                <th scope="col" style="padding: 16px; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--p-gray-500);">Kitchen</th>
+                <th scope="col" style="padding: 16px; text-align: right; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--p-gray-500);">Total Value</th>
+                <th scope="col" style="padding: 16px; text-align: center; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--p-gray-500);">Payment</th>
+                <th scope="col" style="padding: 16px; text-align: center; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--p-gray-500);">Fulfillment</th>
+                <th scope="col" style="padding: 16px 32px; text-align: right; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--p-gray-500);">Datetime</th>
               </tr>
             </thead>
             <tbody>
@@ -177,8 +177,7 @@
                 </td>
                 <td style="padding: 20px 32px; text-align: right; font-size: 0.75rem; color: var(--p-gray-500); font-weight: 500;">
                   {{ order.placed_at|date:"d M, H:i" }}
-                </div>
-               </td>
+                </td>
               </tr>
               {% endfor %}
             </tbody>

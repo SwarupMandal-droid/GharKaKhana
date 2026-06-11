@@ -21,6 +21,11 @@ ALLOWED_HOSTS = config(
     cast=Csv(),
 )
 
+# Always allow local dev — prevents DisallowedHost when running runserver locally
+for _local_host in ('127.0.0.1', 'localhost'):
+    if _local_host not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(_local_host)
+
 # Auto-include Railway's public domain so healthchecks and traffic are accepted
 _railway_public_domain = config('RAILWAY_PUBLIC_DOMAIN', default='')
 if _railway_public_domain and _railway_public_domain not in ALLOWED_HOSTS:

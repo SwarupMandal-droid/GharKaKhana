@@ -11,7 +11,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="container mt-12 delivery-premium-body">
+<div class="container delivery-premium-body" style="padding-top: 40px;">
 
   <!-- Premium Hero Header -->
   <div class="p-hero animate-fade">
@@ -95,7 +95,7 @@
           </span>
           {% endif %}
           {% if batch.maps_url %}
-          <a href="{{ batch.maps_url }}" target="_blank" class="p-btn p-btn-orange" style="box-shadow: var(--shadow-orange);">
+          <a href="{{ batch.maps_url }}" target="_blank" rel="noopener noreferrer" class="p-btn p-btn-orange" style="box-shadow: var(--p-shadow);">
             🗺️ Open Full Route
           </a>
           {% endif %}

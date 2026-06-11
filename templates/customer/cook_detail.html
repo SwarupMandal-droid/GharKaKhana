@@ -13,7 +13,7 @@
 <div class="card" style="margin-bottom: 32px; padding: 0; overflow: hidden; border: none; box-shadow: var(--shadow-md); position: relative;">
     <div style="height: 220px; background: linear-gradient(135deg, var(--p-orange) 0%, var(--p-orange-dark) 100%); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;">
       {% if cook.photo %}
-        <img src="{{ cook.photo.url }}" style="width: 100%; height: 100%; object-fit: cover;"/>
+        <img src="{{ cook.photo.url }}" style="width: 100%; height: 100%; object-fit: cover;" alt="{{ cook.kitchen_name }} kitchen" loading="lazy"/>
       {% else %}
         <div style="font-family: 'Syne', sans-serif; font-size: 5rem; font-weight: 800; color: rgba(255, 255, 255, 0.8); user-select: none;">
           {{ cook.kitchen_name|first|upper }}
@@ -61,7 +61,7 @@
           {% endif %}
           
           <div style="display: flex; gap: 12px; margin-top: 24px; justify-content: flex-end;">
-            <a href="tel:{{ cook.phone }}" class="btn-primary" style="display: flex; align-items: center; gap: 12px; border-radius: 100px; padding: 12px 32px;">
+            <a href="tel:{{ cook.phone }}" class="btn-primary" rel="noopener" style="display: flex; align-items: center; gap: 12px; border-radius: 100px; padding: 12px 32px;" aria-label="Call {{ cook.kitchen_name }} on {{ cook.phone }}">
               <span style="font-size: 1.25rem;">📞</span> <span>Call Kitchen</span>
             </a>
           </div>
@@ -159,11 +159,11 @@
     <div style="flex: 1; min-width: 320px;">
 
       <!-- Premium Cart Panel -->
-      <div class="card" style="margin-bottom: 32px; position: sticky; top: 100px; padding: 0; box-shadow: var(--shadow-lg); border: 1px solid var(--p-orange-mid);" id="cart-panel">
+      <div class="card" style="margin-bottom: 32px; position: sticky; top: 88px; padding: 0; box-shadow: var(--shadow-lg); border: 1px solid var(--p-orange-mid);" id="cart-panel" role="complementary" aria-label="Your order summary">
         <div style="padding: 24px; background: var(--p-orange); color: white; border-radius: var(--radius-md) var(--radius-md) 0 0;">
           <div class="flex-between">
             <h3 style="color: white; font-size: 1.25rem;">Your Order</h3>
-            <span id="cart-count" style="font-size: 0.875rem; font-weight: 700; background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 100px;">0 items</span>
+            <span id="cart-count" style="font-size: 0.875rem; font-weight: 700; background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 100px;" aria-live="polite" aria-label="items in cart">0 items</span>
           </div>
         </div>
         
@@ -238,13 +238,31 @@
 </div>
 
 <style>
-.hover-orange:hover {
-  color: var(--p-orange) !important;
-}
-#cart-panel {
-  transition: transform 0.3s ease;
+.hover-orange:hover { color: var(--p-orange) !important; }
+#cart-panel { transition: transform 0.3s ease; }
+
+/* Mobile: stack layout and sticky cart becomes normal flow */
+@media (max-width: 900px) {
+  .grid-2-custom {
+    grid-template-columns: 1fr !important;
+  }
+  #cart-panel {
+    position: relative !important;
+    top: 0 !important;
+    display: none; /* Hidden on mobile — use FAB instead */
+  }
 }
 </style>
+
+<!-- Floating Cart FAB (mobile only) -->
+<a href="/orders/cart/" class="cart-fab" id="cart-fab" style="display:none;" aria-label="Go to cart">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+  </svg>
+  View Cart
+  <span class="cart-fab-count" id="fab-count" aria-live="polite">0</span>
+</a>
 {% endblock %}
 
 {% block extra_js %}
@@ -261,7 +279,7 @@ function addToCart(menuItemId, dishName, price, menuId, slotLabel, slotId) {
   var currentInCart = cartItems[menuItemId] ? cartItems[menuItemId].qty : 0;
 
   if (currentInCart >= initialStock) {
-    alert("Sorry, no more " + dishName + " left!");
+    showToast('Sorry, no more ' + dishName + ' left!', 'error');
     return;
   }
 
@@ -294,9 +312,24 @@ function updateCartUI() {
   var total   = subtotal + fee + (count > 0 ? deliveryCharge : 0);
 
   document.getElementById('cart-count').textContent = count + ' item' + (count !== 1 ? 's' : '');
-  document.getElementById('cart-subtotal').textContent = '₹' + subtotal.toFixed(0);
-  document.getElementById('cart-fee').textContent      = '₹' + fee.toFixed(2);
-  document.getElementById('cart-total').textContent    = '₹' + total.toFixed(0);
+  document.getElementById('cart-subtotal').textContent = '\u20b9' + subtotal.toFixed(0);
+  document.getElementById('cart-fee').textContent      = '\u20b9' + fee.toFixed(2);
+  document.getElementById('cart-total').textContent    = '\u20b9' + total.toFixed(0);
+
+  // Update FAB (mobile)
+  var fab      = document.getElementById('cart-fab');
+  var fabCount = document.getElementById('fab-count');
+  if (fab) {
+    if (count > 0) {
+      fab.style.display = 'flex';
+      if (fabCount) fabCount.textContent = count;
+    } else {
+      fab.style.display = 'none';
+    }
+  }
+
+  // Sync main nav badge
+  if (typeof updateNavCartCount === 'function') updateNavCartCount();
 
   var listEl    = document.getElementById('cart-items-list');
   var summaryEl = document.getElementById('cart-summary');
@@ -357,7 +390,7 @@ function proceedToCheckout() {
   // NEW: Prevent multi-slot/multi-menu orders (Business Rule: 1 Menu/Order)
   var menuIds = [...new Set(keys.map(k => cartItems[k].menuId))];
   if (menuIds.length > 1) {
-    alert("Please only add items from a single menu (e.g., only Lunch OR only Dinner).");
+    showToast('Please only add items from a single menu (Lunch OR Dinner) per order.', 'error');
     return;
   }
 

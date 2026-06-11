@@ -40,28 +40,28 @@
 
       <div class="form-group" style="text-align: left;">
         <label class="form-label">Full Name</label>
-        <input type="text" name="name" class="form-input" placeholder="e.g. Rahul Sharma" autocomplete="name" required />
+        <input type="text" name="name" class="form-input" placeholder="e.g. Rahul Sharma" autocomplete="name" aria-required="true" required />
       </div>
 
       <div class="grid-2" style="gap: 20px;">
         <div class="form-group" style="text-align: left;">
           <label class="form-label">Email address</label>
-          <input type="email" name="email" class="form-input" placeholder="name@domain.com" autocomplete="email" required />
+          <input type="email" name="email" class="form-input" placeholder="name@domain.com" autocomplete="email" aria-required="true" required />
         </div>
         <div class="form-group" style="text-align: left;">
           <label class="form-label">Phone number</label>
-          <input type="tel" name="phone" class="form-input" placeholder="9876543210" autocomplete="tel" required />
+          <input type="tel" name="phone" class="form-input" placeholder="9876543210" autocomplete="tel" inputmode="numeric" pattern="[0-9]{10}" aria-required="true" required />
         </div>
       </div>
 
       <div class="grid-2" style="gap: 20px;">
         <div class="form-group" style="text-align: left; margin:0">
           <label class="form-label">Password</label>
-          <input type="password" name="password" class="form-input" placeholder="••••••••" autocomplete="new-password" required />
+          <input type="password" name="password" id="reg-password" class="form-input" placeholder="••••••••" autocomplete="new-password" aria-required="true" required />
         </div>
         <div class="form-group" style="text-align: left; margin:0">
           <label class="form-label">Confirm</label>
-          <input type="password" name="confirm_password" class="form-input" placeholder="••••••••" autocomplete="new-password" required />
+          <input type="password" name="confirm_password" id="reg-confirm-password" class="form-input" placeholder="••••••••" autocomplete="new-password" aria-required="true" required />
         </div>
       </div>
 
@@ -105,6 +105,25 @@ document.querySelectorAll('.role-radio').forEach(function(radio) {
 });
 // Initial trigger
 document.querySelector('.role-radio[value="CUSTOMER"]').dispatchEvent(new Event('change'));
+
+// Client-side password match validation
+document.querySelector('form').addEventListener('submit', function(e) {
+  var pw1 = document.getElementById('reg-password');
+  var pw2 = document.getElementById('reg-confirm-password');
+  if (pw1 && pw2 && pw1.value !== pw2.value) {
+    e.preventDefault();
+    showToast('Passwords do not match. Please check and try again.', 'error');
+    pw2.classList.add('error');
+    pw2.focus();
+    return;
+  }
+  if (pw1 && pw1.value.length < 8) {
+    e.preventDefault();
+    showToast('Password must be at least 8 characters long.', 'error');
+    pw1.classList.add('error');
+    pw1.focus();
+  }
+});
 </script>
 
 {% endblock %}

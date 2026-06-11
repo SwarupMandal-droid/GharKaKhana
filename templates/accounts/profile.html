@@ -67,8 +67,21 @@
               </div>
               <p class="text-sm text-muted" style="line-height: 1.6; margin-bottom: 20px;">{{ addr.address }}</p>
               <div style="display: flex; gap: 12px;">
-                <a href="{% url 'accounts:edit_address' addr.pk %}" class="btn-ghost btn-sm" style="font-size: 0.75rem; font-weight: 700; padding: 8px 16px;">Edit</a>
-                <button class="btn-ghost btn-sm" style="font-size: 0.75rem; font-weight: 700; padding: 8px 16px; color: var(--p-error);">Delete</button>
+                <a href="{% url 'accounts:edit_address' addr.pk %}"
+                   class="btn-ghost btn-sm"
+                   style="font-size: 0.75rem; font-weight: 700; padding: 8px 16px;">Edit</a>
+                <form method="post"
+                      action="{% url 'accounts:delete_address' addr.pk %}"
+                      style="display: inline;"
+                      onsubmit="return confirm('Delete address \'{{ addr.label }}\'? This cannot be undone.');">
+                  {% csrf_token %}
+                  <button type="submit"
+                          class="btn-danger btn-sm"
+                          style="font-size: 0.75rem; font-weight: 700; padding: 8px 16px;"
+                          aria-label="Delete address: {{ addr.label }}">
+                    Delete
+                  </button>
+                </form>
               </div>
             </div>
           {% endfor %}
