@@ -21,6 +21,16 @@ ALLOWED_HOSTS = config(
     cast=Csv(),
 )
 
+# Auto-include Railway's public domain so healthchecks and traffic are accepted
+_railway_public_domain = config('RAILWAY_PUBLIC_DOMAIN', default='')
+if _railway_public_domain and _railway_public_domain not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(_railway_public_domain)
+
+# Railway also uses the private networking hostname
+_railway_private_domain = config('RAILWAY_PRIVATE_DOMAIN', default='')
+if _railway_private_domain and _railway_private_domain not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(_railway_private_domain)
+
 # ─── Applications ─────────────────────────────────────────────────────────────
 INSTALLED_APPS = [
     'django.contrib.admin',
