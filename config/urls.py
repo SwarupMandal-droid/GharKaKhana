@@ -22,7 +22,7 @@ urlpatterns = [
     path('delivery/', include('delivery.urls',       namespace='delivery')),
     path('billing/',  include('billing.urls',        namespace='billing')),
     path('admin-panel/', include('admin_panel.urls', namespace='admin_panel')),
-    path('/',          landing_page, name='landing'),
+    path('',          landing_page, name='landing'),
 ]
 
 # In development: serve static and media files via Django
