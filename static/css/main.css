@@ -199,8 +199,8 @@ p { color: var(--p-gray-700); }
 /* ─── Navbar ──────────────────────────────────────────────────── */
 .navbar {
   background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--p-border);
   height: 68px;
   position: sticky;
@@ -347,8 +347,8 @@ p { color: var(--p-gray-700); }
   inset: 0;
   background: rgba(15, 15, 15, 0.5);
   z-index: 1100;
-  backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
 }
 
 .mobile-nav-overlay.open { display: block; }
@@ -648,8 +648,8 @@ p { color: var(--p-gray-700); }
   color: var(--p-black);
   transition: all 0.2s ease;
   min-height: 48px; /* Touch friendly */
-  appearance: none;
   -webkit-appearance: none;
+  appearance: none;
 }
 
 .form-input::placeholder { color: var(--p-gray-300); }
@@ -1025,8 +1025,8 @@ p { color: var(--p-gray-700); }
 
 .btn-glass {
   background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.3);
   color: white;
   width: 48px;
@@ -1137,6 +1137,7 @@ p { color: var(--p-gray-700); }
   font-weight: 800;
   color: rgba(255,255,255,0.8);
   pointer-events: none;
+  -webkit-user-select: none;
   user-select: none;
 }
 

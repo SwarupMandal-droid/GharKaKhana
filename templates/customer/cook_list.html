@@ -101,7 +101,7 @@
             <div class="filter-chips-group">
               
               <div class="filter-chip-wrapper">
-                <select name="food_type" class="hidden-select" onchange="this.form.submit()">
+                <select name="food_type" class="hidden-select" title="Food Type" onchange="this.form.submit()">
                   <option value="">Diet Type</option>
                   <option value="VEG" {% if food_type == 'VEG' %}selected{% endif %}>Veg</option>
                   <option value="NONVEG" {% if food_type == 'NONVEG' %}selected{% endif %}>Non-Veg</option>
@@ -114,7 +114,7 @@
               </div>
 
               <div class="filter-chip-wrapper">
-                <select name="meal_type" class="hidden-select" onchange="this.form.submit()">
+                <select name="meal_type" class="hidden-select" title="Meal Type" onchange="this.form.submit()">
                   <option value="">All Meals</option>
                   <option value="LUNCH" {% if meal_type == 'LUNCH' %}selected{% endif %}>Lunch</option>
                   <option value="DINNER" {% if meal_type == 'DINNER' %}selected{% endif %}>Dinner</option>
@@ -127,7 +127,7 @@
               </div>
 
               <div class="filter-chip-wrapper">
-                <select name="max_dist" class="hidden-select" onchange="this.form.submit()">
+                <select name="max_dist" class="hidden-select" title="Maximum Distance" onchange="this.form.submit()">
                   <option value="">Distance</option>
                   <option value="1" {% if max_dist == '1' %}selected{% endif %}>Under 1 km</option>
                   <option value="2" {% if max_dist == '2' %}selected{% endif %}>Under 2 km</option>

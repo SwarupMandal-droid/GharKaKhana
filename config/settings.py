@@ -50,8 +50,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # Third-party
-    'cloudinary',
-    'cloudinary_storage',
+    'storages',
 
     # Our apps
     'accounts',
@@ -111,16 +110,12 @@ if _DATABASE_URL:
 else:
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': config('DB_NAME'),
-            'USER': config('DB_USER'),
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': config('DB_NAME', default='postgres'),
+            'USER': config('DB_USER', default='postgres'),
             'PASSWORD': config('DB_PASSWORD'),
             'HOST': config('DB_HOST', default='localhost'),
-            'PORT': config('DB_PORT', default='3306'),
-            'OPTIONS': {
-                'charset': 'utf8mb4',
-                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-            },
+            'PORT': config('DB_PORT', default='5432'),
         }
     }
 
@@ -146,24 +141,34 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 # WhiteNoise — compressed + cached static files in production
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# ─── Media / Cloudinary ───────────────────────────────────────────────────────
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME', default=''),
-    'API_KEY':    config('CLOUDINARY_API_KEY',    default=''),
-    'API_SECRET': config('CLOUDINARY_API_SECRET', default=''),
-}
+# ─── Media / Supabase Storage (S3-compatible) ────────────────────────────────
+_SUPABASE_URL        = config('SUPABASE_URL', default='')          # https://<ref>.supabase.co
+_SUPABASE_KEY        = config('SUPABASE_S3_ACCESS_KEY_ID', default='')
+_SUPABASE_SECRET     = config('SUPABASE_S3_SECRET_ACCESS_KEY', default='')
+_SUPABASE_BUCKET     = config('SUPABASE_STORAGE_BUCKET', default='media')
+_SUPABASE_REGION     = config('SUPABASE_S3_REGION', default='ap-south-1')
 
-# Use Cloudinary for media only when credentials are provided
-if all([
-    config('CLOUDINARY_CLOUD_NAME', default=''),
-    config('CLOUDINARY_API_KEY',    default=''),
-    config('CLOUDINARY_API_SECRET', default=''),
-]):
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-    MEDIA_URL = '/media/'  # Cloudinary rewrites this automatically
+if all([_SUPABASE_URL, _SUPABASE_KEY, _SUPABASE_SECRET]):
+    # Use Supabase S3-compatible storage
+    DEFAULT_FILE_STORAGE  = 'storages.backends.s3boto3.S3Boto3Storage'
+
+    AWS_ACCESS_KEY_ID       = _SUPABASE_KEY
+    AWS_SECRET_ACCESS_KEY   = _SUPABASE_SECRET
+    AWS_STORAGE_BUCKET_NAME = _SUPABASE_BUCKET
+    AWS_S3_REGION_NAME      = _SUPABASE_REGION
+    AWS_S3_ENDPOINT_URL     = f'{_SUPABASE_URL}/storage/v1/s3'
+
+    # Files are publicly readable via Supabase CDN URL
+    AWS_S3_CUSTOM_DOMAIN    = f'{_SUPABASE_URL.replace("https://", "")}/storage/v1/object/public/{_SUPABASE_BUCKET}'
+    MEDIA_URL               = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
+
+    AWS_DEFAULT_ACL         = 'public-read'
+    AWS_QUERYSTRING_AUTH    = False   # Use public URLs, not signed URLs
+    AWS_S3_FILE_OVERWRITE   = False   # Keep unique filenames
 else:
+    # Local fallback — store files on disk
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
-    MEDIA_URL = '/media/'
+    MEDIA_URL  = '/media/'
     MEDIA_ROOT = BASE_DIR / 'media'
 
 # ─── Auth ─────────────────────────────────────────────────────────────────────
