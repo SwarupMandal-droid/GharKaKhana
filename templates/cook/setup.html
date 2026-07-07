@@ -1,270 +1,553 @@
 {% extends 'base.html' %}
 {% block title %}Kitchen Setup — GharKhana{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+  /* ── Setup page wrapper ── */
+  .setup-page {
+    min-height: calc(100vh - 72px);
+    background: linear-gradient(135deg, #fff8f3 0%, #fff 60%, #f0f4ff 100%);
+    padding: 48px 16px 80px;
+  }
+  .setup-inner { max-width: 820px; margin: 0 auto; }
+
+  /* ── Stepper ── */
+  .stepper {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 56px;
+    position: relative;
+  }
+  .stepper-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    position: relative;
+    z-index: 2;
+  }
+  .stepper-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 22px;
+    left: 55%;
+    right: -55%;
+    height: 3px;
+    background: var(--p-gray-100, #f0f0f0);
+    z-index: 1;
+  }
+  .stepper-item.done::after { background: var(--p-black, #111); }
+  .step-dot {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; font-weight: 900;
+    position: relative; z-index: 2;
+    transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+    border: 4px solid #fff;
+    background: #f0f0f0; color: #aaa;
+    box-shadow: 0 0 0 2px #f0f0f0;
+  }
+  .step-dot.active {
+    background: var(--p-black, #111); color: #fff;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+    transform: scale(1.12);
+  }
+  .step-dot.done {
+    background: var(--p-orange, #ff6b00); color: #fff;
+    box-shadow: 0 8px 20px rgba(255,107,0,0.28);
+  }
+  .step-label {
+    margin-top: 10px;
+    font-size: 0.72rem; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.12em;
+    color: #aaa; transition: color 0.3s; text-align: center;
+  }
+  .step-label.active { color: var(--p-black, #111); }
+  .step-label.done   { color: var(--p-orange, #ff6b00); }
+
+  /* ── Card ── */
+  .setup-card {
+    background: #fff;
+    border-radius: 28px;
+    padding: 48px 52px 52px;
+    box-shadow: 0 8px 48px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04);
+    border: 1.5px solid rgba(0,0,0,0.04);
+    animation: fadeUp 0.4s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(16px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+  .setup-card-header {
+    margin-bottom: 36px;
+    padding-bottom: 28px;
+    border-bottom: 2px solid #f4f4f4;
+  }
+  .setup-card-header h2 { font-size:2rem; font-weight:950; letter-spacing:-1px; margin:0 0 8px; }
+  .setup-card-header p  { margin:0; color:#888; font-size:1rem; font-weight:500; }
+  .text-orange { color: var(--p-orange, #ff6b00); }
+
+  /* ── Fields ── */
+  .field-group { display:flex; flex-direction:column; gap:28px; }
+  .field-row   { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+  .field       { display:flex; flex-direction:column; gap:8px; }
+  .field label {
+    font-size:0.72rem; font-weight:800;
+    text-transform:uppercase; letter-spacing:0.1em; color:#888;
+  }
+  .field input,.field textarea,.field select {
+    padding:14px 18px;
+    background:#f7f7f7;
+    border:2px solid transparent;
+    border-radius:14px;
+    font-size:0.9375rem; font-weight:600; color:#111;
+    transition:all 0.2s ease;
+    width:100%; box-sizing:border-box;
+    font-family:inherit;
+  }
+  .field input:focus,.field textarea:focus,.field select:focus {
+    background:#fff;
+    border-color:var(--p-orange,#ff6b00);
+    box-shadow:0 0 0 5px rgba(255,107,0,0.1);
+    outline:none;
+  }
+  .field textarea { height:140px; resize:vertical; }
+  .field input[readonly] { background:#efefef; color:#888; cursor:default; }
+
+  /* ── Map ── */
+  .map-wrap {
+    border-radius:18px; overflow:hidden;
+    border:2px solid #eee; height:360px;
+    box-shadow:0 4px 16px rgba(0,0,0,0.07);
+  }
+  #setup-map { height:100%; width:100%; }
+  .detect-btn {
+    display:inline-flex; align-items:center; gap:6px;
+    background:rgba(255,107,0,0.1); color:var(--p-orange,#ff6b00);
+    border:none; padding:8px 16px; border-radius:10px;
+    font-size:0.8125rem; font-weight:800; cursor:pointer;
+    transition:all 0.2s;
+  }
+  .detect-btn:hover { background:var(--p-orange,#ff6b00); color:#fff; }
+
+  /* ── Photo upload ── */
+  .photo-zone {
+    border:2.5px dashed #ddd; border-radius:20px;
+    padding:36px 24px;
+    display:flex; flex-direction:column; align-items:center;
+    gap:14px; cursor:pointer;
+    transition:all 0.25s ease;
+    background:#f9f9f9; text-align:center;
+  }
+  .photo-zone:hover { border-color:var(--p-orange,#ff6b00); background:rgba(255,107,0,0.03); }
+  .photo-icon-wrap {
+    width:72px; height:72px; border-radius:20px;
+    background:rgba(255,107,0,0.1);
+    display:flex; align-items:center; justify-content:center;
+    font-size:2rem;
+    transition:transform 0.2s;
+    background-size:cover; background-position:center;
+    overflow:hidden;
+  }
+  .photo-zone:hover .photo-icon-wrap { transform:scale(1.08); }
+
+  /* ── Slot rows ── */
+  .slot-row {
+    display:grid; grid-template-columns:2fr 1fr 1fr auto;
+    gap:16px; align-items:end;
+    padding:20px 24px;
+    background:#f7f7f7;
+    border:1.5px solid #eee; border-radius:16px;
+    transition:all 0.2s;
+  }
+  .slot-row:hover { border-color:#111; background:#fff; }
+  .slot-field { display:flex; flex-direction:column; gap:6px; }
+  .slot-field label { font-size:0.65rem; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; color:#aaa; }
+  .slot-field input {
+    padding:12px 14px;
+    background:#fff; border:1.5px solid #e5e5e5; border-radius:12px;
+    font-size:0.9rem; font-weight:600; color:#111;
+    font-family:inherit; width:100%; box-sizing:border-box;
+  }
+  .slot-field input:focus { border-color:var(--p-orange,#ff6b00); outline:none; }
+  .slot-remove {
+    width:36px; height:36px; border-radius:10px;
+    border:none; background:#fee2e2; color:#dc2626;
+    cursor:pointer; font-size:1.25rem;
+    display:flex; align-items:center; justify-content:center;
+    transition:all 0.2s; align-self:flex-end;
+  }
+  .slot-remove:hover { background:#dc2626; color:#fff; }
+
+  /* ── Footer / Buttons ── */
+  .form-footer {
+    margin-top:40px; padding-top:32px;
+    border-top:2px solid #f4f4f4;
+    display:flex; align-items:center;
+    justify-content:space-between; gap:16px;
+  }
+  .btn-next {
+    display:inline-flex; align-items:center; gap:10px;
+    background:var(--p-black,#111); color:#fff;
+    border:none; padding:16px 36px; border-radius:16px;
+    font-size:1rem; font-weight:800; cursor:pointer;
+    transition:all 0.2s ease;
+    box-shadow:0 8px 24px rgba(0,0,0,0.15);
+  }
+  .btn-next:hover {
+    background:var(--p-orange,#ff6b00);
+    box-shadow:0 8px 24px rgba(255,107,0,0.3);
+    transform:translateY(-2px);
+  }
+  .btn-next svg { transition:transform 0.2s; }
+  .btn-next:hover svg { transform:translateX(4px); }
+  .btn-back {
+    display:inline-flex; align-items:center; gap:8px;
+    background:transparent; color:#888;
+    border:2px solid #eee; padding:14px 24px; border-radius:16px;
+    font-size:0.9375rem; font-weight:700; text-decoration:none;
+    transition:all 0.2s;
+  }
+  .btn-back:hover { border-color:#888; color:#111; background:#f7f7f7; }
+  .btn-submit {
+    display:inline-flex; align-items:center; gap:10px;
+    background:var(--p-orange,#ff6b00); color:#fff;
+    border:none; padding:18px 44px; border-radius:16px;
+    font-size:1.05rem; font-weight:900; cursor:pointer;
+    transition:all 0.2s ease;
+    box-shadow:0 8px 28px rgba(255,107,0,0.35);
+  }
+  .btn-submit:hover {
+    background:#e05a00;
+    transform:translateY(-2px);
+    box-shadow:0 12px 36px rgba(255,107,0,0.4);
+  }
+
+  /* ── Review ── */
+  .review-grid {
+    display:grid; grid-template-columns:1fr 1fr;
+    gap:28px; padding:36px;
+    background:#f8f8f8; border-radius:20px;
+    border:1.5px solid #eee;
+  }
+  .review-item h4 {
+    font-size:0.65rem; text-transform:uppercase;
+    letter-spacing:0.18em; color:#aaa;
+    margin:0 0 8px; font-weight:800;
+  }
+  .review-item p { font-weight:800; font-size:1.1rem; color:#111; margin:0; }
+  .review-item.full { grid-column:1/-1; }
+  .review-item p.sm { font-weight:600; font-size:0.9375rem; color:#555; }
+
+  /* ── Done ── */
+  .done-wrap {
+    text-align:center; padding:72px 40px;
+    animation:fadeUp 0.5s ease both;
+  }
+  .done-emoji { font-size:7rem; margin-bottom:28px; display:block; filter:drop-shadow(0 20px 40px rgba(0,0,0,0.08)); }
+  .done-wrap h1 { font-size:3rem; font-weight:950; letter-spacing:-2px; margin:0 0 16px; }
+  .done-wrap .subtitle { max-width:520px; margin:0 auto 48px; font-size:1.05rem; line-height:1.8; color:#888; font-weight:500; }
+  .next-steps-card {
+    background:#111; border-radius:24px;
+    padding:40px; text-align:left; margin-bottom:36px;
+    position:relative; overflow:hidden;
+  }
+  .next-steps-card h3 { color:#fff; font-size:1.15rem; font-weight:900; display:flex; align-items:center; gap:12px; margin:0 0 28px; }
+  .ns-item { display:flex; gap:18px; align-items:flex-start; margin-bottom:20px; }
+  .ns-num {
+    width:30px; height:30px; border-radius:8px;
+    background:var(--p-orange,#ff6b00); color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    font-size:0.875rem; font-weight:900; flex-shrink:0;
+  }
+  .ns-item p { margin:0; color:rgba(255,255,255,0.6); font-weight:600; line-height:1.6; }
+  .ns-item strong { color:#fff; }
+  .ghost { position:absolute; right:-20px; bottom:-20px; font-size:11rem; opacity:0.05; }
+
+  /* ── Responsive ── */
+  @media (max-width:640px) {
+    .setup-card { padding:24px 18px 28px; }
+    .field-row  { grid-template-columns:1fr; }
+    .review-grid { grid-template-columns:1fr; }
+    .slot-row { grid-template-columns:1fr 1fr; }
+    .slot-row .slot-field:first-child { grid-column:1/-1; }
+    .form-footer { flex-direction:column-reverse; align-items:stretch; }
+    .btn-next,.btn-submit { justify-content:center; }
+    .done-wrap h1 { font-size:2rem; }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container animate-fade" style="max-width: 900px;">
+<div class="setup-page">
+<div class="setup-inner">
 
   {% if step == 'done' %}
-  <!-- Success State -->
-  <div style="text-align: center; padding: 120px 20px;">
-    <div style="font-size: 6.5rem; margin-bottom: 48px; filter: drop-shadow(0 20px 40px rgba(0,0,0,0.1));">🥂</div>
-    <h1 style="font-size: 3.5rem; margin-bottom: 24px; font-weight: 950; letter-spacing: -2px;">Application <span class="text-orange">Received!</span></h1>
-    <p class="text-muted" style="font-size: 1.25rem; line-height: 1.8; max-width: 580px; margin: 0 auto 56px; font-weight: 500;">
-      Your kitchen profile is now in our curation queue. Our team will verify your details and activate your kitchen shortly.
-    </p>
-    
-    <div class="card" style="background: var(--p-black); color: white; border: none; margin-bottom: 56px; text-align: left; padding: 48px; box-shadow: var(--shadow-xl); border-radius: 24px; position: relative; overflow: hidden;">
-      <div style="position: relative; z-index: 2;">
-        <h3 style="color: white; margin-bottom: 32px; font-size: 1.5rem; display: flex; align-items: center; gap: 16px; font-weight: 900;">
-          <span style="color: var(--p-orange); font-size: 2rem;">✦</span> Next Steps
-        </h3>
-        <div style="display: flex; flex-direction: column; gap: 24px; font-size: 1.05rem;">
-          <div style="display: flex; gap: 20px; align-items: flex-start;">
-            <div style="width: 32px; height: 32px; background: var(--p-orange); color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 0.9375rem; font-weight: 900; flex-shrink: 0;">1</div>
-            <p style="margin:0; color: var(--p-gray-400); font-weight: 600;"><strong style="color: white;">Team Review:</strong> We'll manually verify your kitchen location and setup.</p>
-          </div>
-          <div style="display: flex; gap: 20px; align-items: flex-start;">
-            <div style="width: 32px; height: 32px; background: var(--p-orange); color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 0.9375rem; font-weight: 900; flex-shrink: 0;">2</div>
-            <p style="margin:0; color: var(--p-gray-400); font-weight: 600;"><strong style="color: white;">Activation:</strong> Look out for an email and push notification within 24h.</p>
-          </div>
-          <div style="display: flex; gap: 20px; align-items: flex-start;">
-            <div style="width: 32px; height: 32px; background: var(--p-orange); color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 0.9375rem; font-weight: 900; flex-shrink: 0;">3</div>
-            <p style="margin:0; color: var(--p-gray-400); font-weight: 600;"><strong style="color: white;">First Dish:</strong> Start drafting your menu items while you wait!</p>
-          </div>
+  <!-- ══ DONE ══ -->
+  <div class="setup-card">
+    <div class="done-wrap">
+      <span class="done-emoji">🥂</span>
+      <h1>Application <span class="text-orange">Received!</span></h1>
+      <p class="subtitle">Your kitchen profile is now in our curation queue. Our team will verify your details and activate your kitchen within 24 hours.</p>
+      <div class="next-steps-card">
+        <h3><span style="color:var(--p-orange,#ff6b00);font-size:1.4rem;">✦</span> What happens next</h3>
+        <div class="ns-item">
+          <div class="ns-num">1</div>
+          <p><strong>Team Review:</strong> We'll manually verify your kitchen location and details.</p>
         </div>
+        <div class="ns-item">
+          <div class="ns-num">2</div>
+          <p><strong>Activation:</strong> You'll get an email and notification within 24 hours.</p>
+        </div>
+        <div class="ns-item" style="margin-bottom:0">
+          <div class="ns-num">3</div>
+          <p><strong>First Dish:</strong> Start drafting your menu items while you wait!</p>
+        </div>
+        <div class="ghost">👨‍🍳</div>
       </div>
-      <div style="position: absolute; right: -30px; bottom: -30px; font-size: 12rem; opacity: 0.05; transform: rotate(-10deg);">👨‍🍳</div>
+      <a href="/cook/dashboard/" class="btn-submit" style="font-size:1.1rem;padding:20px 52px;">
+        Go to Dashboard
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+      </a>
     </div>
-    
-    <a href="/cook/dashboard/" class="btn-primary" style="padding: 20px 80px; font-size: 1.25rem; font-weight: 900; box-shadow: var(--shadow-orange); border-radius: 20px;">Launch Dashboard</a>
   </div>
 
   {% else %}
 
-  <!-- Premium Stepper -->
-  <div style="margin-bottom: 72px; padding-top: 56px;">
-    <div style="display: flex; align-items: center; gap: 0; margin-bottom: 24px; position: relative;">
-      <div style="position: absolute; top: 22px; left: 10%; right: 10%; height: 3px; background: var(--p-gray-100); z-index: 1;"></div>
-      <div style="position: absolute; top: 22px; left: 10%; width: {% if step == 1 %}0%{% elif step == 2 %}40%{% else %}80%{% endif %}; height: 3px; background: var(--p-black); z-index: 1; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);"></div>
-      
-      {% for i in "123" %}
-      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; position: relative; z-index: 2;">
-        <div class="step-circle {% if forloop.counter <= step %}active{% endif %}">
-          {% if forloop.counter < step %}✓{% else %}{{ forloop.counter }}{% endif %}
-        </div>
+  <!-- ══ STEPPER ══ -->
+  <div class="stepper">
+    {% for i in "123" %}{% with n=forloop.counter %}
+    <div class="stepper-item {% if n < step %}done{% endif %}">
+      <div class="step-dot {% if n < step %}done{% elif n == step %}active{% endif %}">
+        {% if n < step %}✓{% else %}{{ n }}{% endif %}
       </div>
-      {% endfor %}
+      <span class="step-label {% if n < step %}done{% elif n == step %}active{% endif %}">
+        {% if n == 1 %}Identity{% elif n == 2 %}Operations{% else %}Review{% endif %}
+      </span>
     </div>
-    <div style="display: flex; justify-content: space-between; font-size: 0.8125rem; color: var(--p-gray-400); font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em; padding: 0 40px;">
-      <span style="{% if step == 1 %}color: var(--p-black);{% endif %}">Identity</span>
-      <span style="{% if step == 2 %}color: var(--p-black);{% endif %}">Operations</span>
-      <span style="{% if step == 3 %}color: var(--p-black);{% endif %}">Review</span>
-    </div>
+    {% endwith %}{% endfor %}
   </div>
 
-  {% if messages %}
-    {% for message in messages %}
-    <div class="message message-{{ message.tags }}" style="margin-bottom: 40px; border-radius: 16px;">
-      {{ message }}
-    </div>
-    {% endfor %}
-  {% endif %}
+  <!-- Messages -->
+  {% for message in messages %}
+  <div class="message message-{{ message.tags }}" style="margin-bottom:24px;border-radius:14px;">{{ message }}</div>
+  {% endfor %}
 
-  <!-- Step 1 — Kitchen details -->
+  <!-- ══════════ STEP 1 ══════════ -->
   {% if step == 1 %}
-  <div class="card" style="padding: 56px; border: none; box-shadow: var(--shadow-xl); border-radius: 32px;">
-    <div style="margin-bottom: 48px;">
-      <h2 style="font-size: 2.25rem; margin-bottom: 12px; font-weight: 950; letter-spacing: -1px;">Kitchen <span class="text-orange">Profile</span></h2>
-      <p class="text-muted" style="font-size: 1.1rem; font-weight: 500;">Define your culinary presence and location.</p>
+  <div class="setup-card">
+    <div class="setup-card-header">
+      <h2>Kitchen <span class="text-orange">Profile</span></h2>
+      <p>Define your culinary identity, business contact, and exact kitchen location.</p>
     </div>
 
     <form method="post" enctype="multipart/form-data">
       {% csrf_token %}
       <input type="hidden" name="step" value="1"/>
+      <div class="field-group">
 
-      <div style="display: flex; flex-direction: column; gap: 32px;">
-        <div class="form-group">
-          <label class="form-label" style="font-weight: 800; font-size: 0.8125rem;">Kitchen Brand Name *</label>
-          <input type="text" name="kitchen_name" class="form-input-modern" placeholder="e.g. Artisanal Bengali Kitchen" required/>
+        <div class="field">
+          <label>Kitchen Brand Name <span style="color:var(--p-orange,#ff6b00)">*</span></label>
+          <input type="text" name="kitchen_name" placeholder="e.g. Artisanal Bengali Kitchen" required autocomplete="off"/>
         </div>
 
-        <div class="form-group">
-          <label class="form-label" style="font-weight: 800; font-size: 0.8125rem;">The Chef's Story</label>
-          <textarea name="bio" class="form-textarea-modern" style="height: 160px;" placeholder="Tell us about your culinary background..."></textarea>
+        <div class="field">
+          <label>The Chef's Story</label>
+          <textarea name="bio" placeholder="Tell customers about your culinary background, specialties, and what makes your food special…"></textarea>
         </div>
 
-        <div class="grid-2" style="gap: 32px;">
-          <div class="form-group">
-            <label class="form-label" style="font-weight: 800; font-size: 0.8125rem;">Business Phone *</label>
-            <input type="tel" name="phone" class="form-input-modern" placeholder="+91 00000 00000" required/>
+        <div class="field-row">
+          <div class="field">
+            <label>Business Phone <span style="color:var(--p-orange,#ff6b00)">*</span></label>
+            <input type="tel" name="phone" placeholder="+91 98765 43210" required/>
           </div>
-          <div class="form-group">
-            <label class="form-label" style="font-weight: 800; font-size: 0.8125rem;">Cuisine Specialities</label>
-            <input type="text" name="cuisine_tags" class="form-input-modern" placeholder="Bengali, Mughlai, Home-style"/>
+          <div class="field">
+            <label>Cuisine Specialities</label>
+            <input type="text" name="cuisine_tags" placeholder="Bengali, Mughlai, Home-style"/>
           </div>
         </div>
 
-        <div class="form-group">
-          <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 16px;">
-            <label class="form-label" style="margin: 0; font-weight: 800; font-size: 0.8125rem;">Kitchen Location *</label>
-            <button type="button" onclick="getLocation()" class="btn-ghost" style="font-size: 0.75rem; font-weight: 800; color: var(--p-orange); background: var(--p-orange-light); padding: 8px 16px; border-radius: 10px; display: flex; align-items: center; gap: 6px;">
-              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-              Auto-detect Location
+        <div class="field">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <label style="margin:0;">Kitchen Location <span style="color:var(--p-orange,#ff6b00)">*</span></label>
+            <button type="button" onclick="getLocation()" class="detect-btn" id="detect-btn">
+              <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              Auto-detect
             </button>
           </div>
-          <div id="setup-map" style="height: 400px; border-radius: 24px; border: 2.5px solid var(--p-border); overflow: hidden; margin-bottom: 24px; box-shadow: var(--shadow-sm);"></div>
-          
-          <div class="form-group">
-            <label class="form-label" style="font-weight: 800; font-size: 0.8125rem; color: var(--p-gray-400);">Verified Address</label>
-            <input type="text" name="address" id="setup-address" class="form-input-modern" style="background: var(--p-gray-50); font-weight: 600;" placeholder="Select on map..." required readonly/>
-          </div>
+          <div class="map-wrap"><div id="setup-map"></div></div>
+          <p style="margin:10px 0 0;font-size:0.8rem;color:#aaa;font-weight:600;">Click the map to pin your kitchen, or use auto-detect.</p>
         </div>
 
-        <input type="hidden" name="latitude" id="setup-lat"/>
+        <div class="field">
+          <label>Verified Address <span style="color:var(--p-orange,#ff6b00)">*</span></label>
+          <input type="text" name="address" id="setup-address" placeholder="Pin your location on the map above…" required readonly/>
+        </div>
+
+        <input type="hidden" name="latitude"  id="setup-lat"/>
         <input type="hidden" name="longitude" id="setup-lng"/>
 
-            <div class="form-group" style="margin-top: 32px;">
-              <button type="button" onclick="getLocation()" class="location-btn-premium" style="width: 100%; height: 64px; justify-content: center; font-size: 1rem; border-radius: 20px; box-shadow: var(--shadow-orange);">
-                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" style="margin-right: 12px;">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                </svg>
-                Use My Current Location
-              </button>
-              <p class="text-xs text-muted" style="margin-top: 12px; text-align: center; font-weight: 700;">Detection happens securely via your browser.</p>
-            </div>
+      </div>
+
+      <div class="form-footer">
+        <span style="font-size:0.8rem;color:#aaa;font-weight:600;">Step 1 of 3</span>
+        <button type="submit" class="btn-next">
+          Continue to Operations
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+        </button>
       </div>
     </form>
   </div>
+  {% endif %}
 
-  {% elif step == 2 %}
-  <!-- Step 2 — Capacity & Slots -->
-  <div class="card" style="padding: 56px; border: none; box-shadow: var(--shadow-xl); border-radius: 32px;">
-    <div style="margin-bottom: 48px;">
-      <h2 style="font-size: 2.25rem; margin-bottom: 12px; font-weight: 950; letter-spacing: -1px;">Operations & <span class="text-orange">Flow</span></h2>
-      <p class="text-muted" style="font-size: 1.1rem; font-weight: 500;">Set your working limits and delivery windows.</p>
+  <!-- ══════════ STEP 2 ══════════ -->
+  {% if step == 2 %}
+  <div class="setup-card">
+    <div class="setup-card-header">
+      <h2>Operations <span class="text-orange">&amp; Flow</span></h2>
+      <p>Set your daily capacity, upload a photo, and create delivery time windows.</p>
     </div>
 
     <form method="post" enctype="multipart/form-data">
       {% csrf_token %}
       <input type="hidden" name="step" value="2"/>
+      <div class="field-group">
 
-      <div style="display: flex; flex-direction: column; gap: 40px;">
-        <div class="grid-2" style="gap: 32px;">
-          <div class="form-group">
-            <label class="form-label" style="font-weight: 800; font-size: 0.8125rem;">Max Daily Orders *</label>
-            <input type="number" name="daily_capacity" class="form-input-modern" value="15" min="1" max="100" required/>
+        <div class="field-row">
+          <div class="field">
+            <label>Max Daily Orders <span style="color:var(--p-orange,#ff6b00)">*</span></label>
+            <input type="number" name="daily_capacity" value="15" min="1" max="200" required/>
           </div>
-          <div class="form-group">
-            <label class="form-label" style="font-weight: 800; font-size: 0.8125rem;">Daily Order Cutoff *</label>
-            <input type="time" name="order_cutoff" class="form-input-modern" value="21:00" required/>
+          <div class="field">
+            <label>Order Cutoff Time <span style="color:var(--p-orange,#ff6b00)">*</span></label>
+            <input type="time" name="order_cutoff" value="21:00" required/>
           </div>
         </div>
 
-        <div class="form-group">
-          <label class="form-label" style="font-weight: 800; font-size: 0.8125rem;">Kitchen profile photo</label>
-          <div class="photo-upload-area">
-            <div class="photo-preview" id="setup-photo-preview" onclick="document.getElementById('setup-photo-input').click()">
-              <div class="photo-initial">{{ cook.kitchen_name|first|upper }}</div>
+        <div class="field">
+          <label>Kitchen Profile Photo</label>
+          <div class="photo-zone" id="photo-zone" onclick="document.getElementById('photo-input').click()">
+            <div class="photo-icon-wrap" id="photo-icon">📷</div>
+            <p style="font-weight:700;font-size:0.9375rem;color:#111;margin:0;">Click to upload a kitchen photo</p>
+            <p style="font-size:0.8125rem;color:#aaa;font-weight:600;margin:0;">JPG, PNG or WEBP · Max 5 MB — helps build trust with customers</p>
+            <span id="photo-filename" style="font-size:0.8125rem;font-weight:700;color:var(--p-orange,#ff6b00);display:none;"></span>
+          </div>
+          <input type="file" name="photo" id="photo-input" accept="image/*" style="display:none;" onchange="previewPhoto(this)"/>
+        </div>
+
+        <!-- Slots -->
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+            <div>
+              <h3 style="margin:0 0 4px;font-size:1.05rem;font-weight:900;">Delivery Windows</h3>
+              <p style="margin:0;font-size:0.8rem;color:#aaa;font-weight:600;">Define when customers can receive orders.</p>
             </div>
-            
-            <input type="file" name="photo" id="setup-photo-input" class="photo-upload-input" 
-                   accept="image/*" style="display: none;" 
-                   data-preview="setup-photo-preview" data-label="setup-photo-label">
-            
-            <button type="button" class="btn-primary photo-upload-trigger" 
-                    data-target="setup-photo-input" style="padding: 10px 24px; font-size: 0.875rem; border-radius: 12px;">
-              Upload new photo
+            <button type="button" onclick="addSlot()"
+              style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,107,0,0.1);color:var(--p-orange,#ff6b00);border:none;padding:10px 18px;border-radius:12px;font-weight:800;font-size:0.875rem;cursor:pointer;transition:all 0.2s;"
+              onmouseover="this.style.background='var(--p-orange,#ff6b00)';this.style.color='#fff'"
+              onmouseout="this.style.background='rgba(255,107,0,0.1)';this.style.color='var(--p-orange,#ff6b00)'">
+              + Add Window
             </button>
-            
-            <div id="setup-photo-label" class="photo-filename">No photo selected</div>
-            
-            <p class="text-xs text-muted" style="max-width: 400px; text-align: center; margin-top: 8px;">
-              Use a clear photo of your kitchen or yourself cooking. This helps build trust with customers.
-            </p>
           </div>
-        </div>
-
-        <div style="margin: 24px 0; border-top: 2px dashed var(--p-border);"></div>
-        
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <h3 style="font-size: 1.4rem; font-weight: 900; margin: 0; letter-spacing: -0.5px;">Delivery Slots</h3>
-          <button type="button" id="add-slot-btn" class="btn-ghost" style="color: var(--p-orange); font-weight: 800; padding: 10px 20px; background: var(--p-orange-light); border-radius: 12px;">+ Add Window</button>
-        </div>
-
-        <div id="slots-container" style="display: flex; flex-direction: column; gap: 24px;">
-          <div class="slot-row-premium">
-            <div class="form-group" style="margin:0">
-              <label class="form-label" style="font-size: 0.65rem; color: var(--p-gray-400); font-weight: 800;">LABEL</label>
-              <input type="text" name="slot_label" class="form-input-modern" style="background: white;" placeholder="Lunch Rush" value="Lunch Rush"/>
-            </div>
-            <div class="form-group" style="margin:0">
-              <label class="form-label" style="font-size: 0.65rem; color: var(--p-gray-400); font-weight: 800;">START</label>
-              <input type="time" name="slot_start" class="form-input-modern" style="background: white;" value="12:00"/>
-            </div>
-            <div class="form-group" style="margin:0">
-              <label class="form-label" style="font-size: 0.65rem; color: var(--p-gray-400); font-weight: 800;">END</label>
-              <input type="time" name="slot_end" class="form-input-modern" style="background: white;" value="13:30"/>
+          <div id="slots-container" style="display:flex;flex-direction:column;gap:14px;">
+            <div class="slot-row">
+              <div class="slot-field">
+                <label>Label</label>
+                <input type="text" name="slot_label" placeholder="Lunch Rush" value="Lunch Rush"/>
+              </div>
+              <div class="slot-field">
+                <label>Starts</label>
+                <input type="time" name="slot_start" value="12:00"/>
+              </div>
+              <div class="slot-field">
+                <label>Ends</label>
+                <input type="time" name="slot_end" value="13:30"/>
+              </div>
+              <button type="button" class="slot-remove" onclick="removeSlot(this)" title="Remove slot">×</button>
             </div>
           </div>
         </div>
 
-        <div style="margin-top: 48px;">
-          <button type="submit" class="btn-primary btn-full" style="height: 64px; font-weight: 900; font-size: 1.15rem; border-radius: 20px; box-shadow: var(--shadow-orange);">
-            Finalize and Review →
-          </button>
-        </div>
+      </div>
+
+      <div class="form-footer">
+        <a href="/cook/setup/" class="btn-back">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg>
+          Back
+        </a>
+        <button type="submit" class="btn-next">
+          Review &amp; Confirm
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+        </button>
       </div>
     </form>
   </div>
+  {% endif %}
 
-  {% elif step == 3 %}
-  <!-- Step 3 — Review -->
-  <div class="card" style="padding: 56px; border: none; box-shadow: var(--shadow-xl); border-radius: 32px;">
-    <div style="margin-bottom: 48px;">
-      <h2 style="font-size: 2.25rem; margin-bottom: 12px; font-weight: 950; letter-spacing: -1px;">Ready to <span class="text-orange">Launch?</span></h2>
-      <p class="text-muted" style="font-size: 1.1rem; font-weight: 500;">Please review your application details below.</p>
+  <!-- ══════════ STEP 3 ══════════ -->
+  {% if step == 3 %}
+  <div class="setup-card">
+    <div class="setup-card-header">
+      <h2>Ready to <span class="text-orange">Launch?</span></h2>
+      <p>Review your application details below before submitting.</p>
     </div>
 
-    <div style="display: flex; flex-direction: column; gap: 40px;">
-      <div style="padding: 48px; background: var(--p-gray-50); border-radius: 28px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; border: 1.5px solid var(--p-border);">
-        <div>
-          <h4 style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.2em; color: var(--p-gray-400); margin-bottom: 12px; font-weight: 800;">Kitchen Brand</h4>
-          <p style="font-weight: 900; font-size: 1.5rem; color: var(--p-black);">{{ cook.kitchen_name }}</p>
+    <div style="display:flex;flex-direction:column;gap:28px;">
+      <div class="review-grid">
+        <div class="review-item">
+          <h4>Kitchen Brand</h4>
+          <p>{{ cook.kitchen_name }}</p>
         </div>
-        <div>
-          <h4 style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.2em; color: var(--p-gray-400); margin-bottom: 12px; font-weight: 800;">Daily Capacity</h4>
-          <p style="font-weight: 900; font-size: 1.5rem; color: var(--p-black);">{{ cook.daily_capacity }} <span style="font-size: 0.9rem; color: var(--p-gray-400);">orders</span></p>
+        <div class="review-item">
+          <h4>Daily Capacity</h4>
+          <p>{{ cook.daily_capacity }} <span style="font-size:0.875rem;color:#aaa;font-weight:600;">orders/day</span></p>
         </div>
-        <div style="grid-column: 1/-1;">
-          <h4 style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.2em; color: var(--p-gray-400); margin-bottom: 12px; font-weight: 800;">Verified Location</h4>
-          <p style="font-weight: 600; line-height: 1.7; font-size: 1.1rem; color: var(--p-gray-700);">{{ cook.address }}</p>
+        <div class="review-item">
+          <h4>Business Phone</h4>
+          <p>{{ cook.phone }}</p>
         </div>
-        <div>
-          <h4 style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.2em; color: var(--p-gray-400); margin-bottom: 16px; font-weight: 800;">Operating Windows</h4>
-          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <div class="review-item">
+          <h4>Order Cutoff</h4>
+          <p>{{ cook.order_cutoff }}</p>
+        </div>
+        <div class="review-item full">
+          <h4>Verified Location</h4>
+          <p class="sm">{{ cook.address }}</p>
+        </div>
+        {% if cook.delivery_slots.all %}
+        <div class="review-item full">
+          <h4>Delivery Windows</h4>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;">
             {% for slot in cook.delivery_slots.all %}
-              <span class="badge" style="background: var(--p-black); color: var(--p-white); padding: 8px 16px; border-radius: 10px; font-weight: 800; font-size: 0.75rem;">{{ slot.label }}</span>
+            <span style="background:#111;color:#fff;padding:8px 16px;border-radius:10px;font-weight:800;font-size:0.75rem;display:inline-block;">
+              {{ slot.label }} · {{ slot.start_time|time:"H:i" }}–{{ slot.end_time|time:"H:i" }}
+            </span>
             {% endfor %}
           </div>
         </div>
+        {% endif %}
       </div>
 
-      <div style="padding: 32px; background: var(--p-blue-bg); border-radius: 24px; display: flex; gap: 24px; align-items: center; border: 1.5px solid rgba(47, 128, 237, 0.1);">
-        <div style="font-size: 2.5rem;">🚀</div>
-        <p style="margin:0; color: var(--p-blue); font-size: 1rem; line-height: 1.6; font-weight: 600;">
-          Your profile is perfectly optimized! Click the button below to submit. You can start adding your signature dishes immediately while we review.
+      <div style="padding:24px 28px;background:#eff6ff;border-radius:18px;display:flex;gap:18px;align-items:center;border:1.5px solid rgba(59,130,246,0.15);">
+        <span style="font-size:2rem;flex-shrink:0;">🚀</span>
+        <p style="margin:0;color:#1d4ed8;font-size:0.9375rem;line-height:1.6;font-weight:600;">
+          Everything looks great! Once submitted, our team reviews within 24 hours. You can start adding dishes to your menu right away.
         </p>
       </div>
 
       <form method="post">
         {% csrf_token %}
         <input type="hidden" name="step" value="3"/>
-        <div style="display: flex; gap: 20px;">
-          <button type="submit" class="btn-primary" style="flex: 2; height: 64px; font-weight: 900; font-size: 1.25rem; border-radius: 20px; box-shadow: var(--shadow-orange);">
-            Submit Application ✓
-          </button>
-          <a href="/cook/setup/" class="btn-ghost" style="flex: 1; height: 64px; display: flex; align-items: center; justify-content: center; font-weight: 800; background: var(--p-gray-100); border-radius: 20px;">Edit Details</a>
+        <div class="form-footer" style="margin-top:0;padding-top:24px;">
+          <a href="/cook/setup/" class="btn-back">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg>
+            Edit Details
+          </a>
+          <button type="submit" class="btn-submit">✓ Submit Application</button>
         </div>
       </form>
     </div>
@@ -273,122 +556,16 @@
 
   {% endif %}
 </div>
-
-<style>
-.step-circle {
-  width: 48px; height: 48px;
-  border-radius: 50%;
-  background: var(--p-gray-50);
-  color: var(--p-gray-300);
-  font-size: 1.1rem; font-weight: 900;
-  display: flex; align-items: center; justify-content: center;
-  position: relative; z-index: 2;
-  transition: all 0.6s cubic-bezier(0.2, 0, 0, 1);
-  border: 4px solid var(--p-white);
-  box-shadow: 0 0 0 1px var(--p-gray-100);
-}
-.step-circle.active {
-  background: var(--p-black);
-  color: var(--p-white);
-  box-shadow: 0 12px 24px rgba(0,0,0,0.15);
-  transform: scale(1.1);
-}
-
-.form-input-modern, .form-textarea-modern {
-  width: 100%;
-  padding: 16px 20px;
-  background: var(--p-gray-100);
-  border: 2px solid transparent;
-  border-radius: 16px;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--p-black);
-  transition: all 0.2s ease;
-}
-.form-input-modern:focus, .form-textarea-modern:focus {
-  background: var(--p-white);
-  border-color: var(--p-orange);
-  box-shadow: 0 0 0 5px var(--p-orange-light);
-  outline: none;
-}
-
-.upload-zone-premium {
-  padding: 56px;
-  border: 3px dashed var(--p-border);
-  border-radius: 28px;
-  background: var(--p-gray-50);
-  transition: all 0.3s ease;
-}
-.upload-zone-premium:hover {
-  border-color: var(--p-orange);
-  background: var(--p-orange-light);
-}
-
-.slot-row-premium {
-  display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 24px;
-  padding: 32px; background: var(--p-gray-50); border: 1.5px solid var(--p-border);
-  border-radius: 20px; transition: all 0.3s ease;
-}
-.slot-row-premium:hover {
-  border-color: var(--p-black);
-  transform: scale(1.01);
-}
-</style>
-
-
-<style>
-.step-circle {
-  width: 44px; height: 44px;
-  border-radius: 50%;
-  background: var(--p-gray-100);
-  color: var(--p-gray-400);
-  font-size: 1rem; font-weight: 800;
-  display: flex; align-items: center; justify-content: center;
-  position: relative; z-index: 2;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 4px solid var(--p-cream);
-}
-.step-circle.active {
-  background: var(--p-black);
-  color: var(--p-white);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-}
-.step-line {
-  position: absolute; top: 22px; left: 50%; width: 100%; height: 2px;
-  background: var(--p-gray-100); z-index: 1;
-}
-.step-line.active { background: var(--p-black); }
-
-.slot-row-modern {
-  display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 20px;
-  padding: 24px; background: var(--p-white); border: 1px solid var(--p-border);
-  border-radius: var(--radius-md); box-shadow: var(--shadow-sm);
-}
-
-.card:hover { transform: translateY(-2px); transition: all 0.3s ease; }
-</style>
-
-{% endblock %}
-
-{% block extra_css %}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<style>
-  .leaflet-container {
-    font-family: inherit;
-  }
-  .leaflet-control-attribution {
-    font-size: 10px !important;
-  }
-</style>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 {% if step == 1 %}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-var map = L.map('setup-map', { zoomControl: false, scrollWheelZoom: false }).setView([22.6193, 88.4217], 13);
+var map = L.map('setup-map', { zoomControl: false, scrollWheelZoom: true })
+           .setView([22.6193, 88.4217], 13);
 L.control.zoom({ position: 'bottomright' }).addTo(map);
-
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '© OpenStreetMap'
 }).addTo(map);
@@ -396,30 +573,27 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 var marker = null;
 var orangeIcon = L.divIcon({
   className: '',
-  html: '<div style="width:32px; height:32px; background:var(--p-orange); border-radius:50%; border:4px solid white; box-shadow:0 8px 24px rgba(255,107,0,0.4); display:flex; align-items:center; justify-content:center; color:white; font-size:14px;">🏠</div>',
-  iconSize:[32,32], iconAnchor:[16,16]
+  html: '<div style="width:34px;height:34px;background:#ff6b00;border-radius:50%;border:4px solid white;box-shadow:0 6px 20px rgba(255,107,0,0.45);display:flex;align-items:center;justify-content:center;font-size:14px;">🏠</div>',
+  iconSize:[34,34], iconAnchor:[17,17]
 });
 
-function setMarker(latlng) {
-  if (marker) {
-    marker.setLatLng(latlng);
-  } else {
-    marker = L.marker(latlng, {icon: orangeIcon, draggable: true}).addTo(map);
+function placeMarker(latlng) {
+  if (marker) { marker.setLatLng(latlng); }
+  else {
+    marker = L.marker(latlng, { icon: orangeIcon, draggable: true }).addTo(map);
     marker.on('dragend', function(ev) {
-      var pos = ev.target.getLatLng();
-      setCoords(pos.lat.toFixed(6), pos.lng.toFixed(6));
-      reverseGeocode(pos.lat, pos.lng);
+      var p = ev.target.getLatLng();
+      setCoords(p.lat.toFixed(6), p.lng.toFixed(6));
+      reverseGeocode(p.lat, p.lng);
     });
   }
-  map.setView(latlng, 16);
+  map.setView(latlng, 17);
 }
 
 map.on('click', function(e) {
-  var lat = e.latlng.lat.toFixed(6);
-  var lng = e.latlng.lng.toFixed(6);
-  setMarker(e.latlng);
-  setCoords(lat, lng);
-  reverseGeocode(lat, lng);
+  placeMarker(e.latlng);
+  setCoords(e.latlng.lat.toFixed(6), e.latlng.lng.toFixed(6));
+  reverseGeocode(e.latlng.lat, e.latlng.lng);
 });
 
 function setCoords(lat, lng) {
@@ -428,62 +602,83 @@ function setCoords(lat, lng) {
 }
 
 function reverseGeocode(lat, lng) {
-  const addrInput = document.getElementById('setup-address');
-  if (addrInput) addrInput.placeholder = "Detecting location...";
-  
+  var el = document.getElementById('setup-address');
+  el.value = ''; el.placeholder = 'Detecting address…';
   fetch('https://nominatim.openstreetmap.org/reverse?lat='+lat+'&lon='+lng+'&format=json')
     .then(r => r.json())
-    .then(data => {
-      if (data && data.display_name)
-        document.getElementById('setup-address').value = data.display_name;
-    }).catch(() => {
-        if (addrInput) addrInput.placeholder = "Failed to detect. Please select manually.";
-    });
+    .then(d => { if (d && d.display_name) { el.value = d.display_name; el.placeholder = ''; } })
+    .catch(() => { el.placeholder = 'Could not detect. Try clicking again.'; });
 }
 
 function getLocation() {
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(function(position) {
-      const lat = position.coords.latitude;
-      const lng = position.coords.longitude;
-      const latlng = [lat, lng];
-      setMarker(latlng);
-      setCoords(lat.toFixed(6), lng.toFixed(6));
-      reverseGeocode(lat, lng);
-    }, function(error) {
-      alert("Error getting location: " + error.message);
-    });
-  } else {
-    alert("Geolocation is not supported by this browser.");
-  }
+  if (!navigator.geolocation) { alert('Geolocation not supported.'); return; }
+  var btn = document.getElementById('detect-btn');
+  btn.textContent = 'Detecting…';
+  navigator.geolocation.getCurrentPosition(function(pos) {
+    var latlng = [pos.coords.latitude, pos.coords.longitude];
+    placeMarker(latlng);
+    setCoords(pos.coords.latitude.toFixed(6), pos.coords.longitude.toFixed(6));
+    reverseGeocode(pos.coords.latitude, pos.coords.longitude);
+    btn.innerHTML = '✓ Located';
+  }, function(err) {
+    btn.innerHTML = 'Auto-detect';
+    alert('Could not get location: ' + err.message);
+  });
 }
 </script>
 {% endif %}
 
 {% if step == 2 %}
 <script>
-document.getElementById('add-slot-btn').addEventListener('click', function() {
-  var container = document.getElementById('slots-container');
+function addSlot() {
+  var c = document.getElementById('slots-container');
   var row = document.createElement('div');
-  row.className = 'slot-row-premium';
-  row.style.marginTop = '16px';
+  row.className = 'slot-row';
   row.innerHTML = `
-    <div class="form-group" style="margin:0">
-      <label class="form-label" style="font-size: 0.65rem; color: var(--p-gray-400); font-weight: 800;">LABEL</label>
-      <input type="text" name="slot_label" class="form-input-modern" style="background: white;" placeholder="e.g. Dinner" />
+    <div class="slot-field">
+      <label>Label</label>
+      <input type="text" name="slot_label" placeholder="e.g. Dinner"/>
     </div>
-    <div class="form-group" style="margin:0">
-      <label class="form-label" style="font-size: 0.65rem; color: var(--p-gray-400); font-weight: 800;">START</label>
-      <input type="time" name="slot_start" class="form-input-modern" style="background: white;"/>
+    <div class="slot-field">
+      <label>Starts</label>
+      <input type="time" name="slot_start"/>
     </div>
-    <div class="form-group" style="margin:0">
-      <label class="form-label" style="font-size: 0.65rem; color: var(--p-gray-400); font-weight: 800;">END</label>
-      <input type="time" name="slot_end" class="form-input-modern" style="background: white;"/>
+    <div class="slot-field">
+      <label>Ends</label>
+      <input type="time" name="slot_end"/>
     </div>
+    <button type="button" class="slot-remove" onclick="removeSlot(this)" title="Remove">×</button>
   `;
-  container.appendChild(row);
-});
+  c.appendChild(row);
+  row.querySelector('input').focus();
+}
+
+function removeSlot(btn) {
+  if (document.querySelectorAll('.slot-row').length <= 1) {
+    alert('You need at least one delivery window.');
+    return;
+  }
+  btn.closest('.slot-row').remove();
+}
+
+function previewPhoto(input) {
+  if (!input.files || !input.files[0]) return;
+  var zone = document.getElementById('photo-zone');
+  var icon = document.getElementById('photo-icon');
+  var fn   = document.getElementById('photo-filename');
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    icon.style.backgroundImage = 'url(' + e.target.result + ')';
+    icon.style.backgroundSize  = 'cover';
+    icon.style.backgroundPosition = 'center';
+    icon.textContent = '';
+    zone.style.borderStyle = 'solid';
+    zone.style.borderColor = '#ff6b00';
+  };
+  reader.readAsDataURL(input.files[0]);
+  fn.textContent = '✓ ' + input.files[0].name;
+  fn.style.display = 'block';
+}
 </script>
 {% endif %}
 {% endblock %}
-
