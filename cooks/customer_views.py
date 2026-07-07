@@ -67,19 +67,29 @@ def cook_list(request):
         customer=request.user, is_default=True
     ).first()
 
+    today    = datetime.date.today()
+    tomorrow = today + datetime.timedelta(days=1)
+
+    # Only show cooks that have at least one published menu (today or tomorrow)
+    any_published_menu = DailyMenu.objects.filter(
+        cook=OuterRef('pk'),
+        status='PUBLISHED',
+        menu_date__in=[today, tomorrow],
+    )
+
     cooks = CookProfile.objects.filter(
         is_approved=True, is_active=True
     ).annotate(
         avg_rating=Avg('reviews__rating'),
-        review_count=Count('reviews')
-    )
+        review_count=Count('reviews'),
+        has_any_menu=Exists(any_published_menu),
+    ).filter(has_any_menu=True)  # Only show cooks with a live menu
 
     # Filters from GET params
-    food_type   = request.GET.get('food_type', '')
-    meal_type   = request.GET.get('meal_type', '')
-    search      = request.GET.get('search', '').strip()
-    sort_by     = request.GET.get('sort', 'distance')
-    max_dist    = request.GET.get('max_dist', '')
+    food_type = request.GET.get('food_type', '')
+    meal_type = request.GET.get('meal_type', '')
+    search    = request.GET.get('search', '').strip()
+    sort_by   = request.GET.get('sort', 'rating')
 
     # Search by kitchen name or cuisine
     if search:
@@ -90,39 +100,36 @@ def cook_list(request):
             cuisine_tags__icontains=search
         ).annotate(
             avg_rating=Avg('reviews__rating'),
-            review_count=Count('reviews')
-        )
+            review_count=Count('reviews'),
+            has_any_menu=Exists(any_published_menu),
+        ).filter(has_any_menu=True)
         cooks = cooks.distinct()
 
-    # Filter by food type
+    # Filter by food type (any active dish on their profile)
     if food_type:
         cooks = cooks.filter(
             dishes__food_type=food_type,
-            dishes__is_active=True
+            dishes__is_active=True,
         ).distinct()
 
-    tomorrow = datetime.date.today() + datetime.timedelta(days=1)
-    today    = datetime.date.today()
-
-    # Filter by meal type
+    # Filter by meal type (published menu for today or tomorrow)
     if meal_type:
         cooks = cooks.filter(
-            daily_menus__menu_date=tomorrow,
+            daily_menus__menu_date__in=[today, tomorrow],
             daily_menus__meal_type=meal_type,
             daily_menus__status='PUBLISHED',
         ).distinct()
 
-    # Optimize by checking menu existence in a single query (Rule: Performance)
+    # Annotate per-date menu existence for card badges
     tomorrow_menu_exists = DailyMenu.objects.filter(
         cook=OuterRef('pk'), menu_date=tomorrow, status='PUBLISHED'
     )
     today_menu_exists = DailyMenu.objects.filter(
         cook=OuterRef('pk'), menu_date=today, status='PUBLISHED'
     )
-
     cooks = cooks.annotate(
         has_tomorrow_menu=Exists(tomorrow_menu_exists),
-        has_today_menu=Exists(today_menu_exists)
+        has_today_menu=Exists(today_menu_exists),
     )
 
     cook_data = []
@@ -135,14 +142,6 @@ def cook_list(request):
             distance  = None
             charge    = None
             pickup_ok = False
-
-        # Max distance filter
-        if max_dist and distance is not None:
-            try:
-                if distance > float(max_dist):
-                    continue
-            except ValueError:
-                pass
 
         has_menu = cook.has_tomorrow_menu
         same_day = cook.has_today_menu and cook.same_day_enabled
@@ -158,11 +157,11 @@ def cook_list(request):
             'review_count': cook.review_count,
         })
 
-    # Sort
-    if sort_by == 'rating':
+    # Sort — default to rating; distance sort only when address is known
+    if sort_by == 'distance' and default_address:
+        cook_data.sort(key=lambda x: x['distance'] if x['distance'] is not None else 9999)
+    else:
         cook_data.sort(key=lambda x: x['avg_rating'] or 0, reverse=True)
-    elif sort_by == 'distance' and default_address:
-        cook_data.sort(key=lambda x: x['distance'] if x['distance'] else 999)
 
     context = {
         'cook_data':       cook_data,
@@ -171,7 +170,6 @@ def cook_list(request):
         'meal_type':       meal_type,
         'search':          search,
         'sort_by':         sort_by,
-        'max_dist':        max_dist,
         'today':           today,
         'tomorrow':        tomorrow,
     }

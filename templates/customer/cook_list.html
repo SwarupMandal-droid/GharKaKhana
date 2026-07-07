@@ -18,13 +18,13 @@
     <div class="message message-warning" style="margin-top: 20px;">
       <span style="font-size: 1.25rem; margin-right: 8px;">📍</span>
       <span>
-        Set your delivery address in 
+        Add a delivery address in 
         <a href="/accounts/profile/" style="font-weight: 700; text-decoration: underline;">Profile</a>
-        to see accurate distances and delivery charges.
+        to see estimated distances and delivery charges.
       </span>
     </div>
     {% else %}
-    <p class="text-muted" style="margin-top: 8px;">{{ cook_data|length }} expert chef{{ cook_data|length|pluralize }} found in your area · sorted by distance</p>
+    <p class="text-muted" style="margin-top: 8px;">{{ cook_data|length }} chef{{ cook_data|length|pluralize }} with live menus right now · sorted by {{ sort_by }}</p>
     {% endif %}
   </div>
 
@@ -127,31 +127,17 @@
               </div>
 
               <div class="filter-chip-wrapper">
-                <select name="max_dist" class="hidden-select" title="Maximum Distance" onchange="this.form.submit()">
-                  <option value="">Distance</option>
-                  <option value="1" {% if max_dist == '1' %}selected{% endif %}>Under 1 km</option>
-                  <option value="2" {% if max_dist == '2' %}selected{% endif %}>Under 2 km</option>
-                  <option value="5" {% if max_dist == '5' %}selected{% endif %}>Under 5 km</option>
-                </select>
-                <div class="premium-chip {% if max_dist %}active{% endif %}" onclick="this.previousElementSibling.click()">
-                  <span class="chip-icon">📍</span>
-                  <span>Distance</span>
-                  {% if max_dist %}<span class="chip-dot"></span>{% endif %}
-                </div>
-              </div>
-
-              <div class="filter-chip-wrapper">
                 <select name="sort" class="hidden-select" onchange="this.form.submit()">
-                  <option value="distance" {% if sort_by == 'distance' %}selected{% endif %}>Nearest</option>
                   <option value="rating" {% if sort_by == 'rating' %}selected{% endif %}>Top Rated</option>
+                  <option value="distance" {% if sort_by == 'distance' %}selected{% endif %}>Nearest First</option>
                 </select>
-                <div class="premium-chip {% if sort_by != 'distance' %}active{% endif %}" onclick="this.previousElementSibling.click()">
+                <div class="premium-chip {% if sort_by == 'distance' %}active{% endif %}" onclick="this.previousElementSibling.click()">
                   <span class="chip-icon">↕</span>
                   <span>Sort By</span>
                 </div>
               </div>
 
-              {% if search or food_type or meal_type or max_dist or sort_by != 'distance' %}
+              {% if search or food_type or meal_type %}
                 <button type="button" onclick="clearAllFilters()" class="clear-filters-btn">
                   Clear All
                 </button>
@@ -249,7 +235,7 @@
       <p class="text-muted" style="margin-bottom: 28px;">No results matched your filters. Try adjusting your search or clearing filters.</p>
       <button type="button" onclick="clearAllFilters()" class="btn-primary" style="border-radius: 100px; padding: 14px 32px;">Clear Filters</button>
     {% else %}
-      <p class="text-muted">We're expanding rapidly. Check back soon for home kitchens in your area!</p>
+    <p class="text-muted">We're bringing more home kitchens to your area soon. Check back!</p>
     {% endif %}
   </div>
   {% endif %}
