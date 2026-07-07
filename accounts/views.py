@@ -180,6 +180,14 @@ def edit_address(request, pk):
     return render(request, 'accounts/add_address.html', {'address': address, 'is_edit': True})
 
 @login_required
+def delete_address(request, pk):
+    address = get_object_or_404(SavedAddress, pk=pk, customer=request.user)
+    if request.method == 'POST':
+        address.delete()
+        messages.success(request, 'Address deleted successfully.')
+    return redirect('accounts:profile')
+
+@login_required
 def notifications_view(request):
     notifications = request.user.notifications.order_by('-created_at')[:30]
     # Mark all as read
